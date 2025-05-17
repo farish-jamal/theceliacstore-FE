@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Typography } from "../typography/Typography";
 
 const dietaryItems = [
   {
@@ -22,9 +23,7 @@ const DietaryCategories = () => {
   return (
     <section aria-labelledby="dietary-heading" className="py-10">
       <div className="text-center mb-8">
-        <h2 id="dietary-heading" className="text-4xl font-bold text-gray-800">
-          Your Dietary Needs
-        </h2>
+        <Typography variant="h1">Your Dietary Needs</Typography>
         <div className="w-12 h-1 bg-green-500 mx-auto mt-2 rounded-full" />
       </div>
 

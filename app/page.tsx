@@ -5,16 +5,28 @@ import MainSlider from "./components/home/MainSlider";
 import DietaryCategories from "./components/home/DietaryCategories";
 import PopularCategories from "./components/home/PopularCategories";
 import ProductGrid from "./components/home/ProductGrid";
+import ReviewSection from "./components/home/ReviewSection";
+import TopBrands from "./components/home/TopBrands";
+import WhyChooseUs from "./components/home/WhyChooseUs";
+import BlogsSection from "./components/home/BlogsSection";
+import StoreInfo from "./components/home/StoreInfo";
+import Footer from "./components/layout/Footer";
 
 const HomePage = () => {
   return (
-    <div className="flex flex-col min-h-screen w-full ">
+    <div className="flex flex-col min-h-screen w-full bg-[]">
       <Header />
       <Navbar />
       <MainSlider />
       <DietaryCategories />
       <PopularCategories />
       <ProductGrid />
+      <ReviewSection />
+      <TopBrands />
+      <WhyChooseUs />
+      <BlogsSection />
+      <StoreInfo />
+      <Footer />
     </div>
   );
 };

@@ -2,6 +2,7 @@
 
 import React, { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Typography } from "../typography/Typography";
 
 const categories = [
   "Bestsellers",
@@ -35,9 +36,7 @@ const PopularCategories = () => {
 
   return (
     <div className="flex flex-col items-center py-6 px-4 gap-8">
-      <h2 id="dietary-heading" className="text-4xl font-bold text-gray-800">
-        Popular Categories
-      </h2>
+      <Typography variant="h1">Popular Categories</Typography>
 
       <div className="flex items-center gap-2">
         <button
