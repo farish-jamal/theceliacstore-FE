@@ -186,10 +186,10 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ isOpen, onClose }) => (
 
         <BrandChips />
 
-        <div className="bg-[#f9f9f9] border border-red-100 rounded p-3 text-center">
-          <p className="text-[15px] font-semibold text-red-600">Browse</p>
-          <p className="text-[15px] font-semibold text-red-600">Bundles</p>
-          <button className="text-green-600 text-sm mt-1 flex items-center justify-center w-full">
+        <div className="bg-[#f9f9f9] border border-red-100 rounded p-3 text-center h-40">
+          <p className="text-2xl font-semibold text-red-600">Browse</p>
+          <p className="text-2xl font-semibold text-red-600">Bundles</p>
+          <button className="text-green-600 text-sm mt-5 flex items-center justify-center w-full">
             Shop Now <span className="ml-1">→</span>
           </button>
         </div>

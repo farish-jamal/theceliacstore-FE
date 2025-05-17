@@ -15,7 +15,7 @@ const ProductGrid = () => {
             isOpen={isFilterOpen}
             onClose={() => setIsFilterOpen(false)}
           />
-          <div className="flex-1 py-4">
+          <div className="flex-1 py-4 ">
             <div className="bg-white py-3 text-sm">
               <Link href="/" className="text-gray-500 hover:text-gray-700">
                 Home
@@ -47,15 +47,17 @@ const ProductGrid = () => {
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {Array.from({ length: 27 }).map((_, i) => (
-                <ProductCard
-                  key={i}
-                  name="Product Name"
-                  price={80.0}
-                  image="https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747493487/c58b162fb41509c2f85288ceeea283f9c3859c91_2_ntuvfa.jpg?_s=public-apps"
-                />
-              ))}
+            <div className="h-[calc(100vh-40px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {Array.from({ length: 27 }).map((_, i) => (
+                  <ProductCard
+                    key={i}
+                    name="Product Name"
+                    price={80.0}
+                    image="https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747493487/c58b162fb41509c2f85288ceeea283f9c3859c91_2_ntuvfa.jpg?_s=public-apps"
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
