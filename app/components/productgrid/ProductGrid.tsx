@@ -3,6 +3,7 @@ import ProductCard from "../cards/ProductCard";
 import FilterButton from "../filters/FilterButton";
 import SidebarFilter from "../sidebar/SidebarFilter";
 import Link from "next/link";
+import Pagination from "../pagination/Pagination";
 
 const ProductGrid = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -59,6 +60,8 @@ const ProductGrid = () => {
                 ))}
               </div>
             </div>
+
+            <Pagination />
           </div>
         </div>
       </div>
