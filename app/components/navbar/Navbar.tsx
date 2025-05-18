@@ -9,10 +9,24 @@ import {
   CircleUser,
   Menu,
   X,
+  LogOut,
+  User,
+  Truck,
+  CircleHelp,
+  ClipboardList,
+  Settings2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import CartIcon from "@/app/icons/CartIcon";
 import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Typography } from "../typography/Typography";
 
 const navItems = [
   { label: "Home" },
@@ -72,13 +86,67 @@ const Navbar = () => {
             >
               <CartIcon />
             </div>
-            <div
-              className="flex items-center gap-1 cursor-pointer rounded-full hover:bg-slate-50 p-2"
-              aria-label="User menu"
-            >
-              <CircleUser className="h-7 w-7" />
-              <ChevronDown className="h-4 w-4 mt-1" />
-            </div>
+            {/* User menu with shadcn dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="flex items-center gap-1 cursor-pointer rounded-full hover:bg-slate-50 p-2"
+                  aria-label="User menu"
+                  type="button"
+                >
+                  <CircleUser className="h-7 w-7" />
+                  <ChevronDown className="h-4 w-4 mt-1" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44 p-1">
+                <DropdownMenuItem asChild className="py-2">
+                  {/* <Link href="/account" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    My Account
+                  </Link> */}
+                  <Typography variant="h3">Welcome!</Typography>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="mx-2" />
+                <DropdownMenuItem asChild>
+                  <Link href="/orders" className="flex items-center gap-2">
+                    <Settings2 className="h-4 w-4 rotate-90" />
+                    My Account
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                  <Link href="/orders" className="flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4" />
+                    My Orders
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                  <Link href="/orders" className="flex items-center gap-2">
+                    <Truck className="h-4 w-4" />
+                    Orers Track
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                  <Link href="/orders" className="flex items-center gap-2">
+                    <CircleHelp className="h-4 w-4" />
+                  Help
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="mx-2" />
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/logout"
+                    className="flex items-center gap-2 "
+                  >
+                    <LogOut className="h-4 w-4 text-red-600" />
+                    Signout
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           {/* Hamburger for mobile */}
           <button
