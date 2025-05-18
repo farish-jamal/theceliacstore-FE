@@ -4,6 +4,7 @@ import Footer from "@/app/components/layout/Footer";
 import Navbar from "@/app/components/navbar/Navbar";
 import React, { useState } from "react";
 import ProductSlider from "@/app/components/productsider/ProductSlider";
+import FrequentlyBought from "@/app/components/frequentlybought/FrequentlyBought";
 
 const thumbnails = [
   "https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747513129/183b94b37929bc9eee61fb523d8bef99602cb329_rabkid.jpg?_s=public-apps",
@@ -260,6 +261,7 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+      <FrequentlyBought />
       <ProductSlider title="Recommended for you" image={thumbnails[1]} />
       <ProductSlider title="Best Sellers" image={thumbnails[0]} />
       <Footer />
