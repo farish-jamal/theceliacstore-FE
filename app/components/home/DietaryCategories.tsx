@@ -27,20 +27,25 @@ const DietaryCategories = () => {
         <div className="w-12 h-1 bg-green-500 mx-auto mt-2 rounded-full" />
       </div>
 
-      <ul className="flex flex-row items-center justify-evenly gap-10 max-w-6xl mx-auto px-4">
+      <ul className="flex flex-col md:flex-row items-center justify-evenly gap-10 max-w-6xl mx-auto px-4">
         {dietaryItems.map(({ title, imageSrc, bgColor }, idx) => (
-          <li key={idx} className={`flex flex-col items-center relative`}>
+          <li
+            key={idx}
+            className="flex flex-col items-center relative w-48 md:w-56"
+          >
+            <div
+              className={`${bgColor} absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full h-32 w-32 md:h-44 md:w-44 z-[-1]`}
+            />
             <Image
               src={imageSrc}
               alt={title}
-              width={200}
-              height={200}
-              className="object-contain"
+              width={120}
+              height={120}
+              className="object-contain relative z-10"
             />
-            <div
-              className={`${bgColor} p-4 rounded-full absolute h-45 w-45 z-[-1]`}
-            />
-            <h3 className="mt-4 text-xl font-medium text-gray-700">{title}</h3>
+            <h3 className="mt-4 text-xl font-medium text-gray-700 text-center">
+              {title}
+            </h3>
           </li>
         ))}
       </ul>

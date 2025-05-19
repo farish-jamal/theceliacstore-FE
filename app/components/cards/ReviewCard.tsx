@@ -15,7 +15,6 @@ type ReviewCardProps = {
 const ReviewCard = ({ name, review, rating, url, type }: ReviewCardProps) => {
   return (
     <div className="flex flex-col justify-between shadow-[0_4px_12px_0_rgba(0,0,0,0.08)] px-8 py-8 rounded-lg gap-4 m-4 h-[30vh] bg-white">
-      {" "}
       <CommentIcon />
       <Typography className="mt-2 line-clamp-3 text-base text-gray-800">
         {review}

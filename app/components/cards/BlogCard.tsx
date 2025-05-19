@@ -13,7 +13,7 @@ type BlogCardProps = {
 
 const BlogCard = ({ url, title, tag, views, date }: BlogCardProps) => {
   return (
-    <div className="w-90 shadow-sm rounded-lg overflow-hidden bg-white">
+    <div className="w-full shadow-sm rounded-lg overflow-hidden bg-white">
       <Image
         src={url}
         alt="Blog Image"
