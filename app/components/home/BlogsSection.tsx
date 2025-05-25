@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import BlogCard from "../cards/BlogCard";
 import {
@@ -8,6 +10,7 @@ import {
   CarouselPrevious,
 } from "../carousel/CustomCarousel";
 import { ArrowRight } from "lucide-react";
+import { useIsMobile } from "@/app/hooks/useIsMobile";
 
 // Example blog data
 const blogs = [
@@ -35,6 +38,8 @@ const blogs = [
 ];
 
 const BlogsSection = () => {
+  const isMobile = useIsMobile();
+
   return (
     <div className="mt-10 px-4 lg:px-0 mb-10">
       <h2 className="text-center text-3xl font-bold mb-4">Blogs</h2>
@@ -45,7 +50,7 @@ const BlogsSection = () => {
             loop: true,
           }}
         >
-          <CarouselContent className="p-4">
+          <CarouselContent className="p-4 gap-8">
             {blogs.map((blog, index) => (
               <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
                 <BlogCard
@@ -58,13 +63,13 @@ const BlogsSection = () => {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
+          {!isMobile && <CarouselPrevious />}
+          {!isMobile && <CarouselNext />}
         </Carousel>
 
         <div className="flex justify-center my-6">
           <Button className="rounded-full w-[9rem] bg-[#4CAF50] hover:bg-[#4CAF50] font-bold py-5 flex items-center justify-center gap-2">
-            Show More <ArrowRight className="w-5 h-5 stroke-2 mt-0.5"/>
+            Show More <ArrowRight className="w-5 h-5 stroke-2 mt-0.5" />
           </Button>
         </div>
       </div>

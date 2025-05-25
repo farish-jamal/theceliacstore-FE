@@ -13,7 +13,7 @@ const products = Array.from({ length: 13 }, (_, i) => ({
 
 const ProductGrid = () => {
   return (
-    <div className="grid grid-cols-5 gap-4 px-4 py-6 w-[90vw] max-w-full mx-auto">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 px-2 sm:px-4 py-6 w-full max-w-7xl mx-auto">
       {/* Static Promo - 1st row, 1st column */}
       <div>
         <PromoCard
@@ -21,7 +21,7 @@ const ProductGrid = () => {
           subtitle="GLUTEN FREE"
           buttonText="Shop Now"
           bgColor="bg-gray-200"
-          styles="h-[80%]"
+          styles="h-full"
         />
       </div>
 
@@ -52,7 +52,7 @@ const ProductGrid = () => {
         buttonText="Shop Now"
         bgColor="bg-yellow-300"
         textColor="text-black"
-        styles="h-[80%]"
+        styles="h-full"
       />
     </div>
   );

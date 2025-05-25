@@ -19,8 +19,8 @@ type TypographyProps = {
 
 const variantClasses: Record<TypographyVariant, string> = {
   h1: "text-4xl font-bold",
-  h2: "mt-10 scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0",
-  h3: "mt-8 scroll-m-20 text-2xl font-semibold tracking-tight",
+  h2: "text-3xl font-semibold",
+  h3: "text-2xl font-semibold",
   p: "",
   blockquote: "mt-6 border-l-2 pl-6 italic",
   ul: "my-6 ml-6 list-disc [&>li]:mt-2",
