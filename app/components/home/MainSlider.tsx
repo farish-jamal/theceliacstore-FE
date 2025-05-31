@@ -21,7 +21,7 @@ const slides = [
 
 const MainSlider = () => {
   return (
-    <div className="mt-1">
+    <div className="w-[100%] mt-1">
       <Carousel slides={slides} />
     </div>
   );

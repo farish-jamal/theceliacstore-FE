@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { Typography } from "../typography/Typography";
 import {
@@ -7,6 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "../carousel/CustomCarousel";
+import { useIsMobile } from "@/app/hooks/useIsMobile";
 
 // Alternative open source brand logos (PNG, transparent)
 const brands = [
@@ -53,6 +56,7 @@ const brands = [
 ];
 
 const TopBrands = () => {
+  const isMobile = useIsMobile();
   return (
     <div className="flex flex-col mt-10 px-4 lg:px-0 gap-8 mb-8">
       <Typography variant="h1" className="text-center text-3xl font-bold mb-4">
@@ -82,8 +86,8 @@ const TopBrands = () => {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
+          {!isMobile && <CarouselPrevious />}
+          {!isMobile && <CarouselNext />}
         </Carousel>
       </div>
     </div>
