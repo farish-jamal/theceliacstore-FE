@@ -10,8 +10,6 @@ import {
   Menu,
   X,
   LogOut,
-  MapPin,
-  Truck,
   CircleHelp,
   ClipboardList,
   Settings2,
@@ -109,7 +107,7 @@ const Navbar = () => {
 
                 <DropdownMenuSeparator className="mx-2" />
                 <DropdownMenuItem asChild>
-                  <Link href="/orders" className="flex items-center gap-2">
+                  <Link href="/account" className="flex items-center gap-2">
                     <Settings2 className="h-4 w-4 rotate-90" />
                     My Account
                   </Link>
@@ -123,21 +121,7 @@ const Navbar = () => {
                 </DropdownMenuItem>
 
                 <DropdownMenuItem asChild>
-                  <Link href="/address" className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    My Addresses
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild>
-                  <Link href="/orders" className="flex items-center gap-2">
-                    <Truck className="h-4 w-4" />
-                    Orers Track
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild>
-                  <Link href="/orders" className="flex items-center gap-2">
+                  <Link href="/help" className="flex items-center gap-2">
                     <CircleHelp className="h-4 w-4" />
                   Help
                   </Link>
