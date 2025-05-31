@@ -10,7 +10,7 @@ import {
   Menu,
   X,
   LogOut,
-  User,
+  MapPin,
   Truck,
   CircleHelp,
   ClipboardList,
@@ -119,6 +119,13 @@ const Navbar = () => {
                   <Link href="/orders" className="flex items-center gap-2">
                     <ClipboardList className="h-4 w-4" />
                     My Orders
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                  <Link href="/address" className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    My Addresses
                   </Link>
                 </DropdownMenuItem>
 

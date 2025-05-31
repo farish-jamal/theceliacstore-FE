@@ -748,7 +748,6 @@ const CartPage = () => {
           </motion.div>
         </motion.div>
       )}
-
       <Footer />
     </div>
   );
