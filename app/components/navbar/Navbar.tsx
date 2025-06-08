@@ -10,7 +10,6 @@ import {
   Menu,
   X,
   LogOut,
-  User,
   Truck,
   CircleHelp,
   ClipboardList,
@@ -27,12 +26,21 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Typography } from "../typography/Typography";
+import { useRouter } from "next/navigation";
 
 const navItems = [
-  { label: "Home" },
-  { label: "Shop", icon: <ShoppingBag className="ml-1 h-5 w-5" /> },
-  { label: "Blog" },
-  { label: "About us", icon: <ChevronDown className="ml-1 h-5 w-5" /> },
+  { label: "Home", path: "/" },
+  {
+    label: "Shop",
+    icon: <ShoppingBag className="ml-1 h-5 w-5" />,
+    path: "/products",
+  },
+  { label: "Blog", path: "/blog" },
+  {
+    label: "About us",
+    icon: <ChevronDown className="ml-1 h-5 w-5" />,
+    path: "/about",
+  },
 ];
 
 const categoriesItems = [
@@ -132,15 +140,12 @@ const Navbar = () => {
                 <DropdownMenuItem asChild>
                   <Link href="/orders" className="flex items-center gap-2">
                     <CircleHelp className="h-4 w-4" />
-                  Help
+                    Help
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="mx-2" />
                 <DropdownMenuItem asChild>
-                  <Link
-                    href="/logout"
-                    className="flex items-center gap-2 "
-                  >
+                  <Link href="/logout" className="flex items-center gap-2 ">
                     <LogOut className="h-4 w-4 text-red-600" />
                     Signout
                   </Link>
@@ -204,29 +209,38 @@ const NavItems = ({
   active: string;
   setActive: (label: string) => void;
   mobile?: boolean;
-}) => (
-  <ul
-    className={`flex flex-col ${mobile ? "gap-4" : "md:flex-row md:gap-8"} ${
-      mobile ? "" : "items-center"
-    }`}
-  >
-    {navItems.map((item) => (
-      <li key={item.label}>
-        <button
-          type="button"
-          onClick={() => setActive(item.label)}
-          className={`flex items-center font-medium text-[18px] transition-colors bg-transparent outline-none
+}) => {
+  const router = useRouter();
+
+  return (
+    <ul
+      className={`flex flex-col ${mobile ? "gap-4" : "md:flex-row md:gap-8"} ${
+        mobile ? "" : "items-center"
+      }`}
+    >
+      {navItems.map((item) => (
+        <li key={item.label}>
+          <button
+            type="button"
+            onClick={() => {
+              setActive(item.label);
+              if (item.path) {
+                router.push(item.path);
+              }
+            }}
+            className={`flex items-center font-medium text-[18px] transition-colors bg-transparent outline-none
             ${active === item.label ? "text-[#4CAF50]" : "text-[#717171]"}
           `}
-          aria-current={active === item.label ? "page" : undefined}
-        >
-          {item.label}
-          {item.icon}
-        </button>
-      </li>
-    ))}
-  </ul>
-);
+            aria-current={active === item.label ? "page" : undefined}
+          >
+            {item.label}
+            {item.icon}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+};
 
 const CategoryItem = ({
   active,

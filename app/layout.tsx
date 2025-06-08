@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import ClientProvider from "./components/ClientProvider";
+import ReactQueryProvider from "./components/ReactQueryProvider";
+import GlobalSnackbar from "./components/GlobalSnackbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +30,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased `}
       >
-        {children}
+        <ClientProvider>
+          <ReactQueryProvider>
+            <GlobalSnackbar />
+            {children}
+          </ReactQueryProvider>
+        </ClientProvider>
       </body>
     </html>
   );

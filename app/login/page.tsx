@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FloatingLabelInput } from "../components/input/FloatingLabelInput";
+import { useMutation } from "@tanstack/react-query";
+import { loginUser } from "../apis/loginUser";
+import { useAppDispatch } from "../hooks/reduxHooks";
+import { setAuth } from "../slices/authSlice";
+import { showSnackbar } from "../slices/snackbarSlice";
 
 const Login = () => {
   const [form, setForm] = useState({
@@ -17,9 +22,31 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
+  const dispatch = useAppDispatch();
+  const loginMutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: (data) => {
+      dispatch(setAuth({ user: data.user, token: data.token }));
+      dispatch(showSnackbar({ message: "Login successful!", type: "success" }));
+    },
+    onError: () => {
+      dispatch(
+        showSnackbar({
+          message: "Login failed. Please check your credentials.",
+          type: "error",
+        })
+      );
+    },
+  });
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    loginMutation.mutate({ email: form.email, password: form.password });
   };
 
   return (
@@ -32,7 +59,7 @@ const Login = () => {
           </p>
         </div>
 
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <FloatingLabelInput
             id="email"
             name="email"
@@ -86,8 +113,9 @@ const Login = () => {
           <Button
             type="submit"
             className="w-full bg-[#4CAF50] hover:bg-green-600 text-white p-5 font-bold text-base"
+            disabled={loginMutation.isPending}
           >
-            Login
+            {loginMutation.isPending ? "Logging in..." : "Login"}
           </Button>
 
           <p className="text-center text-sm text-gray-600">
