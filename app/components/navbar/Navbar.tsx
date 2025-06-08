@@ -10,7 +10,6 @@ import {
   Menu,
   X,
   LogOut,
-  Truck,
   CircleHelp,
   ClipboardList,
   Settings2,
@@ -221,9 +220,9 @@ const NavItems = ({
                 router.push(item.path);
               }
             }}
-            className={`flex items-center font-medium text-[18px] transition-colors bg-transparent outline-none
+            className={`flex items-center font-medium text-[18px] cursor-pointer transition-colors bg-transparent outline-none
             ${active === item.label ? "text-[#4CAF50]" : "text-[#717171]"}
-          `}
+            hover:text-[#4CAF50]`}
             aria-current={active === item.label ? "page" : undefined}
           >
             {item.label}
@@ -250,9 +249,9 @@ const CategoryItem = ({
         <button
           type="button"
           onClick={() => setActive(item.label)}
-          className={`flex items-center font-bold text-[14px] transition-colors bg-transparent outline-none
+          className={`flex items-center font-bold text-[14px] transition-colors cursor-pointer bg-transparent outline-none
             ${active === item.label ? "text-[#F76C6B]" : "text-[#333333]"}
-          `}
+            hover:text-[#F76C6B]`}
           aria-current={active === item.label ? "page" : undefined}
         >
           {item.label}

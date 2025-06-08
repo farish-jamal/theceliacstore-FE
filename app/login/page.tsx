@@ -12,6 +12,12 @@ import { loginUser } from "../apis/loginUser";
 import { useAppDispatch } from "../hooks/reduxHooks";
 import { setAuth } from "../slices/authSlice";
 import { showSnackbar } from "../slices/snackbarSlice";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
 
 const Login = () => {
   const [form, setForm] = useState({
@@ -21,21 +27,21 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const dispatch = useAppDispatch();
   const loginMutation = useMutation({
     mutationFn: loginUser,
-    onSuccess: (data) => {
-      dispatch(setAuth({ user: data.user, token: data.token }));
-      dispatch(showSnackbar({ message: "Login successful!", type: "success" }));
+    onSuccess: (response) => {
+      if (response?.success && response.data) {
+        dispatch(setAuth({ user: response.data.user, token: response.data.token }));
+        dispatch(showSnackbar({ message: "Login successful!", type: "success" }));
+      } else {
+        dispatch(showSnackbar({ message: response?.message || "Login failed. Please try again.", type: "error" }));
+      }
     },
     onError: () => {
-      dispatch(
-        showSnackbar({
-          message: "Login failed. Please check your credentials.",
-          type: "error",
-        })
-      );
+      dispatch(showSnackbar({ message: "Login failed. Please check your credentials.", type: "error" }));
     },
   });
 
@@ -46,6 +52,16 @@ const Login = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+    const result = loginSchema.safeParse(form);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
     loginMutation.mutate({ email: form.email, password: form.password });
   };
 
@@ -67,6 +83,7 @@ const Login = () => {
             label="Email"
             value={form.email}
             onChange={handleChange}
+            error={errors.email}
           />
 
           <div className="relative">
@@ -78,6 +95,7 @@ const Login = () => {
               placeholder="••••••••"
               value={form.password}
               onChange={handleChange}
+              error={errors.password}
             />
             <div
               className="absolute inset-y-0 right-3 top-[5px] flex items-center cursor-pointer"

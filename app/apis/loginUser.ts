@@ -1,20 +1,31 @@
-import axios from "axios";
+import { apiService } from "./apiService";
+import { endpoints } from "./endpoints";
 
 export interface LoginPayload {
   email: string;
   password: string;
 }
 
-export interface LoginResponse {
-  user: {
-    id: string;
-    email: string;
+export interface LoginApiResponse {
+  success?: boolean;
+  data?: {
+    user: {
+      id: string;
+      email: string;
+    };
+    token: string;
   };
-  token: string;
+  message?: string;
 }
 
-export async function loginUser(payload: LoginPayload): Promise<LoginResponse> {
-  // Replace with your real API endpoint
-  const response = await axios.post("/api/login", payload);
-  return response.data;
-}
+export const loginUser = async (
+  payload: LoginPayload
+): Promise<LoginApiResponse> => {
+  const apiResponse = await apiService<LoginApiResponse>({
+    endpoint: endpoints.login,
+    method: "POST",
+    data: payload,
+  });
+
+  return apiResponse.response as LoginApiResponse;
+};

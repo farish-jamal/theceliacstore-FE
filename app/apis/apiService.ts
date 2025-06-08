@@ -50,7 +50,6 @@ export const apiService = async <T = unknown>({
     };
 
     if (signal) {
-      // @ts-expect-error AxiosRequestConfig type does not include signal, but it is supported in recent Axios versions
       requestObj.signal = signal;
     }
 
