@@ -7,11 +7,25 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FloatingLabelInput } from "../components/input/FloatingLabelInput";
+import { useMutation } from "@tanstack/react-query";
+import { useAppDispatch } from "../hooks/reduxHooks";
+import { setAuth } from "../slices/authSlice";
+import { showSnackbar } from "../slices/snackbarSlice";
+import { useRouter } from "next/navigation";
+import { registerUser } from "../apis/registerUser";
+import { z } from "zod";
+
+const registerSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
+  phone: z.string().min(1, "Phone is required"),
+  password: z.string().min(1, "Password is required"),
+  confirmPassword: z.string().min(1, "Confirm Password is required"),
+});
 
 const Register = () => {
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
     phone: "",
     password: "",
@@ -21,10 +35,63 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const registerMutation = useMutation({
+    mutationFn: registerUser,
+    onSuccess: (response) => {
+      if (response?.success && response.data) {
+        dispatch(
+          setAuth({ user: response.data.user, token: response.data.token })
+        );
+        dispatch(
+          showSnackbar({
+            message: "Registration successful!",
+            type: "success",
+          })
+        );
+        router.push("/");
+      } else {
+        dispatch(
+          showSnackbar({
+            message:
+              response?.message ||
+              "Registration failed. Please try again.",
+            type: "error",
+          })
+        );
+      }
+    },
+    onError: () => {
+      dispatch(
+        showSnackbar({
+          message: "Registration failed. Please check your details.",
+          type: "error",
+        })
+      );
+    },
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+    const result = registerSchema.safeParse(form);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+    registerMutation.mutate(form);
   };
 
   return (
@@ -37,23 +104,15 @@ const Register = () => {
           </p>
         </div>
 
-        <form className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <FloatingLabelInput
-              id="firstName"
-              name="firstName"
-              label="First Name"
-              value={form.firstName}
-              onChange={handleChange}
-            />
-            <FloatingLabelInput
-              id="lastName"
-              name="lastName"
-              label="Last Name"
-              value={form.lastName}
-              onChange={handleChange}
-            />
-          </div>
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <FloatingLabelInput
+            id="name"
+            name="name"
+            label="Name"
+            value={form.name}
+            onChange={handleChange}
+            error={errors.name}
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <FloatingLabelInput
@@ -63,6 +122,7 @@ const Register = () => {
               label="Email"
               value={form.email}
               onChange={handleChange}
+              error={errors.email}
             />
             <FloatingLabelInput
               id="phone"
@@ -71,6 +131,7 @@ const Register = () => {
               label="Phone Number"
               value={form.phone}
               onChange={handleChange}
+              error={errors.phone}
             />
           </div>
 
@@ -83,6 +144,7 @@ const Register = () => {
               placeholder="••••••••"
               value={form.password}
               onChange={handleChange}
+              error={errors.password}
             />
             <div
               className="absolute inset-y-0 right-3 top-[5px] flex items-center cursor-pointer"
@@ -101,6 +163,7 @@ const Register = () => {
               placeholder="••••••••"
               value={form.confirmPassword}
               onChange={handleChange}
+              error={errors.confirmPassword}
             />
             <div
               className="absolute inset-y-0 right-3 top-[5px] flex items-center cursor-pointer"
