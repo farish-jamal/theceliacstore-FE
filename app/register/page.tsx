@@ -43,16 +43,16 @@ const Register = () => {
     mutationFn: registerUser,
     onSuccess: (response) => {
       if (response?.success && response.data) {
-        dispatch(
-          setAuth({ user: response.data.user, token: response.data.token })
-        );
+        const { id, name, email, phone } = response.data.user;
+        const { token } = response.data;
+        dispatch(setAuth({ user: { id, name, email, phone }, token }));
         dispatch(
           showSnackbar({
             message: "Registration successful!",
             type: "success",
           })
         );
-        router.push("/");
+        router.replace("/");
       } else {
         dispatch(
           showSnackbar({

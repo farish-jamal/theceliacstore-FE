@@ -9,10 +9,10 @@ export interface LoginPayload {
 export interface LoginApiResponse {
   success?: boolean;
   data?: {
-    user: {
-      id: string;
-      email: string;
-    };
+    id: string;
+    email: string;
+    name: string;
+    phone: string;
     token: string;
   };
   message?: string;

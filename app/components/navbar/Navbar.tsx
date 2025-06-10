@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Typography } from "../typography/Typography";
 import { useRouter } from "next/navigation";
+import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
+import { logout as logoutAction } from "@/app/slices/authSlice";
 
 const navItems = [
   { label: "Home", path: "/" },
@@ -52,6 +54,15 @@ const Navbar = () => {
   const [active, setActive] = useState("Home");
   const [activeCategory, setActiveCategory] = useState("Best Sellers");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const auth = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+
+  console.log("auth", auth);
+  const handleLogout = () => {
+    dispatch(logoutAction());
+    router.push("/login");
+  };
 
   return (
     <header className="flex flex-col w-full">
@@ -87,63 +98,76 @@ const Navbar = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <div
+            <button
+              type="button"
+              onClick={() => router.push("/cart")}
               className="flex items-center gap-1 cursor-pointer rounded-full hover:bg-slate-50 p-2"
               aria-label="Cart"
             >
               <CartIcon />
-            </div>
-            {/* User menu with shadcn dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="flex items-center gap-1 cursor-pointer rounded-full hover:bg-slate-50 p-2"
-                  aria-label="User menu"
-                  type="button"
-                >
-                  <CircleUser className="h-7 w-7" />
-                  <ChevronDown className="h-4 w-4 mt-1" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44 p-1">
-                <DropdownMenuItem asChild className="py-2">
-                  {/* <Link href="/account" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    My Account
-                  </Link> */}
-                  <Typography variant="h3">Welcome!</Typography>
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator className="mx-2" />
-                <DropdownMenuItem asChild>
-                  <Link href="/account" className="flex items-center gap-2">
-                    <Settings2 className="h-4 w-4 rotate-90" />
-                    My Account
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild>
-                  <Link href="/orders" className="flex items-center gap-2">
-                    <ClipboardList className="h-4 w-4" />
-                    My Orders
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild>
-                  <Link href="/help" className="flex items-center gap-2">
-                    <CircleHelp className="h-4 w-4" />
-                    Help
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="mx-2" />
-                <DropdownMenuItem asChild>
-                  <Link href="/logout" className="flex items-center gap-2 ">
+            </button>
+            {/* User menu with shadcn dropdown, only if logged in */}
+            {auth.user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="flex items-center gap-1 cursor-pointer rounded-full hover:bg-slate-50 p-2"
+                    aria-label="User menu"
+                    type="button"
+                  >
+                    <CircleUser className="h-7 w-7" />
+                    <ChevronDown className="h-4 w-4 mt-1" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44 p-1">
+                  <DropdownMenuItem asChild className="py-2">
+                    <Typography variant="h3">
+                      {`Welcome${
+                        auth.user.name
+                          ? ", " + auth.user.name
+                          : auth.user.email
+                          ? ", " + auth.user.email
+                          : "!"
+                      }`}
+                    </Typography>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="mx-2" />
+                  <DropdownMenuItem asChild>
+                    <Link href="/account" className="flex items-center gap-2">
+                      <Settings2 className="h-4 w-4 rotate-90" />
+                      My Account
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/orders" className="flex items-center gap-2">
+                      <ClipboardList className="h-4 w-4" />
+                      My Orders
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/help" className="flex items-center gap-2">
+                      <CircleHelp className="h-4 w-4" />
+                      Help
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="mx-2" />
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-red-600 cursor-pointer"
+                  >
                     <LogOut className="h-4 w-4 text-red-600" />
                     Signout
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link
+                href="/login"
+                className="px-4 py-2 rounded-full border border-green-500 text-green-600 font-semibold hover:bg-green-50 transition-colors"
+              >
+                Login
+              </Link>
+            )}
           </div>
           {/* Hamburger for mobile */}
           <button
