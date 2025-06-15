@@ -11,6 +11,7 @@ type FloatingLabelInputProps = {
   placeholder?: string;
   required?: boolean;
   name?: string;
+  error?: string;
 };
 
 export const FloatingLabelInput = ({
@@ -21,7 +22,8 @@ export const FloatingLabelInput = ({
   onChange,
   placeholder = " ",
   required = false,
-  name
+  name,
+  error
 }: FloatingLabelInputProps) => {
   return (
     <div className="relative w-full">
@@ -35,8 +37,11 @@ export const FloatingLabelInput = ({
         required={required}
         className={clsx(
           "peer w-full rounded-md border border-gray-300 px-3 pt-3 pb-3 text-sm shadow-sm transition-all",
-          "focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200"
+          "focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200",
+          error ? "border-red-500" : ""
         )}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${id}-error` : undefined}
       />
       <label
         htmlFor={id}
@@ -47,6 +52,11 @@ export const FloatingLabelInput = ({
       >
         {label}
       </label>
+      {error && (
+        <span id={`${id}-error`} className="text-xs text-red-600 mt-1 block">
+          {error}
+        </span>
+      )}
     </div>
   );
 };
