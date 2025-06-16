@@ -11,6 +11,13 @@ import {
 } from "../carousel/CustomCarousel";
 import { ArrowRight } from "lucide-react";
 import { useIsMobile } from "@/app/hooks/useIsMobile";
+import { useQuery } from "@tanstack/react-query";
+import { getBlogs } from "@/app/apis/getBlogs";
+import { Blog, BlogParams } from "@/app/types/Blog";
+import { FileX } from "lucide-react";
+import EmptySection from "@/app/components/EmptySection";
+import PrimaryLoader from "@/app/components/loaders/PrimaryLoader";
+import { useRouter } from "next/navigation";
 
 // Example blog data
 const blogs = [
@@ -38,35 +45,49 @@ const blogs = [
 ];
 
 const BlogsSection = () => {
+  const router = useRouter();
+  const params: BlogParams = { page: 1, per_page: 6 };
+  const { data: blogsDataRaw = [], isLoading, isError } = useQuery({
+    queryKey: ["blogs", params],
+    queryFn: async () => await getBlogs({ params }),
+    select: (data) => data?.data || [],
+  });
+  const blogs: Blog[] = Array.isArray(blogsDataRaw) ? blogsDataRaw : (blogsDataRaw.data || []);
   const isMobile = useIsMobile();
 
   return (
     <div className="mt-10 px-4 lg:px-0 mb-10">
       <h2 className="text-center text-3xl font-bold mb-4">Blogs</h2>
       <div className="w-full lg:w-4/5 mx-auto rounded-lg bg-white p-4">
-        <Carousel
-          opts={{
-            align: "center",
-            loop: true,
-          }}
-        >
-          <CarouselContent className="p-4 gap-8">
-            {blogs.map((blog, index) => (
-              <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                <BlogCard
-                  url={blog.url}
-                  title={blog.title}
-                  tag={blog.tag}
-                  views={blog.views}
-                  date={blog.date}
-                />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          {!isMobile && <CarouselPrevious />}
-          {!isMobile && <CarouselNext />}
-        </Carousel>
-
+        {isLoading ? (
+          <PrimaryLoader />
+        ) : blogs.length === 0 ? (
+          <EmptySection icon={<FileX />} text="No blogs present" />
+        ) : (
+          <Carousel
+            opts={{
+              align: "center",
+              loop: true,
+            }}
+          >
+            <CarouselContent className="p-4 gap-8">
+              {blogs.map((blog, index) => (
+                <CarouselItem key={blog._id || index} className="md:basis-1/2 lg:basis-1/3">
+                  <BlogCard
+                    url={blog.banner_image_url}
+                    title={blog.title}
+                    tag={blog.is_featured ? "Featured" : "Blog"}
+                    views={0}
+                    date={blog.createdAt ? new Date(blog.createdAt) : new Date()}
+                    onClick={() => blog._id && router.push(`/blogs/${blog._id}`)}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            {!isMobile && <CarouselPrevious />}
+            {!isMobile && <CarouselNext />}
+          </Carousel>
+        )}
         <div className="flex justify-center my-6">
           <Button className="rounded-full w-[9rem] bg-[#4CAF50] hover:bg-[#4CAF50] font-bold py-5 flex items-center justify-center gap-2">
             Show More <ArrowRight className="w-5 h-5 stroke-2 mt-0.5" />

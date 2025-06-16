@@ -58,7 +58,6 @@ const Navbar = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  console.log("auth", auth);
   const handleLogout = () => {
     dispatch(logoutAction());
     router.push("/login");

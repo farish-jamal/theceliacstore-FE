@@ -3,7 +3,7 @@
 import React, { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Typography } from "../typography/Typography";
-import { HomeParams } from "@/app/page";
+import { ProductParams } from "@/app/types/Product";
 
 const categories = [
   "Bestsellers",
@@ -21,8 +21,8 @@ const categories = [
 ];
 
 type PopularCategoriesProps = {
-  params: HomeParams;
-  setParams: React.Dispatch<React.SetStateAction<HomeParams>>;
+  params: ProductParams;
+  setParams: React.Dispatch<React.SetStateAction<ProductParams>>;
 };
 
 const PopularCategories: React.FC<PopularCategoriesProps> = ({
@@ -61,9 +61,7 @@ const PopularCategories: React.FC<PopularCategoriesProps> = ({
           {categories.map((category) => (
             <button
               key={category}
-              onClick={() =>
-                setParams((prev: HomeParams) => ({ ...prev, category }))
-              }
+              onClick={() => setParams((prev) => ({ ...prev, category }))}
               className={`px-5 py-2 rounded-full border text-sm font-medium whitespace-nowrap transition-all duration-200
                 ${
                   params.category === category
