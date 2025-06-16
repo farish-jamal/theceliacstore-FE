@@ -39,14 +39,26 @@ const Login = () => {
       if (response?.success && response.data) {
         const { id, name, email, phone, token } = response.data;
         dispatch(setAuth({ user: { id, name, email, phone }, token }));
-        dispatch(showSnackbar({ message: "Login successful!", type: "success" }));
+        dispatch(
+          showSnackbar({ message: "Login successful!", type: "success" })
+        );
         router.replace("/");
       } else {
-        dispatch(showSnackbar({ message: response?.message || "Login failed. Please try again.", type: "error" }));
+        dispatch(
+          showSnackbar({
+            message: response?.message || "Login failed. Please try again.",
+            type: "error",
+          })
+        );
       }
     },
     onError: () => {
-      dispatch(showSnackbar({ message: "Login failed. Please check your credentials.", type: "error" }));
+      dispatch(
+        showSnackbar({
+          message: "Login failed. Please check your credentials.",
+          type: "error",
+        })
+      );
     },
   });
 

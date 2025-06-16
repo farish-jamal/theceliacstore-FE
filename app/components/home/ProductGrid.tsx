@@ -3,6 +3,7 @@
 import React from "react";
 import PromoCard from "../cards/PromoCard";
 import ProductCard from "../cards/ProductCard";
+import { HomeParams } from "@/app/page";
 
 const products = Array.from({ length: 13 }, (_, i) => ({
   id: i,
@@ -11,7 +12,13 @@ const products = Array.from({ length: 13 }, (_, i) => ({
   image: "/product-1.png",
 }));
 
-const ProductGrid = () => {
+type ProductGridProps = {
+  params: HomeParams;
+  setParams: React.Dispatch<React.SetStateAction<HomeParams>>;
+};
+
+const ProductGrid: React.FC<ProductGridProps> = ({ params, setParams }) => {
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 px-2 sm:px-4 py-6 w-full max-w-7xl mx-auto">
       {/* Static Promo - 1st row, 1st column */}

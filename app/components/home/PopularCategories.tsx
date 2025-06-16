@@ -3,6 +3,7 @@
 import React, { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Typography } from "../typography/Typography";
+import { HomeParams } from "@/app/page";
 
 const categories = [
   "Bestsellers",
@@ -19,9 +20,16 @@ const categories = [
   "Spices",
 ];
 
-const PopularCategories = () => {
+type PopularCategoriesProps = {
+  params: HomeParams;
+  setParams: React.Dispatch<React.SetStateAction<HomeParams>>;
+};
+
+const PopularCategories: React.FC<PopularCategoriesProps> = ({
+  params,
+  setParams,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = React.useState(3);
 
   const scroll = (direction: "left" | "right") => {
     const container = containerRef.current;
@@ -50,13 +58,15 @@ const PopularCategories = () => {
           ref={containerRef}
           className="flex overflow-x-auto no-scrollbar space-x-3 py-1 px-1 w-[70vw] max-w-full"
         >
-          {categories.map((category, index) => (
+          {categories.map((category) => (
             <button
               key={category}
-              onClick={() => setActiveIndex(index)}
+              onClick={() =>
+                setParams((prev: HomeParams) => ({ ...prev, category }))
+              }
               className={`px-5 py-2 rounded-full border text-sm font-medium whitespace-nowrap transition-all duration-200
                 ${
-                  index === activeIndex
+                  params.category === category
                     ? "bg-green-500 text-white"
                     : "border-green-500 text-black hover:bg-green-100"
                 }`}
