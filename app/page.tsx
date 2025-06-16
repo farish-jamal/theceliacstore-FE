@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Header from "./components/layout/Header";
 import Navbar from "./components/navbar/Navbar";
 import MainSlider from "./components/home/MainSlider";
@@ -12,15 +14,27 @@ import BlogsSection from "./components/home/BlogsSection";
 import StoreInfo from "./components/home/StoreInfo";
 import Footer from "./components/layout/Footer";
 
+export type HomeParams = {
+  page: number;
+  per_page: number;
+  category: string;
+};
+
 const HomePage = () => {
+  const [params, setParams] = useState<HomeParams>({
+    page: 1,
+    per_page: 10,
+    category: "Health Foods",
+  });
+
   return (
     <div className="flex-col min-h-screen">
       <Header />
       <Navbar />
       <MainSlider />
       <DietaryCategories />
-      <PopularCategories />
-      <ProductGrid />
+      <PopularCategories params={params} setParams={setParams} />
+      <ProductGrid params={params} setParams={setParams} />
       <ReviewSection />
       <TopBrands />
       <WhyChooseUs />

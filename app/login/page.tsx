@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { useAppDispatch } from "../hooks/reduxHooks";
 import { setAuth } from "../slices/authSlice";
 import { showSnackbar } from "../slices/snackbarSlice";
 import { z } from "zod";
+import { useRouter } from "next/navigation";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -30,18 +31,34 @@ const Login = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const dispatch = useAppDispatch();
+  const router = useRouter();
+
   const loginMutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (response) => {
       if (response?.success && response.data) {
-        dispatch(setAuth({ user: response.data.user, token: response.data.token }));
-        dispatch(showSnackbar({ message: "Login successful!", type: "success" }));
+        const { id, name, email, phone, token } = response.data;
+        dispatch(setAuth({ user: { id, name, email, phone }, token }));
+        dispatch(
+          showSnackbar({ message: "Login successful!", type: "success" })
+        );
+        router.replace("/");
       } else {
-        dispatch(showSnackbar({ message: response?.message || "Login failed. Please try again.", type: "error" }));
+        dispatch(
+          showSnackbar({
+            message: response?.message || "Login failed. Please try again.",
+            type: "error",
+          })
+        );
       }
     },
     onError: () => {
-      dispatch(showSnackbar({ message: "Login failed. Please check your credentials.", type: "error" }));
+      dispatch(
+        showSnackbar({
+          message: "Login failed. Please check your credentials.",
+          type: "error",
+        })
+      );
     },
   });
 
