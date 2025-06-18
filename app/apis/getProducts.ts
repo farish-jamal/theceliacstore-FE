@@ -91,3 +91,16 @@ export const getBrands = async (): Promise<BrandResponse> => {
   });
   return apiResponse.response as BrandResponse;
 };
+
+export type SingleProductResponse = {
+  success?: boolean;
+  data?: Product;
+  message?: string;
+};
+
+export const getProduct = async (id: string): Promise<SingleProductResponse> => {
+  const apiResponse = await apiService<SingleProductResponse>({
+    endpoint: `${endpoints.products}/${id}`,
+  });
+  return apiResponse.response as SingleProductResponse;
+};

@@ -2,21 +2,70 @@
 import TopFloater from "@/app/components/floater/TopFloater";
 import Footer from "@/app/components/layout/Footer";
 import Navbar from "@/app/components/navbar/Navbar";
-import React, { useState } from "react";
-import ProductSlider from "@/app/components/productsider/ProductSlider";
+import React, { useState, useEffect } from "react";
 import FrequentlyBought from "@/app/components/frequentlybought/FrequentlyBought";
-
-const thumbnails = [
-  "https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747513129/183b94b37929bc9eee61fb523d8bef99602cb329_rabkid.jpg?_s=public-apps",
-  "https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747513129/828c7686eb0e33b2b2a9b791c342983d6fee1747_ubi5ay.jpg?_s=public-apps",
-  "https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747513129/183b94b37929bc9eee61fb523d8bef99602cb329_rabkid.jpg?_s=public-apps",
-];
+import { useParams } from "next/navigation";
+import { getProduct } from "@/app/apis/getProducts";
+import { Product } from "@/app/types/Product";
+import ProductSlider from "@/app/components/productsider/ProductSlider";
 
 export default function ProductDetailPage() {
+  const params = useParams();
+  const productId = params.id as string;
+  
   const [selectedThumb, setSelectedThumb] = useState(0);
   const [selectedWeight, setSelectedWeight] = useState(1);
-  const [quantity, setQuantity] = useState(5);
+  const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
   const weights = ["500 g", "1000 g"];
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!productId) return;
+      
+      setLoading(true);
+      try {
+        const response = await getProduct(productId);
+        setProduct(response.data || null);
+      } catch (error) {
+        console.error("Error fetching product:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [productId]);
+
+  if (loading) {
+    return (
+      <div className="bg-gray-50">
+        <TopFloater />
+        <Navbar />
+        <div className="max-w-7xl mx-auto py-8 px-4">
+          <div className="text-center py-10">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="bg-gray-50">
+        <TopFloater />
+        <Navbar />
+        <div className="max-w-7xl mx-auto py-8 px-4">
+          <div className="text-center py-10">Product not found</div>
+        </div>
+      </div>
+    );
+  }
+
+  const allImages = [product.banner_image, ...(product.images || [])].filter(Boolean);
+  const discountPercentage = product.discounted_price && product.price 
+    ? Math.round(((product.price - product.discounted_price) / product.price) * 100)
+    : 0;
 
   return (
     <div className="bg-gray-50">
@@ -28,7 +77,7 @@ export default function ProductDetailPage() {
           <div className="flex gap-6">
             {/* Thumbnails on the left */}
             <div className="flex flex-col gap-3">
-              {thumbnails.map((src, idx) => (
+              {allImages.map((src, idx) => (
                 <div
                   key={idx}
                   className={`w-24 h-24 p-2 bg-white rounded-lg shadow-sm cursor-pointer ${
@@ -37,7 +86,7 @@ export default function ProductDetailPage() {
                 >
                   <img
                     src={src}
-                    alt="thumb"
+                    alt={`${product.name} ${idx + 1}`}
                     className="w-full h-full object-contain"
                     onClick={() => setSelectedThumb(idx)}
                   />
@@ -47,8 +96,8 @@ export default function ProductDetailPage() {
             {/* Main image */}
             <div className="flex-1 aspect-square rounded-lg max-h-[400px]">
               <img
-                src={thumbnails[selectedThumb]}
-                alt="main"
+                src={allImages[selectedThumb]}
+                alt={product.name}
                 className="w-full h-full object-contain"
               />
             </div>
@@ -57,28 +106,33 @@ export default function ProductDetailPage() {
         {/* Right: Product Info */}
         <div className="w-full lg:w-[55%]">
           <h1 className="text-2xl font-semibold mb-2">
-            Wheafree Gluten Free Multigrain Flour 1000 Gms
+            {product.name}
           </h1>
           <div className="flex items-center gap-2 mb-2">
-            <span className="bg-red-50 text-red-500 px-2 py-0.5 rounded-sm text-xs font-medium">
-              🔥 Popular Picks
-            </span>
+            {product.is_best_seller && (
+              <span className="bg-red-50 text-red-500 px-2 py-0.5 rounded-sm text-xs font-medium">
+                🔥 Popular Picks
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-3 mb-4">
-            <span className="text-xl font-bold text-gray-900">₹170.00</span>
-            <span className="text-sm text-gray-400 line-through">₹220.00</span>
-            <span className="text-xs text-red-500">(X% Off)</span>
+            <span className="text-xl font-bold text-gray-900">
+              ₹{product.discounted_price?.toFixed(2) || product.price.toFixed(2)}
+            </span>
+            {product.discounted_price && product.price > product.discounted_price && (
+              <>
+                <span className="text-sm text-gray-400 line-through">
+                  ₹{product.price.toFixed(2)}
+                </span>
+                <span className="text-xs text-red-500">({discountPercentage}% Off)</span>
+              </>
+            )}
             <span className="text-xs text-gray-500">
               (Inclusive of all taxes)
             </span>
           </div>
           <div className="flex items-center gap-2 mb-4">
             <span className="text-sm text-gray-600">Brand:</span>
-            <img
-              src="https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747513129/01b20525870a709af943f41817e7b9a6907f52b5_f5einw.jpg?_s=public-apps"
-              alt="Wheafree"
-              className="h-10"
-            />
             <div className="ml-auto flex gap-3 items-center text-gray-400">
               <button className="hover:text-gray-600">
                 <svg
@@ -113,12 +167,7 @@ export default function ProductDetailPage() {
             </div>
           </div>
           <p className="text-gray-600 mb-6 text-sm leading-relaxed">
-            Wheafree Gluten-Free Multigrain Flour (1000 Gms): Embrace a
-            gluten-free lifestyle with Wheafree&apos;s Gluten-Free Multigrain
-            Flour. This 1000 Gms pack is a blend of nutritious grains, finely
-            milled to perfection, providing a versatile and wholesome
-            alternative for those seeking gluten-free options in their daily
-            cooking.
+            {product.small_description}
           </p>
           <div className="flex gap-3 mb-6">
             {weights.map((w, idx) => (
@@ -162,17 +211,15 @@ export default function ProductDetailPage() {
             </button>
           </div>
           <div className="space-y-2 text-sm text-gray-600">
+            {product.tags && product.tags.length > 0 && (
+              <div>
+                <span className="font-medium text-gray-900">Tags:</span>{" "}
+                {product.tags.join(", ")}
+              </div>
+            )}
             <div>
-              <span className="font-medium text-gray-900">Category:</span>{" "}
-              Flour, Gluten Free, Wheat Free
-            </div>
-            <div>
-              <span className="font-medium text-gray-900">Tag:</span> Flour,
-              Wheat Free
-            </div>
-            <div>
-              <span className="font-medium text-gray-900">Bundles:</span> dfrfd
-              cx cxv cx xc xc xc
+              <span className="font-medium text-gray-900">Stock:</span>{" "}
+              {product.instock ? "In Stock" : "Out of Stock"}
             </div>
           </div>
         </div>
@@ -253,7 +300,7 @@ export default function ProductDetailPage() {
           <div className="w-full lg:w-1/2 flex justify-center">
             <div className="aspect-square -mt-10 rounded-lg max-h-[450px]">
               <img
-                src={thumbnails[1]}
+                src={"https://res.cloudinary.com/dacwig3xk/image/upload/v1748809663/uploads/images/a7qwl65t93onu0ino3pg.png"}
                 alt="back"
                 className="w-full h-full object-contain"
               />
@@ -262,9 +309,13 @@ export default function ProductDetailPage() {
         </div>
       </div>
       <FrequentlyBought />
-      <ProductSlider title="Recommended for you" image={thumbnails[1]} />
-      <ProductSlider title="Best Sellers" image={thumbnails[0]} />
+      <ProductSlider title="Recommended for you" image={"https://res.cloudinary.com/dacwig3xk/image/upload/v1748809663/uploads/images/a7qwl65t93onu0ino3pg.png"} />
+      <ProductSlider title="Best Sellers" image={"https://res.cloudinary.com/dacwig3xk/image/upload/v1748809663/uploads/images/a7qwl65t93onu0ino3pg.png"} />
       <Footer />
     </div>
   );
 }
+
+
+
+

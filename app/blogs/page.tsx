@@ -6,53 +6,25 @@ import Navbar from "../components/navbar/Navbar";
 import Footer from "../components/layout/Footer";
 import BlogCard from "../components/cards/BlogCard";
 import { motion } from "framer-motion";
-
-const blogs = [
-  {
-    url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
-    title: "The Benefits of a Gluten-Free Diet",
-    tag: "Health",
-    views: 120,
-    date: new Date("2024-05-01"),
-  },
-  {
-    url: "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2",
-    title: "Top 10 Organic Essentials",
-    tag: "Organic",
-    views: 95,
-    date: new Date("2024-04-28"),
-  },
-  {
-    url: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca",
-    title: "Lactose-Free Living: Tips & Tricks",
-    tag: "Lifestyle",
-    views: 80,
-    date: new Date("2024-04-15"),
-  },
-  {
-    url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
-    title: "Understanding Celiac Disease",
-    tag: "Education",
-    views: 150,
-    date: new Date("2024-05-05"),
-  },
-  {
-    url: "https://images.unsplash.com/photo-1490818387583-1baba5e638af",
-    title: "Best Gluten-Free Recipes for Beginners",
-    tag: "Recipes",
-    views: 200,
-    date: new Date("2024-05-03"),
-  },
-  {
-    url: "https://images.unsplash.com/photo-1495195134817-aeb325a55b65",
-    title: "The Rise of Organic Food Movement",
-    tag: "Trends",
-    views: 175,
-    date: new Date("2024-05-02"),
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { getBlogs } from "../apis/getBlogs";
+import { Blog } from "../types/Blog";
+import PrimaryLoader from "../components/loaders/PrimaryLoader";
+import EmptySection from "../components/EmptySection";
+import { FileX } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const BlogsPage = () => {
+  const router = useRouter();
+  
+  const { data: blogsData, isLoading } = useQuery({
+    queryKey: ["blogs"],
+    queryFn: async () => await getBlogs(),
+    select: (data) => data?.data || [],
+  });
+
+  const blogs: Blog[] = Array.isArray(blogsData) ? blogsData : [];
+
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -79,24 +51,35 @@ const BlogsPage = () => {
       <TopFloater />
       <Navbar />
       <div className="max-w-6xl mx-auto px-4 py-12">
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-        >
-          {blogs.map((blog, index) => (
-            <motion.div key={index} variants={item}>
-              <BlogCard
-                url={blog.url}
-                title={blog.title}
-                tag={blog.tag}
-                views={blog.views}
-                date={blog.date}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
+        {isLoading ? (
+          <div className="flex justify-center items-center min-h-[400px]">
+            <PrimaryLoader />
+          </div>
+        ) : blogs.length === 0 ? (
+          <div className="flex justify-center items-center min-h-[400px]">
+            <EmptySection icon={<FileX />} text="No blogs available" />
+          </div>
+        ) : (
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {blogs.map((blog, index) => (
+              <motion.div key={blog._id || index} variants={item}>
+                <BlogCard
+                  url={blog.banner_image_url}
+                  title={blog.title}
+                  tag={blog.is_featured ? "Featured" : "Blog"}
+                  views={0}
+                  date={blog.createdAt ? new Date(blog.createdAt) : new Date()}
+                  onClick={() => blog._id && router.push(`/blogs/${blog._id}`)}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
       </div>
 
       <Footer />
