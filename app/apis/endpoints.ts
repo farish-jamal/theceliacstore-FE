@@ -8,4 +8,10 @@ export const endpoints = {
 
   // blogs
   blogs: "api/blogs",
+
+  // categories
+  categories: "api/category",
+
+  // brands
+  brands: "api/brand",
 };

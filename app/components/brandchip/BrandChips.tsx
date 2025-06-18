@@ -1,43 +1,36 @@
-import React, { useState } from "react";
+import React from "react";
+import { Brand } from "../../apis/getProducts";
 
-const BrandChips = () => {
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+export type BrandChipsProps = {
+  selectedBrands: string[];
+  onBrandChange: (brands: string[]) => void;
+  brands: Brand[];
+};
 
-  const toggleBrand = (brand: string) => {
-    setSelectedBrands((prev) =>
-      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
-    );
+const BrandChips: React.FC<BrandChipsProps> = ({ selectedBrands, onBrandChange, brands }) => {
+  const toggleBrand = (brandId: string) => {
+    if (selectedBrands.includes(brandId)) {
+      onBrandChange(selectedBrands.filter((b) => b !== brandId));
+    } else {
+      onBrandChange([...selectedBrands, brandId]);
+    }
   };
 
   return (
     <div className="mb-4">
       <h3 className="font-semibold mb-2">Brands</h3>
       <div className="flex flex-wrap gap-2">
-        {[
-          "Schar",
-          "Cornitos",
-          "Wheafree",
-          "Zero G",
-          "Nutez Hi",
-          "Sai",
-          "Mama",
-          "Fidalgo",
-          "Organ",
-          "24 Mantra",
-          "APF's",
-          "Dr Gluten",
-          "Be Well",
-        ].map((brand, idx) => (
+        {brands.map((brand) => (
           <button
-            key={idx}
-            onClick={() => toggleBrand(brand)}
+            key={brand._id}
+            onClick={() => toggleBrand(brand._id)}
             className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
-              selectedBrands.includes(brand)
+              selectedBrands.includes(brand._id)
                 ? "bg-green-100 border border-green-500 text-green-700"
                 : "bg-gray-50 border border-gray-200 hover:bg-gray-100"
             }`}
           >
-            {brand}
+            {brand.name}
           </button>
         ))}
       </div>

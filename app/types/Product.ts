@@ -26,7 +26,7 @@ export type Product = {
   banner_image?: string;
   images?: string[];
   expiry_date?: string | Date;
-  meta_data?: Record<string, any>;
+  meta_data?: Record<string, unknown>;
   uploaded_by_brand?: string;
   is_best_seller?: boolean;
   sub_category: string;
@@ -38,9 +38,10 @@ export type Product = {
 export type ProductParams = {
   page: number;
   per_page: number;
-  category?: string;
+  category?: string[];
   search?: string;
   sort_by?: "price" | "name" | "createdAt";
   sort_order?: "asc" | "desc";
   tags?: string[];
+  brands?: string[];
 };
