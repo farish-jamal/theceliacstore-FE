@@ -9,11 +9,15 @@ type BlogCardProps = {
   tag: string;
   views: number;
   date: Date;
+  onClick?: () => void;
 };
 
-const BlogCard = ({ url, title, tag, views, date }: BlogCardProps) => {
+const BlogCard = ({ url, title, tag, views, date, onClick }: BlogCardProps) => {
   return (
-    <div className="w-full shadow-sm rounded-lg overflow-hidden bg-white">
+    <div
+      className="w-full shadow-sm rounded-lg overflow-hidden bg-white cursor-pointer"
+      onClick={onClick}
+    >
       <Image
         src={url}
         alt="Blog Image"

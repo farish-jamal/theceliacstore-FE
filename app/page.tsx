@@ -13,15 +13,10 @@ import WhyChooseUs from "./components/home/WhyChooseUs";
 import BlogsSection from "./components/home/BlogsSection";
 import StoreInfo from "./components/home/StoreInfo";
 import Footer from "./components/layout/Footer";
-
-export type HomeParams = {
-  page: number;
-  per_page: number;
-  category: string;
-};
+import { ProductParams } from "./types/Product";
 
 const HomePage = () => {
-  const [params, setParams] = useState<HomeParams>({
+  const [params, setParams] = useState<ProductParams>({
     page: 1,
     per_page: 10,
     category: "Health Foods",
