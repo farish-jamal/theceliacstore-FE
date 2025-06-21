@@ -14,6 +14,8 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+// Metadata for the application
+// This metadata is used for SEO and social sharing
 
 export const metadata: Metadata = {
   title: "The Celiac Store | Gluten-Free, Lactose-Free, Organic Food India",
