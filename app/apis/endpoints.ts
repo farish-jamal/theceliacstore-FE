@@ -6,6 +6,9 @@ export const endpoints = {
   // products
   products: "api/product",
 
+  // bundles
+  bundles: "api/bundles",
+
   // blogs
   blogs: "api/blogs",
 

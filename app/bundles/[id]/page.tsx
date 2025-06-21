@@ -2,47 +2,80 @@
 import TopFloater from "@/app/components/floater/TopFloater";
 import Footer from "@/app/components/layout/Footer";
 import Navbar from "@/app/components/navbar/Navbar";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ProductSlider from "@/app/components/productsider/ProductSlider";
 import FrequentlyBought from "@/app/components/frequentlybought/FrequentlyBought";
-
-const thumbnails = [
-  "https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747513129/183b94b37929bc9eee61fb523d8bef99602cb329_rabkid.jpg?_s=public-apps",
-  "https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747513129/828c7686eb0e33b2b2a9b791c342983d6fee1747_ubi5ay.jpg?_s=public-apps",
-  "https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747513129/183b94b37929bc9eee61fb523d8bef99602cb329_rabkid.jpg?_s=public-apps",
-];
-
-// Example bundle items
-const bundleItems = [
-  {
-    id: 1,
-    name: "Wheafree Gluten Free Multigrain Flour 1000 Gms",
-    price: 170.00,
-    image: thumbnails[0],
-    quantity: 1
-  },
-  {
-    id: 2,
-    name: "Sai Healthy Atta 1000 Gms",
-    price: 160.00,
-    image: thumbnails[1],
-    quantity: 1
-  },
-  {
-    id: 3,
-    name: "Dr. Gluten Platinum Chapati Flour 1000 Gms",
-    price: 180.00,
-    image: thumbnails[2],
-    quantity: 1
-  }
-];
+import { getBundle, Bundle } from "@/app/apis/getBundles";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 
 export default function BundleDetailPage() {
   const [selectedThumb, setSelectedThumb] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const totalPrice = bundleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const originalPrice = totalPrice * 1.2; // 20% more than bundle price
+  const [bundle, setBundle] = useState<Bundle | null>(null);
+  const [loading, setLoading] = useState(true);
+  const params = useParams();
+  const bundleId = params.id as string;
+
+  useEffect(() => {
+    const fetchBundle = async () => {
+      if (!bundleId) return;
+      
+      setLoading(true);
+      try {
+        const response = await getBundle(bundleId);
+        console.log("Bundle detail API response:", response); // Debug log
+        if (response.success && response.data) {
+          setBundle(response.data);
+        } else {
+          setBundle(null);
+        }
+      } catch (error) {
+        console.error("Error fetching bundle:", error);
+        setBundle(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBundle();
+  }, [bundleId]);
+
+  if (loading) {
+    return (
+      <div className="bg-gray-50">
+        <TopFloater />
+        <Navbar />
+        <div className="max-w-7xl mx-auto py-8 px-4">
+          <div className="text-center py-10">Loading...</div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!bundle) {
+    return (
+      <div className="bg-gray-50">
+        <TopFloater />
+        <Navbar />
+        <div className="max-w-7xl mx-auto py-8 px-4">
+          <div className="text-center py-10">
+            <h2 className="text-xl font-semibold mb-2">Bundle not found</h2>
+            <Link href="/bundles" className="text-green-600 hover:text-green-700">
+              Back to Bundles
+            </Link>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  const totalPrice = bundle.discounted_price ?? bundle.price;
+  const originalPrice = bundle.price;
   const savings = originalPrice - totalPrice;
+  const savingsPercentage = Math.round((savings / originalPrice) * 100);
 
   return (
     <div className="bg-gray-50">
@@ -54,7 +87,7 @@ export default function BundleDetailPage() {
           <div className="flex gap-6">
             {/* Thumbnails on the left */}
             <div className="flex flex-col gap-3">
-              {thumbnails.map((src, idx) => (
+              {bundle.images?.map((src, idx) => (
                 <div
                   key={idx}
                   className={`w-24 h-24 p-2 bg-white rounded-lg shadow-sm cursor-pointer ${
@@ -73,7 +106,7 @@ export default function BundleDetailPage() {
             {/* Main image */}
             <div className="flex-1 aspect-square rounded-lg max-h-[400px]">
               <img
-                src={thumbnails[selectedThumb]}
+                src={bundle.images?.[selectedThumb] || bundle.images?.[0] || ""}
                 alt="main"
                 className="w-full h-full object-contain"
               />
@@ -83,8 +116,20 @@ export default function BundleDetailPage() {
 
         {/* Right: Bundle Info */}
         <div className="w-full lg:w-[55%]">
+          <div className="bg-white py-3 text-sm mb-4">
+            <Link href="/" className="text-gray-500 hover:text-gray-700">
+              Home
+            </Link>
+            <span className="mx-2 text-gray-400">›</span>
+            <Link href="/bundles" className="text-gray-500 hover:text-gray-700">
+              Bundles
+            </Link>
+            <span className="mx-2 text-gray-400">›</span>
+            <span className="text-gray-700">{bundle.name}</span>
+          </div>
+
           <h1 className="text-2xl font-semibold mb-2">
-            Gluten-Free Essentials Bundle
+            {bundle.name}
           </h1>
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-sm text-xs font-medium">
@@ -103,21 +148,21 @@ export default function BundleDetailPage() {
           <div className="bg-white rounded-lg p-4 mb-6">
             <h3 className="font-medium mb-3">Bundle Contents:</h3>
             <div className="space-y-3">
-              {bundleItems.map((item) => (
-                <div key={item.id} className="flex items-center gap-3">
+              {bundle.products?.map((product) => (
+                <div key={product._id} className="flex items-center gap-3">
                   <div className="w-16 h-16 bg-gray-50 rounded-lg p-1">
                     <img
-                      src={item.image}
-                      alt={item.name}
+                      src={product.banner_image || product.images?.[0] || ""}
+                      alt={product.name}
                       className="w-full h-full object-contain"
                     />
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-sm font-medium">{item.name}</h4>
-                    <p className="text-xs text-gray-500">Quantity: {item.quantity}</p>
+                    <h4 className="text-sm font-medium">{product.name}</h4>
+                    <p className="text-xs text-gray-500">Quantity: 1</p>
                   </div>
                   <div className="text-sm font-medium">
-                    ₹{item.price.toFixed(2)}
+                    ₹{(product.discounted_price ?? product.price).toFixed(2)}
                   </div>
                 </div>
               ))}
@@ -154,15 +199,15 @@ export default function BundleDetailPage() {
           <div className="space-y-2 text-sm text-gray-600">
             <div>
               <span className="font-medium text-gray-900">Bundle Type:</span>{" "}
-              Gluten-Free Essentials
+              {bundle.name}
             </div>
             <div>
               <span className="font-medium text-gray-900">Total Items:</span>{" "}
-              {bundleItems.length}
+              {bundle.products?.length || 0}
             </div>
             <div>
               <span className="font-medium text-gray-900">Savings:</span>{" "}
-              ₹{savings.toFixed(2)} ({((savings/originalPrice) * 100).toFixed(0)}% off)
+              ₹{savings.toFixed(2)} ({savingsPercentage}% off)
             </div>
           </div>
         </div>
@@ -173,16 +218,16 @@ export default function BundleDetailPage() {
         <div className="bg-white rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-4">Bundle Description</h2>
           <p className="text-gray-600 mb-6">
-            This carefully curated bundle brings together essential gluten-free products for your daily needs. Perfect for those following a gluten-free lifestyle, this bundle offers great value and convenience. Each product is certified gluten-free and made with high-quality ingredients.
+            {bundle.description}
           </p>
           
           <h3 className="font-medium mb-2">Bundle Benefits:</h3>
           <ul className="list-disc list-inside text-gray-600 space-y-2 mb-6">
-            <li>Save up to 20% compared to buying items individually</li>
-            <li>All products are certified gluten-free</li>
-            <li>Perfect for daily cooking needs</li>
+            <li>Save up to {savingsPercentage}% compared to buying items individually</li>
+            <li>All products are carefully curated for quality</li>
+            <li>Perfect for your daily needs</li>
             <li>High-quality ingredients</li>
-            <li>Long shelf life</li>
+            <li>Convenient packaging</li>
           </ul>
 
           <h3 className="font-medium mb-2">Storage Instructions:</h3>
@@ -193,8 +238,8 @@ export default function BundleDetailPage() {
       </div>
 
       <FrequentlyBought />
-      <ProductSlider title="You May Also Like" image={thumbnails[1]} />
-      <ProductSlider title="Best Sellers" image={thumbnails[0]} />
+      <ProductSlider title="You May Also Like" image={bundle.images?.[1] || ""} />
+      <ProductSlider title="Best Sellers" image={bundle.images?.[0] || ""} />
       <Footer />
     </div>
   );
