@@ -11,16 +11,13 @@ import { useRouter } from "next/navigation";
 
 type ProductGridProps = {
   params: ProductParams;
-  setParams: React.Dispatch<React.SetStateAction<ProductParams>>;
 };
 
-const ProductGrid = ({ params, setParams }: ProductGridProps) => {
+const ProductGrid = ({ params }: ProductGridProps) => {
   const router = useRouter();
   const {
     data: productsDataRaw = [],
     isLoading,
-    isError,
-    error,
   } = useQuery({
     queryKey: ["products", params],
     queryFn: async () => await getProducts({ params }),
@@ -62,6 +59,7 @@ const ProductGrid = ({ params, setParams }: ProductGridProps) => {
               }
               productId={product._id || ""}
               tags={product.tags}
+              instock={product.instock}
               onClick={() => product._id && router.push(`/products/${product._id}`)}
             />
           ))}
@@ -78,6 +76,7 @@ const ProductGrid = ({ params, setParams }: ProductGridProps) => {
               }
               productId={product._id || ""}
               tags={product.tags}
+              instock={product.instock}
               onClick={() => product._id && router.push(`/products/${product._id}`)}
             />
           ))}

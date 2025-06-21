@@ -167,6 +167,7 @@ const ProductGrid = () => {
                       image={product.banner_image || product.images?.[0] || ""}
                       productId={product._id || ""}
                       tags={product.tags}
+                      instock={product.instock}
                     />
                   ))}
                 </div>

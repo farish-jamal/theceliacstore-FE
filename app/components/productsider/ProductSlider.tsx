@@ -88,6 +88,9 @@ const ProductSlider = ({ title, image }: { title: string; image: string }) => {
                   name="24 Mantra Organic Jaggery Powder 500GM"
                   price={80}
                   image={image}
+                  productId={`slider-product-${i}`}
+                  tags={[]}
+                  instock={true}
                 />
               </div>
             ))}
