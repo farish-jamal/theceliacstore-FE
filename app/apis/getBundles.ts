@@ -48,6 +48,7 @@ export interface BundleParams {
   min_price?: number;
   max_price?: number;
   category?: string[];
+  sub_category?: string[];
   brands?: string[];
 }
 

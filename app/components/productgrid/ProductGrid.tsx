@@ -15,6 +15,7 @@ const ProductGrid = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
   const [selectedPrice, setSelectedPrice] = useState<number>(DEFAULT_PRICE);
   const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -57,6 +58,7 @@ const ProductGrid = () => {
           per_page: PER_PAGE,
         };
         if (selectedCategory) params.category = [selectedCategory];
+        if (selectedSubCategory) params.sub_category = [selectedSubCategory];
         if (sortBy && sortBy !== "latest") {
           if (sortBy === "price_asc") {
             params.sort_by = "price";
@@ -78,7 +80,7 @@ const ProductGrid = () => {
       }
     };
     fetchProducts();
-  }, [selectedCategory, selectedPrice, selectedRatings, selectedBrands, sortBy, currentPage]);
+  }, [selectedCategory, selectedSubCategory, selectedPrice, selectedRatings, selectedBrands, sortBy, currentPage]);
 
   return (
     <div className="min-h-screen">
@@ -90,6 +92,11 @@ const ProductGrid = () => {
             selectedCategory={selectedCategory}
             onCategoryChange={(cat) => {
               setSelectedCategory(cat);
+              setCurrentPage(1);
+            }}
+            selectedSubCategory={selectedSubCategory}
+            onSubCategoryChange={(subCat) => {
+              setSelectedSubCategory(subCat);
               setCurrentPage(1);
             }}
             selectedPrice={selectedPrice}

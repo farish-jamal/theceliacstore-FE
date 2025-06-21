@@ -67,6 +67,7 @@ const BundleGrid = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
   const [selectedPrice, setSelectedPrice] = useState<number>(DEFAULT_PRICE);
   const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -110,6 +111,7 @@ const BundleGrid = () => {
           per_page: PER_PAGE,
         };
         if (selectedCategory) params.category = [selectedCategory];
+        if (selectedSubCategory) params.sub_category = [selectedSubCategory];
         if (sortBy && sortBy !== "latest") {
           if (sortBy === "price_asc") {
             params.sort_by = "price";
@@ -137,7 +139,7 @@ const BundleGrid = () => {
       }
     };
     fetchBundles();
-  }, [selectedCategory, selectedPrice, selectedRatings, selectedBrands, sortBy, currentPage]);
+  }, [selectedCategory, selectedSubCategory, selectedPrice, selectedRatings, selectedBrands, sortBy, currentPage]);
 
   console.log("Current bundles state:", bundles); // Debug log
 
@@ -151,6 +153,11 @@ const BundleGrid = () => {
             selectedCategory={selectedCategory}
             onCategoryChange={(cat) => {
               setSelectedCategory(cat);
+              setCurrentPage(1);
+            }}
+            selectedSubCategory={selectedSubCategory}
+            onSubCategoryChange={(subCat) => {
+              setSelectedSubCategory(subCat);
               setCurrentPage(1);
             }}
             selectedPrice={selectedPrice}

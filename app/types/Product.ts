@@ -39,6 +39,7 @@ export type ProductParams = {
   page: number;
   per_page: number;
   category?: string[];
+  sub_category?: string[];
   search?: string;
   sort_by?: "price" | "name" | "createdAt";
   sort_order?: "asc" | "desc";

@@ -104,3 +104,28 @@ export const getProduct = async (id: string): Promise<SingleProductResponse> => 
   });
   return apiResponse.response as SingleProductResponse;
 };
+
+export type SubCategory = {
+  _id: string;
+  name: string;
+  description?: string;
+  category?: Category | null;
+  meta_data?: Record<string, unknown>;
+  is_active?: boolean;
+  images?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type SubCategoryResponse = {
+  success?: boolean;
+  data?: SubCategory[];
+  message?: string;
+};
+
+export const getSubCategories = async (categoryId: string): Promise<SubCategoryResponse> => {
+  const apiResponse = await apiService<SubCategoryResponse>({
+    endpoint: `${endpoints.subCategories}?category=${categoryId}`,
+  });
+  return apiResponse.response as SubCategoryResponse;
+};
