@@ -28,6 +28,7 @@ import { Typography } from "../typography/Typography";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
 import { logout as logoutAction } from "@/app/slices/authSlice";
+import { removeCookie } from "@/app/utils/removeCookie";
 
 const navItems = [
   { label: "Home", path: "/" },
@@ -60,6 +61,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     dispatch(logoutAction());
+    removeCookie("token"); // Remove the token cookie
     router.push("/login");
   };
 

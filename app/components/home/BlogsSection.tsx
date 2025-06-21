@@ -89,7 +89,10 @@ const BlogsSection = () => {
           </Carousel>
         )}
         <div className="flex justify-center my-6">
-          <Button className="rounded-full w-[9rem] bg-[#4CAF50] hover:bg-[#4CAF50] font-bold py-5 flex items-center justify-center gap-2">
+          <Button
+            className="rounded-full cursor-pointer w-[9rem] bg-[#4CAF50] hover:bg-[#388e3c] font-bold py-5 flex items-center justify-center gap-2 transition-transform duration-200 hover:scale-105 hover:shadow-lg"
+            onClick={() => router.push("/blogs")}
+          >
             Show More <ArrowRight className="w-5 h-5 stroke-2 mt-0.5" />
           </Button>
         </div>

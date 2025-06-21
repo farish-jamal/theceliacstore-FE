@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig, Method } from "axios";
 import { BACKEND_URL } from "../constants/URL";
+import { getCookie } from "../utils/getCookie";
 
 interface ApiServiceParams {
   endpoint: string;
@@ -29,9 +30,10 @@ export const apiService = async <T = unknown>({
   try {
     let token: string | null = null;
     if (typeof window !== "undefined") {
-      token = localStorage.getItem("token");
+      token = getCookie("token");
     }
 
+    console.log("TOKENN", token);
     const requestHeaders: Record<string, string> = {
       "ngrok-skip-browser-warning": "true",
       ...headers,

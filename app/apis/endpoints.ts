@@ -8,4 +8,7 @@ export const endpoints = {
 
   // blogs
   blogs: "api/blogs",
+
+  // cart
+  cart: "api/cart",
 };

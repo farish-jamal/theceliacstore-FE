@@ -13,7 +13,8 @@ import { useAppDispatch } from "../hooks/reduxHooks";
 import { setAuth } from "../slices/authSlice";
 import { showSnackbar } from "../slices/snackbarSlice";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { setCookie } from "../utils/setCookie";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -32,6 +33,8 @@ const Login = () => {
 
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get("redirect") || "/";
 
   const loginMutation = useMutation({
     mutationFn: loginUser,
@@ -39,10 +42,16 @@ const Login = () => {
       if (response?.success && response.data) {
         const { id, name, email, phone, token } = response.data;
         dispatch(setAuth({ user: { id, name, email, phone }, token }));
+        // Set cookie: persistent if rememberMe, session if not
+        if (rememberMe) {
+          setCookie("token", token, 30); // 30 days
+        } else {
+          document.cookie = `token=${encodeURIComponent(token)}; path=/`;
+        }
         dispatch(
           showSnackbar({ message: "Login successful!", type: "success" })
         );
-        router.replace("/");
+        router.replace(redirectPath);
       } else {
         dispatch(
           showSnackbar({
@@ -82,11 +91,19 @@ const Login = () => {
     loginMutation.mutate({ email: form.email, password: form.password });
   };
 
+  // Show a message if redirected from a protected page
+  const redirectedFrom = searchParams.get("redirect");
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <div className="max-w-lg w-full space-y-12">
         <div className="space-y-3">
           <h1 className="text-3xl font-bold">Login</h1>
+          {redirectedFrom && (
+            <div className="text-sm text-red-500 bg-red-50 border border-red-200 rounded px-3 py-2 mb-2">
+              Please login to access this page.
+            </div>
+          )}
           <p className="text-sm text-gray-600">
             Welcome back! Please enter your details to continue.
           </p>
@@ -154,7 +171,7 @@ const Login = () => {
           </Button>
 
           <p className="text-center text-sm text-gray-600">
-            Don’t have an account?{" "}
+            Don&#39;t have an account?{" "}
             <Link href="/register" className="text-blue-600 font-medium">
               Sign up
             </Link>
