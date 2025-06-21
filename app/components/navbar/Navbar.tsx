@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useState } from "react";
 import {
-  ShoppingBag,
   ChevronDown,
   Search,
   CircleUser,
@@ -33,11 +32,14 @@ import { removeCookie } from "@/app/utils/removeCookie";
 const navItems = [
   { label: "Home", path: "/" },
   {
-    label: "Shop",
-    icon: <ShoppingBag className="ml-1 h-5 w-5" />,
+    label: "Shop",  
     path: "/products",
   },
-  { label: "Blog", path: "/blog" },
+  {
+    label: "Bundles",
+    path: "/bundles",
+  },
+  { label: "Blog", path: "/blogs" },
   {
     label: "About us",
     icon: <ChevronDown className="ml-1 h-5 w-5" />,

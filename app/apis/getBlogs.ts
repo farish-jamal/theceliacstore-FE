@@ -4,24 +4,37 @@ import { endpoints } from "./endpoints";
 
 export type BlogResponse = {
   success?: boolean;
-  data?: {
-    total: number;
-    data: Blog[];
-  };
+  data?: Blog[];
   message?: string;
+  statusCode?: number;
+};
+
+export type SingleBlogResponse = {
+  success?: boolean;
+  data?: Blog;
+  message?: string;
+  statusCode?: number;
 };
 
 export type GetBlogsType = {
-  params: BlogParams;
+  params?: BlogParams;
 };
 
 export const getBlogs = async ({
   params,
-}: GetBlogsType): Promise<BlogResponse> => {
+}: GetBlogsType = {}): Promise<BlogResponse> => {
   const apiResponse = await apiService<BlogResponse>({
     endpoint: endpoints.blogs,
     params: params,
   });
 
   return apiResponse.response as BlogResponse;
+};
+
+export const getBlogById = async (id: string): Promise<SingleBlogResponse> => {
+  const apiResponse = await apiService<SingleBlogResponse>({
+    endpoint: `${endpoints.blogs}/${id}`,
+  });
+
+  return apiResponse.response as SingleBlogResponse;
 };

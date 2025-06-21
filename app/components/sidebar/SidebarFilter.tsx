@@ -1,12 +1,36 @@
 import React from "react";
-import BrandChips from "../brandchip/BrandChips";
+import BrandChips, { BrandChipsProps } from "../brandchip/BrandChips";
+import { Category, Brand } from "../../apis/getProducts";
 
 interface SidebarFilterProps {
   isOpen: boolean;
   onClose: () => void;
+  selectedCategory: string;
+  onCategoryChange: (category: string) => void;
+  selectedPrice: number;
+  onPriceChange: (price: number) => void;
+  selectedRatings: number[];
+  onRatingsChange: (ratings: number[]) => void;
+  selectedBrands: BrandChipsProps["selectedBrands"];
+  onBrandChange: BrandChipsProps["onBrandChange"];
+  categories: Category[];
+  brands: Brand[];
 }
 
-const SidebarFilter: React.FC<SidebarFilterProps> = ({ isOpen, onClose }) => (
+const SidebarFilter: React.FC<SidebarFilterProps> = ({
+  isOpen,
+  onClose,
+  selectedCategory,
+  onCategoryChange,
+  selectedPrice,
+  onPriceChange,
+  selectedRatings,
+  onRatingsChange,
+  selectedBrands,
+  onBrandChange,
+  categories,
+  brands,
+}) => (
   <div
     className={`${
       isOpen ? "fixed inset-0 z-50 bg-black bg-opacity-50 lg:bg-opacity-0" : ""
@@ -38,84 +62,21 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ isOpen, onClose }) => (
 
         <div className="mb-4">
           <h3 className="font-semibold mb-2">All Categories</h3>
-          <div className="flex items-center gap-2 mb-1">
-            <input
-              type="radio"
-              name="category"
-              id="gluten-free"
-              className="accent-green-600 w-4 h-4"
-            />
-            <label htmlFor="gluten-free" className="text-gray-700">
-              Gluten Free (478)
-            </label>
-          </div>
-          <div className="flex items-center gap-2 mb-1">
-            <input
-              type="radio"
-              name="category"
-              id="lactose-free"
-              defaultChecked
-              className="accent-green-600 w-4 h-4"
-            />
-            <label htmlFor="lactose-free" className="text-gray-700">
-              Lactose Free (190)
-            </label>
-          </div>
-          <div className="flex items-center gap-2 mb-1">
-            <input
-              type="radio"
-              name="category"
-              id="organic"
-              className="accent-green-600 w-4 h-4"
-            />
-            <label htmlFor="organic" className="text-gray-700">
-              Organic (80)
-            </label>
-          </div>
-          <div className="flex items-center gap-2 mb-1">
-            <input
-              type="radio"
-              name="category"
-              id="snacks"
-              className="accent-green-600 w-4 h-4"
-            />
-            <label htmlFor="snacks" className="text-gray-700">
-              Snacks (47)
-            </label>
-          </div>
-          <div className="flex items-center gap-2 mb-1">
-            <input
-              type="radio"
-              name="category"
-              id="beverages"
-              className="accent-green-600 w-4 h-4"
-            />
-            <label htmlFor="beverages" className="text-gray-700">
-              Beverages (44)
-            </label>
-          </div>
-          <div className="flex items-center gap-2 mb-1">
-            <input
-              type="radio"
-              name="category"
-              id="cookies"
-              className="accent-green-600 w-4 h-4"
-            />
-            <label htmlFor="cookies" className="text-gray-700">
-              Cookies (38)
-            </label>
-          </div>
-          <div className="flex items-center gap-2 mb-1">
-            <input
-              type="radio"
-              name="category"
-              id="bread"
-              className="accent-green-600 w-4 h-4"
-            />
-            <label htmlFor="bread" className="text-gray-700">
-              Bread & Bakery (15)
-            </label>
-          </div>
+          {categories.map((cat) => (
+            <div className="flex items-center gap-2 mb-1" key={cat._id}>
+              <input
+                type="radio"
+                name="category"
+                id={cat._id}
+                className="accent-green-600 w-4 h-4"
+                checked={selectedCategory === cat._id}
+                onChange={() => onCategoryChange(cat._id)}
+              />
+              <label htmlFor={cat._id} className="text-gray-700">
+                {cat.name}
+              </label>
+            </div>
+          ))}
         </div>
 
         <div className="mb-4">
@@ -124,67 +85,38 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ isOpen, onClose }) => (
             type="range"
             min="50"
             max="1500"
-            defaultValue="1500"
+            value={selectedPrice}
+            onChange={e => onPriceChange(Number(e.target.value))}
             className="w-full accent-green-600"
           />
-          <p className="text-xs mt-1">Price: 50 — 1,500</p>
+          <p className="text-xs mt-1">Price: 50 — {selectedPrice}</p>
         </div>
 
         <div className="mb-4">
           <h3 className="font-semibold mb-2">Rating</h3>
-          <div className="flex items-center gap-2 mb-1">
-            <input
-              type="checkbox"
-              id="rating-5"
-              className="accent-green-600 w-4 h-4"
-            />
-            <label htmlFor="rating-5" className="text-gray-700">
-              ★★★★★ 5.0
-            </label>
-          </div>
-          <div className="flex items-center gap-2 mb-1">
-            <input
-              type="checkbox"
-              id="rating-4"
-              className="accent-green-600 w-4 h-4"
-            />
-            <label htmlFor="rating-4" className="text-gray-700">
-              ★★★★☆ 4.0 & up
-            </label>
-          </div>
-          <div className="flex items-center gap-2 mb-1">
-            <input
-              type="checkbox"
-              id="rating-3"
-              className="accent-green-600 w-4 h-4"
-            />
-            <label htmlFor="rating-3" className="text-gray-700">
-              ★★★☆☆ 3.0 & up
-            </label>
-          </div>
-          <div className="flex items-center gap-2 mb-1">
-            <input
-              type="checkbox"
-              id="rating-2"
-              className="accent-green-600 w-4 h-4"
-            />
-            <label htmlFor="rating-2" className="text-gray-700">
-              ★★☆☆☆ 2.0 & up
-            </label>
-          </div>
-          <div className="flex items-center gap-2 mb-1">
-            <input
-              type="checkbox"
-              id="rating-1"
-              className="accent-green-600 w-4 h-4"
-            />
-            <label htmlFor="rating-1" className="text-gray-700">
-              ★☆☆☆☆ 1.0 & up
-            </label>
-          </div>
+          {[5, 4, 3, 2, 1].map((rating) => (
+            <div className="flex items-center gap-2 mb-1" key={rating}>
+              <input
+                type="checkbox"
+                id={`rating-${rating}`}
+                className="accent-green-600 w-4 h-4"
+                checked={selectedRatings.includes(rating)}
+                onChange={() => {
+                  if (selectedRatings.includes(rating)) {
+                    onRatingsChange(selectedRatings.filter(r => r !== rating));
+                  } else {
+                    onRatingsChange([...selectedRatings, rating]);
+                  }
+                }}
+              />
+              <label htmlFor={`rating-${rating}`} className="text-gray-700">
+                {"★".repeat(rating) + "☆".repeat(5 - rating)} {rating}.0 & up
+              </label>
+            </div>
+          ))}
         </div>
 
-        <BrandChips />
+        <BrandChips selectedBrands={selectedBrands} onBrandChange={onBrandChange} brands={brands} />
 
         <div className="bg-[#f9f9f9] border border-red-100 rounded p-3 text-center h-40">
           <p className="text-2xl font-semibold text-red-600">Browse</p>

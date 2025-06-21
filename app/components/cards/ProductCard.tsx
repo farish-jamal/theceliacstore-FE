@@ -1,18 +1,30 @@
 import Image from "next/image";
 import React from "react";
+import { useRouter } from "next/navigation";
 
 type ProductCardProps = {
   name: string;
   price: number;
   image: string;
+  productId: string;
   onClick?: () => void;
 };
 
-const ProductCard = ({ name, price, image, onClick }: ProductCardProps) => {
+const ProductCard = ({ name, price, image, productId, onClick }: ProductCardProps) => {
+  const router = useRouter();
+
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      router.push(`/products/${productId}`);
+    }
+  };
+
   return (
     <div
       className="border rounded-lg p-4 flex flex-col cursor-pointer items-center gap-2 h-full transition-transform duration-200 hover:scale-105 hover:shadow-lg hover:border-green-500 group"
-      onClick={onClick}
+      onClick={handleCardClick}
     >
       <Image
         src={image}

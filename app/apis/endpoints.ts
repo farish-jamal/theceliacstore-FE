@@ -11,4 +11,9 @@ export const endpoints = {
 
   // cart
   cart: "api/cart",
+  // categories
+  categories: "api/category",
+
+  // brands
+  brands: "api/brand",
 };
