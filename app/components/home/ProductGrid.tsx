@@ -60,6 +60,8 @@ const ProductGrid = ({ params, setParams }: ProductGridProps) => {
                 (product.images && product.images[0]) ||
                 "/product-1.png"
               }
+              productId={product._id || ""}
+              tags={product.tags}
               onClick={() => product._id && router.push(`/products/${product._id}`)}
             />
           ))}
@@ -74,6 +76,8 @@ const ProductGrid = ({ params, setParams }: ProductGridProps) => {
                 (product.images && product.images[0]) ||
                 "/product-1.png"
               }
+              productId={product._id || ""}
+              tags={product.tags}
               onClick={() => product._id && router.push(`/products/${product._id}`)}
             />
           ))}

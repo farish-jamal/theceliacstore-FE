@@ -77,6 +77,36 @@ export default function BundleDetailPage() {
   const savings = originalPrice - totalPrice;
   const savingsPercentage = Math.round((savings / originalPrice) * 100);
 
+  // Mapping of tags to their corresponding image files
+  const tagImageMap: Record<string, string> = {
+    no_palm_oil: "/no_palm_oil.png",
+    organic: "/organic.png",
+    no_gmo: "/no_gmo.png",
+    no_aritificial_flavors: "/no_artifical.png",
+    vegan: "/vegan.png",
+    sugar_free: "/suger_free.png",
+    gluten_free: "/gluten_free.png",
+    soya_free: "/soya_free.png",
+    no_preservatives: "/no_preservation.png",
+    lactose_free: "/lactoase_free.png",
+    no_flavor_enhancer: "/no_free_enhancer.png"
+  };
+
+  // Aggregate all unique tags from all products in the bundle
+  const allTags = bundle.products?.reduce((acc: string[], product) => {
+    if (product.tags) {
+      product.tags.forEach(tag => {
+        if (!acc.includes(tag)) {
+          acc.push(tag);
+        }
+      });
+    }
+    return acc;
+  }, []) || [];
+
+  // Filter out valid tags that have corresponding images
+  const validTags = allTags.filter(tag => tagImageMap[tag]);
+
   return (
     <div className="bg-gray-50">
       <TopFloater />
@@ -131,6 +161,27 @@ export default function BundleDetailPage() {
           <h1 className="text-2xl font-semibold mb-2">
             {bundle.name}
           </h1>
+          
+          {/* Tag images after title */}
+          {validTags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {validTags.map((tag) => (
+                <div key={tag} className="relative group/tag">
+                  <img
+                    src={tagImageMap[tag]}
+                    alt={tag.replace(/_/g, ' ')}
+                    className="w-8 h-8 object-contain transition-transform duration-200 group-hover/tag:scale-110"
+                  />
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover/tag:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-20">
+                    {tag.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-sm text-xs font-medium">
               💰 Bundle Deal

@@ -238,17 +238,32 @@ const BundleGrid = () => {
                 <div className="text-center py-10">Loading...</div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {bundles.map((bundle) => (
-                    <BundleCard
-                      key={bundle._id}
-                      name={bundle.name}
-                      price={bundle.discounted_price ?? bundle.price}
-                      originalPrice={bundle.price}
-                      image={bundle.images?.[0] || ""}
-                      bundleId={bundle._id}
-                      productCount={bundle.products?.length || 0}
-                    />
-                  ))}
+                  {bundles.map((bundle) => {
+                    // Aggregate all unique tags from all products in the bundle
+                    const allTags = bundle.products?.reduce((acc: string[], product) => {
+                      if (product.tags) {
+                        product.tags.forEach(tag => {
+                          if (!acc.includes(tag)) {
+                            acc.push(tag);
+                          }
+                        });
+                      }
+                      return acc;
+                    }, []) || [];
+
+                    return (
+                      <BundleCard
+                        key={bundle._id}
+                        name={bundle.name}
+                        price={bundle.discounted_price ?? bundle.price}
+                        originalPrice={bundle.price}
+                        image={bundle.images?.[0] || ""}
+                        bundleId={bundle._id}
+                        productCount={bundle.products?.length || 0}
+                        tags={allTags}
+                      />
+                    );
+                  })}
                 </div>
               )}
             </div>

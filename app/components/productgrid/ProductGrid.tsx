@@ -166,6 +166,7 @@ const ProductGrid = () => {
                       price={product.discounted_price ?? product.price}
                       image={product.banner_image || product.images?.[0] || ""}
                       productId={product._id || ""}
+                      tags={product.tags}
                     />
                   ))}
                 </div>
