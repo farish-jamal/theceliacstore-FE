@@ -51,14 +51,15 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/celiac-brand-logo.png", type: "image/png", sizes: "512x512" },
+      { url: "/brand-favicon.png", type: "image/png", sizes: "512x512" },
+      { url: "/brand-favicon.png", type: "image/png" },
       { url: "/favicon.ico", type: "image/x-icon" },
     ],
     shortcut: [
-      { url: "/celiac-brand-logo.png", type: "image/png" },
+      { url: "/brand-favicon.png", type: "image/png" },
     ],
     apple: [
-      { url: "/celiac-brand-logo.png", type: "image/png", sizes: "512x512" },
+      { url: "/brand-favicon.png", type: "image/png" },
     ],
   },
 };
