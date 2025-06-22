@@ -40,16 +40,16 @@ export interface Bundle {
 }
 
 export interface BundleParams {
-  page?: number;
-  per_page?: number;
-  sort_by?: string;
-  sort_order?: "asc" | "desc";
+  page: number;
+  per_page: number;
   search?: string;
-  min_price?: number;
-  max_price?: number;
+  price_range?: string; // Format: "min_max" e.g., "100_200"
   category?: string[];
   sub_category?: string[];
+  rating?: number; // Single rating value (1-5)
+  is_best_seller?: boolean;
   brands?: string[];
+  sort_by?: "created_at" | "low_to_high" | "high_to_low"; // Updated sort options
 }
 
 export interface BundleResponse {
