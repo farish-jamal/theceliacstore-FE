@@ -8,7 +8,7 @@ import FrequentlyBought from "@/app/components/frequentlybought/FrequentlyBought
 import { getBundle, Bundle } from "@/app/apis/getBundles";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { formatPrice } from "@/app/utils/formatPrice";
+import { formatPrice, convertToNumber } from "@/app/utils/formatPrice";
 
 export default function BundleDetailPage() {
   const [selectedThumb, setSelectedThumb] = useState(0);
@@ -73,8 +73,12 @@ export default function BundleDetailPage() {
     );
   }
 
-  const totalPrice = bundle.discounted_price ?? bundle.price;
-  const originalPrice = bundle.price;
+  // Convert MongoDB Decimal objects to numbers for calculations
+  const bundlePrice = convertToNumber(bundle.price);
+  const bundleDiscountedPrice = convertToNumber(bundle.discounted_price);
+  
+  const totalPrice = bundleDiscountedPrice || bundlePrice;
+  const originalPrice = bundlePrice;
   const savings = originalPrice - totalPrice;
   const savingsPercentage = Math.round((savings / originalPrice) * 100);
 

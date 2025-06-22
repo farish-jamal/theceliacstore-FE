@@ -1,12 +1,13 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { formatPrice } from "@/app/utils/formatPrice";
+import { formatPrice, convertToNumber } from "@/app/utils/formatPrice";
+import { MongoDBDecimal } from "@/app/types/Product";
 
 interface BundleCardProps {
   name: string;
-  price: number;
-  originalPrice?: number;
+  price: MongoDBDecimal | number;
+  originalPrice?: MongoDBDecimal | number;
   image: string;
   bundleId: string;
   productCount?: number;
@@ -22,8 +23,12 @@ const BundleCard: React.FC<BundleCardProps> = ({
   productCount = 0,
   tags = [],
 }) => {
-  const savings = originalPrice ? originalPrice - price : 0;
-  const savingsPercentage = originalPrice ? Math.round((savings / originalPrice) * 100) : 0;
+  // Convert MongoDB Decimal objects to numbers for calculations
+  const priceNum = convertToNumber(price);
+  const originalPriceNum = originalPrice ? convertToNumber(originalPrice) : undefined;
+  
+  const savings = originalPriceNum ? originalPriceNum - priceNum : 0;
+  const savingsPercentage = originalPriceNum ? Math.round((savings / originalPriceNum) * 100) : 0;
 
   // Mapping of tags to their corresponding image files
   const tagImageMap: Record<string, string> = {
@@ -99,11 +104,11 @@ const BundleCard: React.FC<BundleCardProps> = ({
 
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-green-600">
-              ₹{formatPrice(price)}
+              ₹{formatPrice(priceNum)}
             </span>
-            {originalPrice && originalPrice > price && (
+            {originalPriceNum && originalPriceNum > priceNum && (
               <span className="text-sm text-gray-500 line-through">
-                ₹{formatPrice(originalPrice)}
+                ₹{formatPrice(originalPriceNum)}
               </span>
             )}
           </div>

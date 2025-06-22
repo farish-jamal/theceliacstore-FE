@@ -1,15 +1,16 @@
 import { apiService } from "./apiService";
 import { endpoints } from "./endpoints";
+import { MongoDBDecimal } from "@/app/types/Product";
 
 export interface BundleProduct {
   _id: string;
   name: string;
   small_description: string;
-  price: number;
-  discounted_price: number;
+  price: MongoDBDecimal | number;
+  discounted_price: MongoDBDecimal | number;
   tags: string[];
-  salesperson_discounted_price: number | null;
-  dnd_discounted_price: number | null;
+  salesperson_discounted_price: MongoDBDecimal | number | null;
+  dnd_discounted_price: MongoDBDecimal | number | null;
   instock: boolean;
   banner_image: string;
   images: string[];
@@ -28,8 +29,8 @@ export interface Bundle {
   name: string;
   description: string;
   products: BundleProduct[];
-  price: number;
-  discounted_price: number;
+  price: MongoDBDecimal | number;
+  discounted_price: MongoDBDecimal | number;
   images: string[];
   is_active: boolean;
   meta_data?: Record<string, unknown>;

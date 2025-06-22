@@ -1,6 +1,34 @@
 import { MongoDBDecimal } from "@/app/types/Product";
 
 /**
+ * Converts MongoDB Decimal128 objects to numbers
+ * @param value - The value to convert (can be MongoDB Decimal, number, or other types)
+ * @returns The converted number or 0 if invalid
+ */
+export const convertToNumber = (value: MongoDBDecimal | number | string | null | undefined): number => {
+  if (value === null || value === undefined) {
+    return 0;
+  }
+  
+  // Handle MongoDB Decimal128 object
+  if (typeof value === 'object' && '$numberDecimal' in value) {
+    return parseFloat(value.$numberDecimal);
+  }
+  // Handle regular numbers
+  else if (typeof value === 'number') {
+    return value;
+  }
+  // Handle strings
+  else if (typeof value === 'string') {
+    return parseFloat(value);
+  }
+  // Handle other cases
+  else {
+    return parseFloat(String(value));
+  }
+};
+
+/**
  * Safely formats a price value to 2 decimal places
  * Handles MongoDB Decimal128 objects, numbers, strings, null, and undefined
  * @param price - The price value to format (can be MongoDB Decimal, number, string, null, or undefined)
@@ -14,28 +42,7 @@ import { MongoDBDecimal } from "@/app/types/Product";
  * formatPrice(undefined) // "0.00"
  */
 export const formatPrice = (price: MongoDBDecimal | number | string | null | undefined): string => {
-  if (price === null || price === undefined) {
-    return "0.00";
-  }
-  
-  let numPrice: number;
-  
-  // Handle MongoDB Decimal128 object
-  if (typeof price === 'object' && '$numberDecimal' in price) {
-    numPrice = parseFloat(price.$numberDecimal);
-  }
-  // Handle regular numbers
-  else if (typeof price === 'number') {
-    numPrice = price;
-  }
-  // Handle strings
-  else if (typeof price === 'string') {
-    numPrice = parseFloat(price);
-  }
-  // Handle other cases
-  else {
-    numPrice = parseFloat(String(price));
-  }
+  const numPrice = convertToNumber(price);
   
   if (isNaN(numPrice)) {
     return "0.00";

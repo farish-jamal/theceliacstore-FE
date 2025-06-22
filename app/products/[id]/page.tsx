@@ -13,7 +13,7 @@ import { showSnackbar } from "@/app/slices/snackbarSlice";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
 import { motion, AnimatePresence } from "framer-motion";
-import { formatPrice } from "@/app/utils/formatPrice";
+import { formatPrice, convertToNumber } from "@/app/utils/formatPrice";
 
 interface CartResponse {
   success: boolean;
@@ -189,8 +189,13 @@ export default function ProductDetailPage() {
   const showVariantPricing = hasVariants && selectedVariant;
   const displayPrice = showVariantPricing ? selectedVariant!.discounted_price || selectedVariant!.price : product.discounted_price || product.price;
   const displayOriginalPrice = showVariantPricing ? selectedVariant!.price : product.price;
-  const displayDiscountPercentage = displayPrice && displayOriginalPrice && displayPrice < displayOriginalPrice
-    ? Math.round(((displayOriginalPrice - displayPrice) / displayOriginalPrice) * 100)
+  
+  // Convert to numbers for calculations
+  const displayPriceNum = convertToNumber(displayPrice);
+  const displayOriginalPriceNum = convertToNumber(displayOriginalPrice);
+  
+  const displayDiscountPercentage = displayPriceNum && displayOriginalPriceNum && displayPriceNum < displayOriginalPriceNum
+    ? Math.round(((displayOriginalPriceNum - displayPriceNum) / displayOriginalPriceNum) * 100)
     : 0;
 
   return (

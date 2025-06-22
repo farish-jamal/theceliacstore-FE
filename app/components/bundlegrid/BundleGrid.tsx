@@ -10,6 +10,7 @@ import { getBundles, Bundle } from "../../apis/getBundles";
 import { getCategories, getBrands, Category, Brand } from "../../apis/getProducts";
 import { useBundleFilters } from "../../hooks/useBundleFilters";
 import SortFilter from "../filters/SortFilter";
+import { convertToNumber } from "@/app/utils/formatPrice";
 
 const PER_PAGE = 10;
 
@@ -108,8 +109,40 @@ const BundleGrid = () => {
         
         const res = await getBundles({ params: apiParams });
         console.log("Bundles API Response:", res);
-        setBundles(res.data || []);
-        setTotalPages(Math.ceil((res.data?.length || 1) / PER_PAGE));
+        console.log("Response type:", typeof res);
+        console.log("Response.data type:", typeof res.data);
+        console.log("Is res.data an array?", Array.isArray(res.data));
+        if (res.data && typeof res.data === 'object') {
+          console.log("res.data keys:", Object.keys(res.data));
+          console.log("res.data.data type:", typeof (res.data as unknown as Record<string, unknown>).data);
+          console.log("Is res.data.data an array?", Array.isArray((res.data as unknown as Record<string, unknown>).data));
+        }
+        
+        // Handle different possible response structures
+        let bundlesData: Bundle[] = [];
+        if (res.data && Array.isArray(res.data)) {
+          // Direct array response
+          bundlesData = res.data;
+          console.log("Using direct array response");
+        } else if (res.data && typeof res.data === 'object' && 'data' in res.data && Array.isArray((res.data as { data: Bundle[] }).data)) {
+          // Nested data structure: { data: { data: [...] } }
+          bundlesData = (res.data as { data: Bundle[] }).data;
+          console.log("Using nested data response");
+        } else if (Array.isArray(res)) {
+          // Response is directly an array
+          bundlesData = res;
+          console.log("Using direct response as array");
+        } else {
+          console.error("Unexpected bundles response structure:", res);
+          setError("Invalid response format from server");
+          setBundles([]);
+          setTotalPages(1);
+          return;
+        }
+        
+        console.log("Extracted bundles data:", bundlesData);
+        setBundles(bundlesData);
+        setTotalPages(Math.ceil((bundlesData.length || 1) / PER_PAGE));
       } catch (err) {
         console.error("Error fetching bundles:", err);
         setError("Unable to load bundles. Showing sample data.");
@@ -233,7 +266,7 @@ const BundleGrid = () => {
             <div className="h-[calc(100vh-40px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
               {loading ? (
                 <div className="text-center py-10">Loading...</div>
-              ) : bundles.length === 0 ? (
+              ) : !Array.isArray(bundles) || bundles.length === 0 ? (
                 <div className="text-center py-10">
                   <p className="text-gray-500">No bundles found matching your filters.</p>
                   <button
@@ -245,16 +278,24 @@ const BundleGrid = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {bundles.map((bundle) => (
-                    <BundleCard
-                      key={bundle._id}
-                      name={bundle.name}
-                      price={bundle.discounted_price ?? bundle.price}
-                      originalPrice={bundle.price}
-                      image={bundle.images?.[0] || ""}
-                      bundleId={bundle._id}
-                    />
-                  ))}
+                  {bundles.map((bundle) => {
+                    // Convert MongoDB Decimal objects to numbers for calculations
+                    const bundlePrice = convertToNumber(bundle.price);
+                    const bundleDiscountedPrice = convertToNumber(bundle.discounted_price);
+                    
+                    return (
+                      <BundleCard
+                        key={bundle._id}
+                        name={bundle.name}
+                        price={bundleDiscountedPrice || bundlePrice}
+                        originalPrice={bundlePrice}
+                        image={bundle.images?.[0] || ""}
+                        bundleId={bundle._id}
+                        productCount={bundle.products?.length || 0}
+                        tags={bundle.products?.flatMap(product => product.tags || []) || []}
+                      />
+                    );
+                  })}
                 </div>
               )}
             </div>
