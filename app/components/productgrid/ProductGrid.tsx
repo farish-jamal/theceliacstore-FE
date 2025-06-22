@@ -5,25 +5,22 @@ import SidebarFilter from "../sidebar/SidebarFilter";
 import Link from "next/link";
 import Pagination from "../pagination/Pagination";
 import { getProducts, getCategories, getBrands, Category, Brand } from "../../apis/getProducts";
-import { Product, ProductParams } from "../../types/Product";
+import { Product } from "../../types/Product";
+import { useProductFilters } from "../../hooks/useProductFilters";
+import SortFilter from "../filters/SortFilter";
 
-const DEFAULT_PRICE = 1500;
-const PER_PAGE = 36;
+const PER_PAGE = 10;
 
 const ProductGrid = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
-  const [selectedPrice, setSelectedPrice] = useState<number>(DEFAULT_PRICE);
-  const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<string>("latest");
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+
+  // Use the URL-based filtering hook
+  const { filters, updateFilter, clearFilters, getApiParams } = useProductFilters();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -53,26 +50,14 @@ const ProductGrid = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const params: ProductParams = {
-          page: currentPage,
-          per_page: PER_PAGE,
-        };
-        if (selectedCategory) params.category = [selectedCategory];
-        if (selectedSubCategory) params.sub_category = [selectedSubCategory];
-        if (sortBy && sortBy !== "latest") {
-          if (sortBy === "price_asc") {
-            params.sort_by = "price";
-            params.sort_order = "asc";
-          } else if (sortBy === "price_desc") {
-            params.sort_by = "price";
-            params.sort_order = "desc";
-          }
-        }
-        if (selectedBrands.length > 0) params.brands = selectedBrands;
-        const res = await getProducts({ params });
+        const apiParams = getApiParams;
+        console.log("Fetching products with params:", apiParams);
+        
+        const res = await getProducts({ params: apiParams });
         setProducts(res.data?.data || []);
         setTotalPages(Math.ceil((res.data?.total || 1) / PER_PAGE));
-      } catch {
+      } catch (error) {
+        console.error("Error fetching products:", error);
         setProducts([]);
         setTotalPages(1);
       } finally {
@@ -80,7 +65,47 @@ const ProductGrid = () => {
       }
     };
     fetchProducts();
-  }, [selectedCategory, selectedSubCategory, selectedPrice, selectedRatings, selectedBrands, sortBy, currentPage]);
+  }, [getApiParams]);
+
+  const handlePageChange = (page: number) => {
+    updateFilter("page", page);
+  };
+
+  const handleSearchChange = (search: string) => {
+    updateFilter("search", search);
+  };
+
+  const handlePriceRangeChange = (priceRange: string) => {
+    updateFilter("price_range", priceRange);
+  };
+
+  const handleCategoryChange = (category: string) => {
+    updateFilter("category", category);
+  };
+
+  const handleSubCategoryChange = (subCategory: string) => {
+    updateFilter("sub_category", subCategory);
+  };
+
+  const handleRatingChange = (rating: number | undefined) => {
+    updateFilter("rating", rating);
+  };
+
+  const handleBestSellerChange = (isBestSeller: boolean) => {
+    updateFilter("is_best_seller", isBestSeller);
+  };
+
+  const handleBrandChange = (brands: string[]) => {
+    updateFilter("brands", brands);
+  };
+
+  const handleSortByChange = (sortBy: string) => {
+    updateFilter("sort_by", sortBy);
+  };
+
+  const handleClearFilters = () => {
+    clearFilters();
+  };
 
   return (
     <div className="min-h-screen">
@@ -89,35 +114,25 @@ const ProductGrid = () => {
           <SidebarFilter
             isOpen={isFilterOpen}
             onClose={() => setIsFilterOpen(false)}
-            selectedCategory={selectedCategory}
-            onCategoryChange={(cat) => {
-              setSelectedCategory(cat);
-              setCurrentPage(1);
-            }}
-            selectedSubCategory={selectedSubCategory}
-            onSubCategoryChange={(subCat) => {
-              setSelectedSubCategory(subCat);
-              setCurrentPage(1);
-            }}
-            selectedPrice={selectedPrice}
-            onPriceChange={(price) => {
-              setSelectedPrice(price);
-              setCurrentPage(1);
-            }}
-            selectedRatings={selectedRatings}
-            onRatingsChange={(ratings) => {
-              setSelectedRatings(ratings);
-              setCurrentPage(1);
-            }}
-            selectedBrands={selectedBrands}
-            onBrandChange={(brands) => {
-              setSelectedBrands(brands);
-              setCurrentPage(1);
-            }}
+            search={filters.search || ""}
+            onSearchChange={handleSearchChange}
+            priceRange={filters.price_range || ""}
+            onPriceRangeChange={handlePriceRangeChange}
+            category={filters.category || ""}
+            onCategoryChange={handleCategoryChange}
+            subCategory={filters.sub_category || ""}
+            onSubCategoryChange={handleSubCategoryChange}
+            rating={filters.rating}
+            onRatingChange={handleRatingChange}
+            isBestSeller={filters.is_best_seller}
+            onBestSellerChange={handleBestSellerChange}
+            selectedBrands={filters.brands || []}
+            onBrandChange={handleBrandChange}
             categories={categories}
             brands={brands}
+            onClearFilters={handleClearFilters}
           />
-          <div className="flex-1 py-4 ">
+          <div className="flex-1 py-4">
             <div className="bg-white py-3 text-sm">
               <Link href="/" className="text-gray-500 hover:text-gray-700">
                 Home
@@ -132,31 +147,27 @@ const ProductGrid = () => {
               <div className="flex items-center gap-4">
                 <FilterButton onClick={() => setIsFilterOpen(true)} />
                 <p className="text-xs text-gray-600">
-                  Showing 1–{products.length} of {products.length} products
+                  Showing {((filters.page - 1) * PER_PAGE) + 1}–{Math.min(filters.page * PER_PAGE, products.length)} of {products.length} products
                 </p>
               </div>
-              <div className="text-xs">
-                <label htmlFor="sort" className="mr-2">
-                  Sort by:
-                </label>
-                <select
-                  id="sort"
-                  className="border border-gray-300 rounded px-2 py-1"
-                  value={sortBy}
-                  onChange={e => {
-                    setSortBy(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                >
-                  <option value="latest">Latest</option>
-                  <option value="price_asc">Price: Low to High</option>
-                  <option value="price_desc">Price: High to Low</option>
-                </select>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600">Sort by:</span>
+                <SortFilter value={filters.sort_by} onChange={handleSortByChange} />
               </div>
             </div>
             <div className="h-[calc(100vh-40px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
               {loading ? (
                 <div className="text-center py-10">Loading...</div>
+              ) : products.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="text-gray-500">No products found matching your filters.</p>
+                  <button
+                    onClick={handleClearFilters}
+                    className="mt-2 text-green-600 hover:text-green-700 underline"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {products.map((product) => (
@@ -174,11 +185,13 @@ const ProductGrid = () => {
               )}
             </div>
 
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={filters.page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
           </div>
         </div>
       </div>

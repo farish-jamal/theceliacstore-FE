@@ -50,11 +50,12 @@ export type Product = {
 export type ProductParams = {
   page: number;
   per_page: number;
+  search?: string;
+  price_range?: string; // Format: "min_max" e.g., "100_200"
   category?: string[];
   sub_category?: string[];
-  search?: string;
-  sort_by?: "price" | "name" | "createdAt";
-  sort_order?: "asc" | "desc";
-  tags?: string[];
+  rating?: number; // Single rating value (1-5)
+  is_best_seller?: boolean;
   brands?: string[];
+  sort_by?: "created_at" | "low_to_high" | "high_to_low"; // Updated sort options
 };

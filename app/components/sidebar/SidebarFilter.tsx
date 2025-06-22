@@ -1,38 +1,54 @@
 import React, { useState } from "react";
 import BrandChips, { BrandChipsProps } from "../brandchip/BrandChips";
 import { Category, Brand, SubCategory, getSubCategories } from "../../apis/getProducts";
+import SearchFilter from "../filters/SearchFilter";
+import PriceRangeFilter from "../filters/PriceRangeFilter";
+import RatingFilter from "../filters/RatingFilter";
+import BestSellerFilter from "../filters/BestSellerFilter";
 
 interface SidebarFilterProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedCategory: string;
+  // URL-based filter values
+  search: string;
+  onSearchChange: (value: string) => void;
+  priceRange: string;
+  onPriceRangeChange: (value: string) => void;
+  category: string;
   onCategoryChange: (category: string) => void;
-  selectedSubCategory: string;
+  subCategory: string;
   onSubCategoryChange: (subCategory: string) => void;
-  selectedPrice: number;
-  onPriceChange: (price: number) => void;
-  selectedRatings: number[];
-  onRatingsChange: (ratings: number[]) => void;
+  rating: number | undefined;
+  onRatingChange: (rating: number | undefined) => void;
+  isBestSeller: boolean;
+  onBestSellerChange: (value: boolean) => void;
   selectedBrands: BrandChipsProps["selectedBrands"];
   onBrandChange: BrandChipsProps["onBrandChange"];
   categories: Category[];
   brands: Brand[];
+  onClearFilters: () => void;
 }
 
 const SidebarFilter: React.FC<SidebarFilterProps> = ({
   isOpen,
   onClose,
+  search,
+  onSearchChange,
+  priceRange,
+  onPriceRangeChange,
+  category,
   onCategoryChange,
-  selectedSubCategory,
+  subCategory,
   onSubCategoryChange,
-  selectedPrice,
-  onPriceChange,
-  selectedRatings,
-  onRatingsChange,
+  rating,
+  onRatingChange,
+  isBestSeller,
+  onBestSellerChange,
   selectedBrands,
   onBrandChange,
   categories,
   brands,
+  onClearFilters,
 }) => {
   const [categorySubCategories, setCategorySubCategories] = useState<Record<string, SubCategory[]>>({});
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
@@ -72,7 +88,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
   };
 
   const handleSubCategorySelect = (subCategoryId: string, parentCategoryId: string) => {
-    if (selectedSubCategory === subCategoryId) {
+    if (subCategory === subCategoryId) {
       // Deselect if already selected
       onSubCategoryChange("");
       onCategoryChange("");
@@ -84,13 +100,13 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
   };
 
   const getSelectedCategoryId = () => {
-    if (!selectedSubCategory) return "";
+    if (!subCategory) return category || "";
     for (const [categoryId, subCats] of Object.entries(categorySubCategories)) {
-      if (subCats.some(sub => sub._id === selectedSubCategory)) {
+      if (subCats.some(sub => sub._id === subCategory)) {
         return categoryId;
       }
     }
-    return "";
+    return category || "";
   };
 
   const selectedCategoryId = getSelectedCategoryId();
@@ -125,6 +141,12 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
             </button>
           </div>
 
+          {/* Search Filter */}
+          <div className="mb-6">
+            <SearchFilter value={search} onChange={onSearchChange} />
+          </div>
+
+          {/* Categories */}
           <div className="mb-6">
             <h3 className="font-semibold mb-3 text-gray-800">Categories</h3>
             <div className="space-y-2">
@@ -190,13 +212,13 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                                   name="subCategory"
                                   id={subCat._id}
                                   className="accent-green-600 w-3 h-3"
-                                  checked={selectedSubCategory === subCat._id}
+                                  checked={subCategory === subCat._id}
                                   onChange={() => handleSubCategorySelect(subCat._id, cat._id)}
                                 />
                                 <label 
                                   htmlFor={subCat._id} 
                                   className={`text-xs cursor-pointer flex-1 ${
-                                    selectedSubCategory === subCat._id 
+                                    subCategory === subCat._id 
                                       ? 'text-green-700 font-medium' 
                                       : 'text-gray-600'
                                   }`}
@@ -219,48 +241,35 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
             </div>
           </div>
 
+          {/* Price Range Filter */}
           <div className="mb-6">
-            <h3 className="font-semibold mb-3 text-gray-800">Price Range</h3>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <input
-                type="range"
-                min="50"
-                max="1500"
-                value={selectedPrice}
-                onChange={e => onPriceChange(Number(e.target.value))}
-                className="w-full accent-green-600"
-              />
-              <p className="text-xs mt-2 text-gray-600">₹50 — ₹{selectedPrice}</p>
-            </div>
+            <PriceRangeFilter value={priceRange} onChange={onPriceRangeChange} />
           </div>
 
+          {/* Rating Filter */}
           <div className="mb-6">
-            <h3 className="font-semibold mb-3 text-gray-800">Rating</h3>
-            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-              {[5, 4, 3, 2, 1].map((rating) => (
-                <div className="flex items-center gap-3" key={rating}>
-                  <input
-                    type="checkbox"
-                    id={`rating-${rating}`}
-                    className="accent-green-600 w-4 h-4"
-                    checked={selectedRatings.includes(rating)}
-                    onChange={() => {
-                      if (selectedRatings.includes(rating)) {
-                        onRatingsChange(selectedRatings.filter(r => r !== rating));
-                      } else {
-                        onRatingsChange([...selectedRatings, rating]);
-                      }
-                    }}
-                  />
-                  <label htmlFor={`rating-${rating}`} className="text-sm text-gray-700 cursor-pointer">
-                    {"★".repeat(rating) + "☆".repeat(5 - rating)} {rating}.0 & up
-                  </label>
-                </div>
-              ))}
-            </div>
+            <RatingFilter value={rating} onChange={onRatingChange} />
           </div>
 
-          <BrandChips selectedBrands={selectedBrands} onBrandChange={onBrandChange} brands={brands} />
+          {/* Best Seller Filter */}
+          <div className="mb-6">
+            <BestSellerFilter value={isBestSeller} onChange={onBestSellerChange} />
+          </div>
+
+          {/* Brands */}
+          <div className="mb-6">
+            <BrandChips selectedBrands={selectedBrands} onBrandChange={onBrandChange} brands={brands} />
+          </div>
+
+          {/* Clear Filters Button */}
+          <div className="mb-6">
+            <button
+              onClick={onClearFilters}
+              className="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+            >
+              Clear All Filters
+            </button>
+          </div>
 
           <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-4 text-center mt-6">
             <p className="text-lg font-semibold text-green-700">Browse</p>
