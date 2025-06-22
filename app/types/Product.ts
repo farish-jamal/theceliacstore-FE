@@ -1,3 +1,13 @@
+export type Variant = {
+  _id: string;
+  name: string;
+  price: number;
+  discounted_price?: number | null;
+  inventory: number;
+  sku?: string;
+  images?: string[];
+};
+
 export type Product = {
   _id?: string;
   name: string;
@@ -21,6 +31,7 @@ export type Product = {
   salesperson_discounted_price?: number | null;
   dnd_discounted_price?: number | null;
   instock?: boolean;
+  inventory?: number;
   manufacturer?: string;
   consumed_type?: string;
   banner_image?: string;
@@ -33,6 +44,7 @@ export type Product = {
   created_by_admin: string;
   createdAt?: string;
   updatedAt?: string;
+  variants?: Variant[];
 };
 
 export type ProductParams = {
