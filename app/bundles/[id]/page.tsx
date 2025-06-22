@@ -8,6 +8,7 @@ import FrequentlyBought from "@/app/components/frequentlybought/FrequentlyBought
 import { getBundle, Bundle } from "@/app/apis/getBundles";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { formatPrice } from "@/app/utils/formatPrice";
 
 export default function BundleDetailPage() {
   const [selectedThumb, setSelectedThumb] = useState(0);
@@ -188,9 +189,9 @@ export default function BundleDetailPage() {
             </span>
           </div>
           <div className="flex items-center gap-3 mb-4">
-            <span className="text-xl font-bold text-gray-900">₹{totalPrice.toFixed(2)}</span>
-            <span className="text-sm text-gray-400 line-through">₹{originalPrice.toFixed(2)}</span>
-            <span className="text-xs text-green-600">Save ₹{savings.toFixed(2)}</span>
+            <span className="text-xl font-bold text-gray-900">₹{formatPrice(totalPrice)}</span>
+            <span className="text-sm text-gray-400 line-through">₹{formatPrice(originalPrice)}</span>
+            <span className="text-xs text-green-600">Save ₹{formatPrice(savings)}</span>
             <span className="text-xs text-gray-500">
               (Inclusive of all taxes)
             </span>
@@ -213,7 +214,7 @@ export default function BundleDetailPage() {
                     <p className="text-xs text-gray-500">Quantity: 1</p>
                   </div>
                   <div className="text-sm font-medium">
-                    ₹{(product.discounted_price ?? product.price).toFixed(2)}
+                    ₹{formatPrice(product.discounted_price ?? product.price)}
                   </div>
                 </div>
               ))}
@@ -258,7 +259,7 @@ export default function BundleDetailPage() {
             </div>
             <div>
               <span className="font-medium text-gray-900">Savings:</span>{" "}
-              ₹{savings.toFixed(2)} ({savingsPercentage}% off)
+              ₹{formatPrice(savings)} ({savingsPercentage}% off)
             </div>
           </div>
         </div>

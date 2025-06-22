@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { CartItem } from "@/app/types/Cart";
+import { formatPrice } from "@/app/utils/formatPrice";
 
 export type CartItemCardProps = {
   item: CartItem;
@@ -26,9 +27,9 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, onQuantityChange, onR
           {product.small_description}
         </div>
         <div className="flex items-center gap-2">
-          <span className="font-bold text-green-700">₹{price.toFixed(2)}</span>
+          <span className="font-bold text-green-700">₹{formatPrice(price)}</span>
           {product.discounted_price && (
-            <span className="line-through text-gray-400 text-xs">₹{product.price.toFixed(2)}</span>
+            <span className="line-through text-gray-400 text-xs">₹{formatPrice(product.price)}</span>
           )}
         </div>
       </div>
@@ -63,7 +64,7 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, onQuantityChange, onR
           Remove
         </button>
       </div>
-      <div className="font-semibold text-base min-w-[60px] text-right">₹{total.toFixed(2)}</div>
+      <div className="font-semibold text-base min-w-[60px] text-right">₹{formatPrice(total)}</div>
     </div>
   );
 };

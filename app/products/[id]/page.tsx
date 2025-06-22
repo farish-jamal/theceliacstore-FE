@@ -13,6 +13,7 @@ import { showSnackbar } from "@/app/slices/snackbarSlice";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatPrice } from "@/app/utils/formatPrice";
 
 interface CartResponse {
   success: boolean;
@@ -300,12 +301,12 @@ export default function ProductDetailPage() {
           </div>
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xl font-bold text-gray-900">
-              ₹{displayPrice?.toFixed(2)}
+              ₹{formatPrice(displayPrice)}
             </span>
             {displayPrice && displayOriginalPrice && displayPrice < displayOriginalPrice && (
               <>
                 <span className="text-sm text-gray-400 line-through">
-                  ₹{displayOriginalPrice.toFixed(2)}
+                  ₹{formatPrice(displayOriginalPrice)}
                 </span>
                 <span className="text-xs text-red-500">({displayDiscountPercentage}% Off)</span>
               </>
@@ -374,11 +375,11 @@ export default function ProductDetailPage() {
                     <div className="text-center">
                       <div className="font-medium">{variant.name}</div>
                       <div className="text-xs font-medium">
-                        ₹{variant.discounted_price?.toFixed(2) || variant.price.toFixed(2)}
+                        ₹{formatPrice(variant.discounted_price || variant.price)}
                       </div>
                       {variant.discounted_price && variant.price > variant.discounted_price && (
                         <div className="text-xs text-gray-400 line-through">
-                          ₹{variant.price.toFixed(2)}
+                          ₹{formatPrice(variant.price)}
                         </div>
                       )}
                       {(!variant.inventory || variant.inventory <= 0) && (

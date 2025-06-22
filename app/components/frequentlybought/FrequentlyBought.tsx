@@ -1,4 +1,5 @@
 import React from "react";
+import { formatPrice } from "@/app/utils/formatPrice";
 
 const FrequentlyBought = () => {
   const products = [
@@ -65,7 +66,7 @@ const FrequentlyBought = () => {
                 {product.name}
               </h3>
               <p className="text-xs font-bold mt-1">
-                ₹{product.price.toFixed(2)}
+                ₹{formatPrice(product.price)}
               </p>
             </div>
           </React.Fragment>
@@ -75,7 +76,7 @@ const FrequentlyBought = () => {
 
         <div className="flex flex-col items-center mx-2">
           <div className="text-lg font-semibold text-gray-900 mb-1">
-            Total: ₹{totalPrice.toFixed(2)}
+            Total: ₹{formatPrice(totalPrice)}
           </div>
           <div className="text-xs text-gray-500 mb-3">
             For {products.length} Items

@@ -6,6 +6,9 @@ import { showSnackbar } from "@/app/slices/snackbarSlice";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../auth/useAuth";
+import { useAddToCart } from "../../apis/getCart";
+import { formatPrice } from "../../utils/formatPrice";
 
 interface CartResponse {
   success: boolean;
@@ -208,7 +211,7 @@ const ProductCard = ({ name, price, image, productId, tags = [], onClick, instoc
           {name}
         </h3>
         <div className="flex items-center gap-2">
-          <p className="text-base font-semibold">₹{price.toFixed(2)}</p>
+          <p className="text-base font-semibold">₹{formatPrice(price)}</p>
           <p className="text-xs">(inclusive of all taxes)</p>
         </div>
         <div className="flex flex-1" />

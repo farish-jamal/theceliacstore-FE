@@ -1,11 +1,18 @@
 import { Product } from "@/app/types/Product";
 
+/**
+ * Type for MongoDB Decimal128 objects
+ */
+export type MongoDBDecimal = {
+  $numberDecimal: string;
+};
+
 export type CartItem = {
   _id: string;
   product: Product;
   quantity: number;
-  price: number;
-  total: number;
+  price: MongoDBDecimal | number;
+  total: MongoDBDecimal | number;
   addedAt: string;
   updatedAt: string;
 };
@@ -14,7 +21,7 @@ export type Cart = {
   _id: string;
   user: string;
   items: CartItem[];
-  total_price: number;
+  total_price: MongoDBDecimal | number;
   is_active: boolean;
   createdAt: string;
   updatedAt: string;

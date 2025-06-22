@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { formatPrice } from "@/app/utils/formatPrice";
 
 interface BundleCardProps {
   name: string;
@@ -98,17 +99,17 @@ const BundleCard: React.FC<BundleCardProps> = ({
 
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-green-600">
-              ₹{price.toFixed(2)}
+              ₹{formatPrice(price)}
             </span>
             {originalPrice && originalPrice > price && (
               <span className="text-sm text-gray-500 line-through">
-                ₹{originalPrice.toFixed(2)}
+                ₹{formatPrice(originalPrice)}
               </span>
             )}
           </div>
           {savings > 0 && (
             <p className="text-xs text-green-600 font-medium mt-1">
-              You save ₹{savings.toFixed(2)}
+              You save ₹{formatPrice(savings)}
             </p>
           )}
         </div>
