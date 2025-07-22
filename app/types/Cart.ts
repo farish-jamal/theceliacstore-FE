@@ -1,4 +1,5 @@
 import { Product } from "@/app/types/Product";
+import { Bundle } from "@/app/apis/getBundles";
 
 /**
  * Type for MongoDB Decimal128 objects
@@ -7,8 +8,9 @@ export type MongoDBDecimal = {
   $numberDecimal: string;
 };
 
-export type CartItem = {
+export type ProductCartItem = {
   _id: string;
+  type: "product";
   product: Product;
   quantity: number;
   price: MongoDBDecimal | number;
@@ -16,6 +18,19 @@ export type CartItem = {
   addedAt: string;
   updatedAt: string;
 };
+
+export type BundleCartItem = {
+  _id: string;
+  type: "bundle";
+  bundle: string | Bundle; // Can be ID string or full Bundle object
+  quantity: number;
+  price: MongoDBDecimal | number;
+  total: MongoDBDecimal | number;
+  addedAt: string;
+  updatedAt: string;
+};
+
+export type CartItem = ProductCartItem | BundleCartItem;
 
 export type Cart = {
   _id: string;

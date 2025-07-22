@@ -11,25 +11,55 @@ export type CartItemCardProps = {
 };
 
 const CartItemCard: React.FC<CartItemCardProps> = ({ item, onQuantityChange, onRemove, loading }) => {
-  const { product, quantity, price, total } = item;
+  const { quantity, price, total } = item;
+  
+  // Handle different item types
+  const isProduct = item.type === "product";
+  const isBundle = item.type === "bundle";
+  
+  // Get display properties based on item type
+  const name = isProduct ? item.product.name : 
+               isBundle && typeof item.bundle === "object" ? item.bundle.name : 
+               "Bundle"; // fallback if bundle is just an ID
+  
+  const description = isProduct ? item.product.small_description : 
+                     isBundle && typeof item.bundle === "object" ? item.bundle.description : 
+                     "Bundle package"; // fallback
+  
+  const banner_image = isProduct ? item.product.banner_image : 
+                      isBundle && typeof item.bundle === "object" && item.bundle.images?.[0] ? item.bundle.images[0] : 
+                      null;
+  
+  const images = isProduct ? item.product.images : 
+                isBundle && typeof item.bundle === "object" ? item.bundle.images : 
+                [];
+  
+  const originalPrice = isProduct ? item.product.price : 
+                       isBundle && typeof item.bundle === "object" ? item.bundle.price : 
+                       0;
+  
+  const hasDiscount = isProduct ? !!item.product.discounted_price : 
+                     isBundle && typeof item.bundle === "object" ? !!item.bundle.discounted_price : 
+                     false;
+
   return (
     <div className="flex gap-4 items-center border-b py-4">
       <Image
-        src={product.banner_image || (product.images && product.images[0]) || "/product-1.png"}
-        alt={product.name}
+        src={banner_image || (images?.[0]) || "/product-1.png"}
+        alt={name}
         width={80}
         height={80}
         className="object-cover rounded w-20 h-20"
       />
       <div className="flex-1">
-        <div className="font-semibold text-base mb-1">{product.name}</div>
+        <div className="font-semibold text-base mb-1">{name}</div>
         <div className="text-xs text-gray-500 mb-2 line-clamp-2">
-          {product.small_description}
+          {description}
         </div>
         <div className="flex items-center gap-2">
           <span className="font-bold text-green-700">₹{formatPrice(price)}</span>
-          {product.discounted_price && (
-            <span className="line-through text-gray-400 text-xs">₹{formatPrice(product.price)}</span>
+          {hasDiscount && (
+            <span className="line-through text-gray-400 text-xs">₹{formatPrice(originalPrice)}</span>
           )}
         </div>
       </div>

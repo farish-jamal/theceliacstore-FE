@@ -6,8 +6,6 @@ import { showSnackbar } from "@/app/slices/snackbarSlice";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "../auth/useAuth";
-import { useAddToCart } from "../../apis/getCart";
 import { formatPrice } from "../../utils/formatPrice";
 
 interface CartResponse {
@@ -123,7 +121,8 @@ const ProductCard = ({ name, price, image, productId, tags = [], onClick, instoc
     setIsAddingToCart(true);
     addToCartMutation.mutate({
       product_id: productId,
-      quantity: quantity
+      quantity: quantity,
+      type: 'product'
     });
   };
 

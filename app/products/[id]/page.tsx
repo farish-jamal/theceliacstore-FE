@@ -128,7 +128,8 @@ export default function ProductDetailPage() {
     addToCartMutation.mutate({
       product_id: product._id || productId,
       quantity: quantity,
-      variant_id: selectedVariant?._id
+      variant_id: selectedVariant?._id,
+      type: 'product'
     });
   };
 

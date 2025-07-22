@@ -22,16 +22,46 @@ const CartItemsList: React.FC<CartItemsListProps> = ({ items }) => {
 
   const handleQuantityChange = (itemId: string, quantity: number) => {
     const item = items.find((i) => i._id === itemId);
-    if (!item || !item.product._id) return;
+    if (!item) return;
+    
     setLoadingId(itemId);
-    mutation.mutate({ product_id: item.product._id as string, quantity });
+    
+    if (item.type === "product") {
+      mutation.mutate({ 
+        product_id: item.product._id as string, 
+        quantity, 
+        type: 'product' 
+      });
+    } else if (item.type === "bundle") {
+      const bundleId = typeof item.bundle === "string" ? item.bundle : item.bundle._id;
+      mutation.mutate({ 
+        bundle_id: bundleId, 
+        quantity, 
+        type: 'bundle' 
+      });
+    }
   };
 
   const handleRemove = (itemId: string) => {
     const item = items.find((i) => i._id === itemId);
-    if (!item || !item.product._id) return;
+    if (!item) return;
+    
     setLoadingId(itemId);
-    mutation.mutate({ product_id: item.product._id as string, quantity: 0 });
+    
+    if (item.type === "product") {
+      mutation.mutate({ 
+        product_id: item.product._id as string, 
+        quantity: 0, 
+        type: 'product' 
+      });
+    } else if (item.type === "bundle") {
+      const bundleId = typeof item.bundle === "string" ? item.bundle : item.bundle._id;
+      mutation.mutate({ 
+        bundle_id: bundleId, 
+        quantity: 0, 
+        type: 'bundle' 
+      });
+    }
   };
 
   console.log("Rendering CartItemsList with items:", items);
