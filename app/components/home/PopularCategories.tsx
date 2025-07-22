@@ -5,29 +5,30 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Typography } from "../typography/Typography";
 import { ProductParams } from "@/app/types/Product";
 
-const categories = [
-  "Bestsellers",
-  "Essentials",
-  "Noodles",
-  "Health Foods",
-  "Baking Essentials",
-  "Cookies",
-  "Snacks",
-  "Beverages",
-  "Frozen Foods",
-  "Condiments",
-  "Sauces",
-  "Spices",
-];
+interface Category {
+  _id: string;
+  name: string;
+  description: string;
+  discount_label_text?: string;
+  meta_data?: Record<string, unknown>;
+  newly_launched?: boolean;
+  is_active?: boolean;
+  images: string[];
+  tags?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 type PopularCategoriesProps = {
   params: ProductParams;
   setParams: React.Dispatch<React.SetStateAction<ProductParams>>;
+  categories: Category[];
 };
 
 const PopularCategories: React.FC<PopularCategoriesProps> = ({
   params,
   setParams,
+  categories,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -60,16 +61,16 @@ const PopularCategories: React.FC<PopularCategoriesProps> = ({
         >
           {categories.map((category) => (
             <button
-              key={category}
-              onClick={() => setParams((prev) => ({ ...prev, category }))}
+              key={category._id}
+              onClick={() => setParams((prev) => ({ ...prev, category: category._id }))}
               className={`px-5 py-2 rounded-full border text-sm font-medium whitespace-nowrap transition-all duration-200
                 ${
-                  params.category === category
+                  Array.isArray(params.category) && params.category.includes(category.name)
                     ? "bg-green-500 text-white"
                     : "border-green-500 text-black hover:bg-green-100"
                 }`}
             >
-              {category}
+              {category.name}
             </button>
           ))}
         </div>
