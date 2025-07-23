@@ -1,34 +1,19 @@
 import { apiService } from "./apiService";
 import { endpoints } from "./endpoints";
-import { MongoDBDecimal } from "@/app/types/Product";
+import { MongoDBDecimal, Product } from "@/app/types/Product";
 
-export interface BundleProduct {
+export interface BundleItem {
   _id: string;
-  name: string;
-  small_description: string;
-  price: MongoDBDecimal | number;
-  discounted_price: MongoDBDecimal | number;
-  tags: string[];
-  salesperson_discounted_price: MongoDBDecimal | number | null;
-  dnd_discounted_price: MongoDBDecimal | number | null;
-  instock: boolean;
-  banner_image: string;
-  images: string[];
-  meta_data?: Record<string, unknown>;
-  is_best_seller: boolean;
-  sub_category?: string;
-  category?: string[];
-  created_by_admin: string;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
+  product: Product;
+  variant_sku?: string;
+  quantity: number;
 }
 
 export interface Bundle {
   _id: string;
   name: string;
   description: string;
-  products: BundleProduct[];
+  products: BundleItem[];
   price: MongoDBDecimal | number;
   discounted_price: MongoDBDecimal | number;
   images: string[];

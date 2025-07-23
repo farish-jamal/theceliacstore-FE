@@ -173,9 +173,9 @@ export default function BundleDetailPage() {
   };
 
   // Aggregate all unique tags from all products in the bundle
-  const allTags = bundle.products?.reduce((acc: string[], product) => {
-    if (product.tags) {
-      product.tags.forEach(tag => {
+  const allTags = bundle.products?.reduce((acc: string[], item) => {
+    if (item.product?.tags) {
+      item.product.tags.forEach(tag => {
         if (!acc.includes(tag)) {
           acc.push(tag);
         }
@@ -315,24 +315,45 @@ export default function BundleDetailPage() {
           <div className="bg-white rounded-lg p-4 mb-6">
             <h3 className="font-medium mb-3">Bundle Contents:</h3>
             <div className="space-y-3">
-              {bundle.products?.map((product) => (
-                <div key={product._id} className="flex items-center gap-3">
-                  <div className="w-16 h-16 bg-gray-50 rounded-lg p-1">
-                    <img
-                      src={product.banner_image || product.images?.[0] || ""}
-                      alt={product.name}
-                      className="w-full h-full object-contain"
-                    />
+              {bundle.products?.filter(item => item.product).map((item) => {
+                const product = item.product;
+                
+                let displayPrice = convertToNumber(product.discounted_price ?? product.price);
+                let productName = product.name;
+                
+                // If there's a variant selected, use variant details
+                if (item.variant_sku && product.variants && product.variants.length > 0) {
+                  const selectedVariant = product.variants.find(v => v.sku === item.variant_sku);
+                  if (selectedVariant) {
+                    displayPrice = convertToNumber(selectedVariant.discounted_price ?? selectedVariant.price);
+                    productName = `${product.name} (${selectedVariant.name})`;
+                  }
+                }
+                
+                return (
+                  <div key={item._id} className="flex items-center gap-3">
+                    <div className="w-16 h-16 bg-gray-50 rounded-lg p-1">
+                      <img
+                        src={product.banner_image || product.images?.[0] || ""}
+                        alt={product.name}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium">{productName}</h4>
+                      <p className="text-xs text-gray-500">Quantity: {item.quantity}</p>
+                    </div>
+                    <div className="text-sm font-medium">
+                      ₹{formatPrice(displayPrice)}
+                      {item.quantity > 1 && (
+                        <span className="text-xs text-gray-500 block">
+                          ₹{formatPrice(displayPrice * item.quantity)} total
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-medium">{product.name}</h4>
-                    <p className="text-xs text-gray-500">Quantity: 1</p>
-                  </div>
-                  <div className="text-sm font-medium">
-                    ₹{formatPrice(product.discounted_price ?? product.price)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -393,7 +414,7 @@ export default function BundleDetailPage() {
             </div>
             <div>
               <span className="font-medium text-gray-900">Total Items:</span>{" "}
-              {bundle.products?.length || 0}
+              {bundle.products?.reduce((total, item) => total + item.quantity, 0) || 0}
             </div>
             <div>
               <span className="font-medium text-gray-900">Savings:</span>{" "}
@@ -428,7 +449,7 @@ export default function BundleDetailPage() {
       </div>
 
       <FrequentlyBought />
-      <ProductSlider title="You May Also Like" image={bundle.images?.[1] || ""} />
+      <ProductSlider title="You May Also Like" image={bundle.images?.[0] || ""} />
       <ProductSlider title="Best Sellers" image={bundle.images?.[0] || ""} />
       <Footer />
     </div>
