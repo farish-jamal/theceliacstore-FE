@@ -4,6 +4,8 @@ import CartItemCard from "./CartItemCard";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
 import SmallLoader from "./SmallLoader";
+import { useDispatch } from "react-redux";
+import { showSnackbar } from "@/app/slices/snackbarSlice";
 
 export type CartItemsListProps = {
   items: CartItem[];
@@ -11,18 +13,40 @@ export type CartItemsListProps = {
 
 const CartItemsList: React.FC<CartItemsListProps> = ({ items }) => {
   const queryClient = useQueryClient();
+  const dispatch = useDispatch();
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  
   const mutation = useMutation({
     mutationFn: updateProductInCart,
-    onSettled: () => {
+    onSuccess: (data, variables) => {
       setLoadingId(null);
       queryClient.invalidateQueries({ queryKey: ["cart"] });
+      
+      // Show success message for removal (quantity 0)
+      if (variables.quantity === 0) {
+        dispatch(showSnackbar({
+          message: "Item removed from cart successfully",
+          type: "success"
+        }));
+      }
+    },
+    onError: (error, variables) => {
+      setLoadingId(null);
+      console.error("Cart operation error:", error);
+      
+      const isRemoval = variables.quantity === 0;
+      dispatch(showSnackbar({
+        message: isRemoval 
+          ? "Failed to remove item from cart. Please try again."
+          : "Failed to update item quantity. Please try again.",
+        type: "error"
+      }));
     },
   });
 
   const handleQuantityChange = (itemId: string, quantity: number) => {
     const item = items.find((i) => i._id === itemId);
-    if (!item) return;
+    if (!item || quantity < 1) return;
     
     setLoadingId(itemId);
     

@@ -7,7 +7,7 @@ import Footer from "@/app/components/layout/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, Settings2 } from "lucide-react";
 import ProductSlider from "../components/productsider/ProductSlider";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { getCart } from "@/app/apis/getCart";
 import { Cart } from "@/app/types/Cart";
 import CartItemsList from "./components/CartItemsList";
@@ -79,14 +79,14 @@ const thumbnails = [
 ];
 
 const CartPage = () => {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["cart"],
     queryFn: getCart,
     select: (res) => res?.data?.data,
   });
 
   console.log("data", data);
-  const cart: Cart | undefined = data?.[0];
+  const cart: Cart | undefined = data;
 
   const [addresses, setAddresses] = useState<Address[]>(initialAddresses);
   const [selectedAddress, setSelectedAddress] = useState(addresses[0].id);
@@ -102,7 +102,7 @@ const CartPage = () => {
   const items = isArrayWithValues(cart?.items) ? cart.items : [];
   console.log("Cart items:", data, items);
   const subtotal = items.reduce(
-    (acc, item) => acc + item.price * item.quantity,
+    (acc, item) => acc + (typeof item.price === 'number' ? item.price : 0) * item.quantity,
     0
   );
   const discount = appliedCoupon ? subtotal * 0.1 : 0;
