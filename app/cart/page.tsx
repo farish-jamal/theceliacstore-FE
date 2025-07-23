@@ -7,7 +7,7 @@ import Footer from "@/app/components/layout/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, Settings2 } from "lucide-react";
 import ProductSlider from "../components/productsider/ProductSlider";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCart } from "@/app/apis/getCart";
 import { Cart } from "@/app/types/Cart";
 import CartItemsList from "./components/CartItemsList";
@@ -16,9 +16,18 @@ import EmptyCart from "./components/EmptyCart";
 import AddressCard from "./components/AddressCard";
 import OrderSummary from "./components/OrderSummary";
 import CheckoutButton from "./components/CheckoutButton";
+import {
+  getAddresses,
+  createAddress,
+  updateAddress,
+  deleteAddress,
+} from "@/app/apis/addressService";
+import { Address, CreateAddressPayload } from "@/app/types/Address";
+import { useAppSelector } from "@/app/hooks/reduxHooks";
 
-interface Address {
-  id: number;
+// Convert API Address to the local Address interface used in the component
+interface LocalAddress {
+  id: string;
   name: string;
   address: string;
   city: string;
@@ -28,28 +37,23 @@ interface Address {
   isDefault: boolean;
 }
 
-const initialAddresses = [
-  {
-    id: 1,
-    name: "John Doe",
-    address: "123 Main St, Apt 4B",
-    city: "New York",
-    state: "NY",
-    zip: "10001",
-    phone: "123-456-7890",
-    isDefault: true,
-  },
-  {
-    id: 2,
-    name: "John Doe",
-    address: "456 Park Ave",
-    city: "New York",
-    state: "NY",
-    zip: "10002",
-    phone: "123-456-7890",
-    isDefault: false,
-  },
-];
+const convertApiAddressToLocal = (apiAddress: Address): LocalAddress => {
+  console.log("🔄 Converting API address:", apiAddress);
+
+  const converted = {
+    id: apiAddress._id || "",
+    name: apiAddress.name || "",
+    address: apiAddress.address || "",
+    city: apiAddress.city || "",
+    state: apiAddress.state || "",
+    zip: apiAddress.pincode || "",
+    phone: apiAddress.mobile || "",
+    isDefault: apiAddress.isPrimary || false, // Convert isPrimary to isDefault for local use
+  };
+
+  console.log("✅ Converted to local address:", converted);
+  return converted;
+};
 
 const availableCoupons = [
   {
@@ -79,30 +83,134 @@ const thumbnails = [
 ];
 
 const CartPage = () => {
-  const { data, isLoading } = useQuery({
+  const queryClient = useQueryClient();
+
+  // Get user from Redux store
+  const user = useAppSelector((state) => state.auth.user);
+  const userId = user?.id;
+
+  const { data: cartData, isLoading: cartLoading } = useQuery({
     queryKey: ["cart"],
     queryFn: getCart,
     select: (res) => res?.data?.data,
   });
 
-  console.log("data", data);
-  const cart: Cart | undefined = data;
+  const { data: addressData, isLoading: addressLoading } = useQuery({
+    queryKey: ["addresses", userId],
+    queryFn: async () => {
+      if (!userId) {
+        return {
+          success: true,
+          data: { addresses: [], total: 0 },
+          message: "No user",
+          statusCode: 200,
+        };
+      }
+      const response = await getAddresses(userId);
+      console.log("🌐 RAW API RESPONSE:", response);
+      return response;
+    },
+    select: (res) => {
+      console.log("🔍 SELECT FUNCTION INPUT:", res);
+      const addresses = res?.data || []; // data is directly the addresses array
+      console.log("🔍 EXTRACTED ADDRESSES:", addresses);
+      return addresses;
+    },
+    enabled: !!userId, // Only run query if userId exists
+  });
 
-  const [addresses, setAddresses] = useState<Address[]>(initialAddresses);
-  const [selectedAddress, setSelectedAddress] = useState(addresses[0].id);
+  console.log("🔍 ADDRESS DEBUG INFO:");
+  console.log("Raw addressData from API:", addressData);
+  console.log("UserId:", userId);
+  console.log("Address loading:", addressLoading);
+
+  const cart: Cart | undefined = cartData;
+  const addresses: LocalAddress[] = Array.isArray(addressData)
+    ? addressData.map(convertApiAddressToLocal)
+    : [];
+
+  console.log("Final addresses array:", addresses);
+  console.log("Address array length:", addresses.length);
+
+  const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [showAddAddress, setShowAddAddress] = useState(false);
   const [showEditAddress, setShowEditAddress] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [editingAddress, setEditingAddress] = useState<LocalAddress | null>(
+    null
+  );
   const [showAddressSelect, setShowAddressSelect] = useState(false);
   const [showCoupons, setShowCoupons] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
+  // Set default selected address when addresses load
+  React.useEffect(() => {
+    console.log("🎯 ADDRESS SELECTION LOGIC:");
+    console.log("Addresses available:", addresses.length);
+    console.log("Current selectedAddress:", selectedAddress);
+
+    if (addresses.length > 0 && !selectedAddress) {
+      const defaultAddress =
+        addresses.find((addr) => addr.isDefault) || addresses[0];
+      console.log("Setting default address:", defaultAddress);
+      setSelectedAddress(defaultAddress.id);
+    }
+  }, [addresses, selectedAddress]);
+
+  const createAddressMutation = useMutation({
+    mutationFn: async (payload: CreateAddressPayload) => {
+      return await createAddress(payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
+      setShowAddAddress(false);
+    },
+    onError: (error) => {
+      console.error("Error creating address:", error);
+      alert("Failed to create address. Please try again.");
+    },
+  });
+
+  const updateAddressMutation = useMutation({
+    mutationFn: async ({
+      addressId,
+      payload,
+    }: {
+      addressId: string;
+      payload: CreateAddressPayload;
+    }) => {
+      return await updateAddress(addressId, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
+      setShowEditAddress(false);
+      setEditingAddress(null);
+    },
+    onError: (error) => {
+      console.error("Error updating address:", error);
+      alert("Failed to update address. Please try again.");
+    },
+  });
+
+  const deleteAddressMutation = useMutation({
+    mutationFn: async (addressId: string) => {
+      return await deleteAddress(addressId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
+    },
+    onError: (error) => {
+      console.error("Error deleting address:", error);
+      alert("Failed to delete address. Please try again.");
+    },
+  });
+
   // Defensive: handle undefined/null cart or items
   const items = isArrayWithValues(cart?.items) ? cart.items : [];
-  console.log("Cart items:", data, items);
+  console.log("Cart items:", cartData, items);
   const subtotal = items.reduce(
-    (acc, item) => acc + (typeof item.price === 'number' ? item.price : 0) * item.quantity,
+    (acc, item) =>
+      acc + (typeof item.price === "number" ? item.price : 0) * item.quantity,
     0
   );
   const discount = appliedCoupon ? subtotal * 0.1 : 0;
@@ -111,26 +219,21 @@ const CartPage = () => {
   const addNewAddress = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    const newAddress = {
-      id: addresses.length + 1,
+    const newAddress: CreateAddressPayload = {
       name: formData.get("fullName") as string,
       address: formData.get("address") as string,
       city: formData.get("city") as string,
       state: formData.get("state") as string,
-      zip: formData.get("zip") as string,
-      phone: formData.get("phone") as string,
-      isDefault: formData.get("default") === "on",
+      pincode: formData.get("zip") as string,
+      mobile: formData.get("phone") as string,
+      isPrimary: formData.get("default") === "on",
     };
 
-    setAddresses((prev) => {
-      if (newAddress.isDefault) {
-        return prev
-          .map((addr) => ({ ...addr, isDefault: false }))
-          .concat(newAddress);
-      }
-      return [...prev, newAddress];
-    });
-    setShowAddAddress(false);
+    if (!userId) {
+      alert("Please log in to add an address");
+      return;
+    }
+    createAddressMutation.mutate(newAddress);
   };
 
   const editAddress = (e: React.FormEvent) => {
@@ -138,31 +241,34 @@ const CartPage = () => {
     if (!editingAddress) return;
 
     const formData = new FormData(e.target as HTMLFormElement);
-    const updatedAddress = {
-      id: editingAddress.id,
+    const updatedAddress: CreateAddressPayload = {
       name: formData.get("fullName") as string,
       address: formData.get("address") as string,
       city: formData.get("city") as string,
       state: formData.get("state") as string,
-      zip: formData.get("zip") as string,
-      phone: formData.get("phone") as string,
-      isDefault: formData.get("default") === "on",
+      pincode: formData.get("zip") as string,
+      mobile: formData.get("phone") as string,
+      isPrimary: formData.get("default") === "on",
     };
 
-    setAddresses((prev) => {
-      if (updatedAddress.isDefault) {
-        return prev.map((addr) =>
-          addr.id === updatedAddress.id
-            ? updatedAddress
-            : { ...addr, isDefault: false }
-        );
-      }
-      return prev.map((addr) =>
-        addr.id === updatedAddress.id ? updatedAddress : addr
-      );
+    if (!userId) {
+      alert("Please log in to update an address");
+      return;
+    }
+    updateAddressMutation.mutate({
+      addressId: editingAddress.id,
+      payload: updatedAddress,
     });
-    setShowEditAddress(false);
-    setEditingAddress(null);
+  };
+
+  const handleDeleteAddress = (addressId: string) => {
+    if (window.confirm("Are you sure you want to delete this address?")) {
+      if (!userId) {
+        alert("Please log in to delete an address");
+        return;
+      }
+      deleteAddressMutation.mutate(addressId);
+    }
   };
 
   const applyCoupon = () => {
@@ -181,6 +287,31 @@ const CartPage = () => {
     setCouponCode("");
   };
 
+  // If user is not logged in, show login prompt
+  if (!userId) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <TopFloater />
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          <div className="bg-white rounded-xl p-8 text-center">
+            <h2 className="text-2xl font-semibold mb-4">Please Log In</h2>
+            <p className="text-gray-600 mb-6">
+              You need to be logged in to view your cart and manage addresses.
+            </p>
+            <button
+              onClick={() => (window.location.href = "/login")}
+              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
+            >
+              Go to Login
+            </button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <TopFloater />
@@ -190,7 +321,7 @@ const CartPage = () => {
           {/* Cart Items Section */}
           <div className="lg:w-2/3">
             <AnimatePresence>
-              {isLoading ? (
+              {cartLoading ? (
                 <div className="bg-white rounded-xl p-8 text-center">
                   Loading...
                 </div>
@@ -255,17 +386,32 @@ const CartPage = () => {
                   className="border-2 rounded-xl p-4 cursor-pointer hover:border-gray-300"
                   onClick={() => setShowAddressSelect(true)}
                 >
-                  {addresses.find((addr) => addr.id === selectedAddress) ? (
-                    <AddressCard
-                      {...addresses.find(
-                        (addr) => addr.id === selectedAddress
-                      )!}
-                    />
-                  ) : (
-                    <p className="text-gray-500 text-center">
-                      Select a delivery address
-                    </p>
-                  )}
+                  {(() => {
+                    console.log("🏠 ADDRESS DISPLAY LOGIC:");
+                    console.log("addressLoading:", addressLoading);
+                    console.log("addresses array:", addresses);
+                    console.log("selectedAddress:", selectedAddress);
+                    const foundAddress = addresses.find(
+                      (addr) => addr.id === selectedAddress
+                    );
+                    console.log("Found selected address:", foundAddress);
+
+                    if (addressLoading) {
+                      return (
+                        <p className="text-gray-500 text-center">
+                          Loading addresses...
+                        </p>
+                      );
+                    } else if (foundAddress) {
+                      return <AddressCard {...foundAddress} />;
+                    } else {
+                      return (
+                        <p className="text-gray-500 text-center">
+                          Select a delivery address
+                        </p>
+                      );
+                    }
+                  })()}
                 </div>
               </div>
 
@@ -373,7 +519,7 @@ const CartPage = () => {
                     className="block text-sm font-medium mb-2"
                     htmlFor="zip"
                   >
-                    ZIP Code
+                    PIN Code
                   </label>
                   <input
                     type="text"
@@ -388,7 +534,7 @@ const CartPage = () => {
                     className="block text-sm font-medium mb-2"
                     htmlFor="phone"
                   >
-                    Phone
+                    Mobile
                   </label>
                   <input
                     type="tel"
@@ -412,9 +558,10 @@ const CartPage = () => {
               </div>
               <button
                 type="submit"
-                className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors mt-6 font-medium"
+                disabled={createAddressMutation.isPending}
+                className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors mt-6 font-medium disabled:opacity-50"
               >
-                Add Address
+                {createAddressMutation.isPending ? "Adding..." : "Add Address"}
               </button>
             </form>
           </motion.div>
@@ -537,16 +684,25 @@ const CartPage = () => {
                         </span>
                       )}
                     </div>
-                    <button
-                      onClick={() => {
-                        setEditingAddress(address);
-                        setShowEditAddress(true);
-                        setShowAddressSelect(false);
-                      }}
-                      className="text-gray-400 hover:text-gray-600 p-1"
-                    >
-                      <Settings2 className="w-5 h-5" />
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingAddress(address);
+                          setShowEditAddress(true);
+                          setShowAddressSelect(false);
+                        }}
+                        className="text-gray-400 hover:text-gray-600 p-1"
+                      >
+                        <Settings2 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAddress(address.id)}
+                        className="text-red-400 hover:text-red-600 p-1"
+                        disabled={deleteAddressMutation.isPending}
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -652,7 +808,7 @@ const CartPage = () => {
                     className="block text-sm font-medium mb-2"
                     htmlFor="zip"
                   >
-                    ZIP Code
+                    PIN Code
                   </label>
                   <input
                     type="text"
@@ -668,7 +824,7 @@ const CartPage = () => {
                     className="block text-sm font-medium mb-2"
                     htmlFor="phone"
                   >
-                    Phone
+                    Mobile
                   </label>
                   <input
                     type="tel"
@@ -694,9 +850,10 @@ const CartPage = () => {
               </div>
               <button
                 type="submit"
-                className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors mt-6 font-medium"
+                disabled={updateAddressMutation.isPending}
+                className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors mt-6 font-medium disabled:opacity-50"
               >
-                Save Changes
+                {updateAddressMutation.isPending ? "Saving..." : "Save Changes"}
               </button>
             </form>
           </motion.div>
