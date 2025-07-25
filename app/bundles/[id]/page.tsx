@@ -315,39 +315,47 @@ export default function BundleDetailPage() {
           <div className="bg-white rounded-lg p-4 mb-6">
             <h3 className="font-medium mb-3">Bundle Contents:</h3>
             <div className="space-y-3">
-              {bundle.products?.filter(item => item.product).map((item) => {
-                const product = item.product;
-                
-                let displayPrice = convertToNumber(product.discounted_price ?? product.price);
-                let productName = product.name;
-                
+              {(bundle.products || []).map((item, idx) => {
+                // Support both { product, quantity } and direct product objects
+                let product, quantity;
+                if (item.product) {
+                  product = item.product;
+                  quantity = item.quantity || 1;
+                } else {
+                  product = item;
+                  quantity = item.quantity || 1;
+                }
+                if (!product) return null;
+                // Explicitly cast product as Product for property access
+                const prod = product as import("@/app/types/Product").Product;
+                let displayPrice = convertToNumber(prod.discounted_price ?? prod.price);
+                let productName = prod.name;
                 // If there's a variant selected, use variant details
-                if (item.variant_sku && product.variants && product.variants.length > 0) {
-                  const selectedVariant = product.variants.find(v => v.sku === item.variant_sku);
+                if (item.variant_sku && prod.variants && prod.variants.length > 0) {
+                  const selectedVariant = prod.variants.find((v: import("@/app/types/Product").Variant) => v.sku === item.variant_sku);
                   if (selectedVariant) {
                     displayPrice = convertToNumber(selectedVariant.discounted_price ?? selectedVariant.price);
-                    productName = `${product.name} (${selectedVariant.name})`;
+                    productName = `${prod.name} (${selectedVariant.name})`;
                   }
                 }
-                
                 return (
-                  <div key={item._id} className="flex items-center gap-3">
+                  <div key={prod._id || idx} className="flex items-center gap-3">
                     <div className="w-16 h-16 bg-gray-50 rounded-lg p-1">
                       <img
-                        src={product.banner_image || product.images?.[0] || ""}
-                        alt={product.name}
+                        src={prod.banner_image || (prod.images && prod.images[0]) || ""}
+                        alt={prod.name}
                         className="w-full h-full object-contain"
                       />
                     </div>
                     <div className="flex-1">
                       <h4 className="text-sm font-medium">{productName}</h4>
-                      <p className="text-xs text-gray-500">Quantity: {item.quantity}</p>
+                      <p className="text-xs text-gray-500">Quantity: {quantity}</p>
                     </div>
                     <div className="text-sm font-medium">
                       ₹{formatPrice(displayPrice)}
-                      {item.quantity > 1 && (
+                      {quantity > 1 && (
                         <span className="text-xs text-gray-500 block">
-                          ₹{formatPrice(displayPrice * item.quantity)} total
+                          ₹{formatPrice(displayPrice * quantity)} total
                         </span>
                       )}
                     </div>
