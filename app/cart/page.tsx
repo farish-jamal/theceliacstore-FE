@@ -420,7 +420,11 @@ const CartPage = () => {
                 discount={discount}
                 total={total}
               />
-              <CheckoutButton disabled={!isArrayWithValues(cart?.items)} />
+              <CheckoutButton 
+                disabled={!isArrayWithValues(cart?.items) || !selectedAddress} 
+                cartId={cart?._id}
+                addressId={selectedAddress}
+              />
             </div>
           </div>
         </div>

@@ -27,4 +27,7 @@ export const endpoints = {
   // addresses
   addresses: "api/address",
   getUserAddresses: (userId: string) => `api/address/user/${userId}`,
+
+  // orders
+  order: "api/order",
 };
