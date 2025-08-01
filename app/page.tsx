@@ -63,7 +63,7 @@ const HomePage = () => {
       <ReviewSection />
       <TopBrands />
       <WhyChooseUs />
-      <BlogsSection />
+      {/* <BlogsSection /> */}
       <StoreInfo />
       <Footer />
     </div>

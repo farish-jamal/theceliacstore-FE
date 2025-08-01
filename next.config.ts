@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       "images.unsplash.com",
       "upload.wikimedia.org",
       "res.cloudinary.com",
+      "i0.wp.com",
     ],
   },
   typescript: {

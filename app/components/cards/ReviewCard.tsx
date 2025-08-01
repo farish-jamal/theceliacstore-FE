@@ -14,9 +14,9 @@ type ReviewCardProps = {
 
 const ReviewCard = ({ name, review, rating, url, type }: ReviewCardProps) => {
   return (
-    <div className="flex flex-col justify-between shadow-[0_4px_12px_0_rgba(0,0,0,0.08)] px-8 py-8 rounded-lg gap-4 m-4 h-[30vh] bg-white">
+    <div className="flex flex-col justify-between shadow-[0_4px_12px_0_rgba(0,0,0,0.08)] px-8 py-8 rounded-lg gap-4 m-4 min-h-[280px] bg-white">
       <CommentIcon />
-      <Typography className="mt-2 line-clamp-3 text-base text-gray-800">
+      <Typography className="text-sm mt-2 text-gray-800 flex-1">
         {review}
       </Typography>
       <div className="flex justify-between items-center gap-2 mt-4">
@@ -29,7 +29,7 @@ const ReviewCard = ({ name, review, rating, url, type }: ReviewCardProps) => {
             className="rounded-full"
           />
           <div>
-            <p className="font-semibold text-sm">{name}</p>
+            <p className="font-semibold text-xs">{name}</p>
             <p className="text-xs text-gray-500">{type}</p>
           </div>
         </div>
@@ -37,7 +37,7 @@ const ReviewCard = ({ name, review, rating, url, type }: ReviewCardProps) => {
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
-              size={18}
+              size={14}
               fill={i < rating ? "#FACC15" : "none"}
               stroke="#FACC15"
               className={i < rating ? "" : "opacity-40"}

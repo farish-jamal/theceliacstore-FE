@@ -4,6 +4,24 @@ import { Button } from "@/components/ui/button";
 import { MapPin, PhoneCall } from "lucide-react";
 
 const StoreInfo = () => {
+  const handleGetDirections = () => {
+    window.open(
+      "https://www.google.com/maps/dir//A-373,+Defence+Colony,+New+Delhi,+Delhi+110024/@28.5733491,77.1473385,12z/data=!4m8!4m7!1m0!1m5!1m1!1s0x390ce2570b6dafd3:0x5457894f8ba41e70!2m2!1d77.2297399!2d28.573374?entry=ttu&g_ep=EgoyMDI1MDcyOS4wIKXMDSoASAFQAw%3D%3D",
+      "_blank"
+    );
+  };
+
+  const handleCallUs = () => {
+    window.open("tel:+919810107887", "_self");
+  };
+
+  const handleWhatsApp = () => {
+    const phoneNumber = "919810107887";
+    const message = "Hi! I'm interested in your products. Can you help me?";
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
   return (
     <div className="bg-[#EDF2EE] flex flex-col md:flex-row py-8 md:py-[5%] px-4 md:px-[10%] gap-8 md:gap-24 items-center">
       <Image
@@ -21,7 +39,7 @@ const StoreInfo = () => {
             variant="h1"
             className="text-2xl md:text-h leading-8 md:leading-10 text-center md:text-left"
           >
-            Reach Our Delhi Store & <br /> Shop in Person!
+            Contact our Delhi Store or <br /> Visit to shop in person
           </Typography>
 
           <Typography className="text-base md:text-h leading-6 text-gray-500 text-center md:text-left">
@@ -32,20 +50,25 @@ const StoreInfo = () => {
         </div>
 
         <div className="flex flex-col md:flex-row gap-3 md:gap-2 w-full md:w-auto items-center md:items-start justify-center md:justify-start">
-          <Button className="rounded-full w-full md:w-[11rem] bg-[#4CAF50] hover:bg-[#4CAF50] font-bold py-4 md:py-5 flex items-center justify-center gap-2">
+          <Button 
+            onClick={handleGetDirections}
+            className="rounded-full w-full md:w-[11rem] bg-[#4CAF50] hover:bg-[#4CAF50] font-bold py-4 md:py-5 flex items-center justify-center gap-2 cursor-pointer"
+          >
             <MapPin /> Get Directions
           </Button>
 
           <Button
+            onClick={handleCallUs}
             variant="outline"
-            className="rounded-full border-1 border-black w-full md:w-[8rem] bg-transparent font-bold py-4 md:py-5 flex items-center justify-center gap-2"
+            className="rounded-full border-1 border-black w-full md:w-[8rem] bg-transparent font-bold py-4 md:py-5 flex items-center justify-center gap-2 cursor-pointer"
           >
             <PhoneCall /> Call Us
           </Button>
 
           <Button
+            onClick={handleWhatsApp}
             variant="outline"
-            className="rounded-full border-1 border-black w-full md:w-[8rem] bg-transparent font-bold py-4 md:py-5 flex items-center justify-center gap-2"
+            className="rounded-full border-1 border-black w-full md:w-[8rem] bg-transparent font-bold py-4 md:py-5 flex items-center justify-center gap-2 cursor-pointer"
           >
             Whatsapp
           </Button>
