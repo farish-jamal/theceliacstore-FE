@@ -3,7 +3,6 @@
 import { Typography } from "../typography/Typography";
 import {
   ChevronDown,
-  ChevronRight,
   LanguagesIcon,
   PhoneCallIcon,
 } from "lucide-react";
@@ -31,6 +30,10 @@ const TopFloater = () => {
     { label: "ગુજરાતી", code: "gu" },
     { label: "தமிழ்", code: "ta" },
     { label: "తెలుగు", code: "te" },
+    { label: "French", code: "fr" },
+    { label: "German", code: "de" },
+    { label: "Spanish", code: "es" },
+    { label: "Italian", code: "it" },
   ];
   return (
     <div className="flex flex-col md:flex-row items-center justify-between bg-[#58B45B] px-4 md:px-24 py-2 gap-2 md:gap-0">
@@ -38,7 +41,7 @@ const TopFloater = () => {
         <Typography className="text-[#fff] font-bold text-sm text-center md:text-left">
           {t.offOnBrands}
         </Typography>
-        <ChevronRight className="inline h-4 w-4 text-white" strokeWidth={3} />
+        {/* <ChevronRight className="inline h-4 w-4 text-white" strokeWidth={3} /> */}
       </div>
 
       {/* On mobile: language and phone in same row. On desktop: row with gap */}

@@ -30,10 +30,10 @@ const Footer = () => {
           We stock the best brands for Gluten Free Foods, Organic Food, Super Food and other Healthy Foods and we offer Doorstep Delivery across India from our retail location. Check out our products for more.
           </p>
           <div className="flex gap-4 mt-4 justify-center md:justify-start flex-wrap">
-            <a href="#" aria-label="Facebook">
+            <a href="https://www.facebook.com/theceliacstore" aria-label="Facebook">
               <Facebook className="text-blue-600" />
             </a>
-            <a href="#" aria-label="Instagram">
+            <a href="https://www.instagram.com/theceliacstore" aria-label="Instagram">
               <Instagram className="text-pink-500" />
             </a>
           </div>
@@ -44,16 +44,16 @@ const Footer = () => {
           <h3 className="font-bold text-lg mb-4">COMPANY</h3>
           <ul className="text-sm space-y-2">
             <li>
-              <a href="#">About Us</a>
+              <a href="/about">About Us</a>
             </li>
             <li>
-              <a href="#">Privacy Policy</a>
+              <a href="/privacy">Privacy Policy</a>
             </li>
             <li>
-              <a href="#">Terms & Conditions</a>
+              <a href="/terms-condition">Terms & Conditions</a>
             </li>
             <li>
-              <a href="#">Refund Policy</a>
+              <a href="/refund">Refund Policy</a>
             </li>
           </ul>
         </div>
