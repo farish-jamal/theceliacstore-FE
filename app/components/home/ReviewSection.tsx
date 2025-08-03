@@ -13,27 +13,27 @@ import { useIsMobile } from "@/app/hooks/useIsMobile";
 
 const reviews = [
   {
-    name: "John Doe",
+    name: "Customer",
     review:
-      "Pellentesque eu nibh eget mauris congue mattis mattis nec tellus. Pellentesque eu nibh eget mauris congue mattis mattis nec tellus.. Phasellus imperdiet elit eu magna dictum, !",
+      "My husband has been suffering from celiac disease for the last 15 years. Besides the disease, he also suffered as there were not much options available to eat. And then searching the internet one day, I found the celiac store. I called them. They responded. And it has been a beautiful journey since then.",
     rating: 5,
-    url: "https://randomuser.me/api/portraits/men/1.jpg",
+    url: "/review-1.webp",
     type: "Customer",
   },
   {
-    name: "Jane Smith",
+    name: "Customer",
     review:
-      "Pellentesque eu nibh eget mauris congue mattis mattis nec tellus. Pellentesque eu nibh eget mauris congue mattis mattis nec tellus...",
-    rating: 4,
-    url: "https://randomuser.me/api/portraits/women/2.jpg",
+      "My child had to shift to a lactose free diet a year ago and since then we've been ordering from The Celiac Store because we like their service and their supportiveness in every little thing. Half my son's favorite dishes he would have had to leave had we not found Celiac Store and had they not been so helpful in every which way.",
+    rating: 5,
+    url: "/review-2.webp",
     type: "Customer",
   },
   {
-    name: "Sam Wilson",
+    name: "ANSHUL GUPTA",
     review:
-      "Pellentesque eu nibh eget mauris congue mattis mattis nec tellus. Pellentesque eu nibh eget mauris congue mattis mattis nec tellus..",
+      "Celiac store is the best destination in India whether you visit physically or place your demand online. It has a very large variety of gluten free products foreign made as well as Indian made. I have been a regular customer of this store since last two years and I have gotten wonderful and in time service.",
     rating: 5,
-    url: "https://randomuser.me/api/portraits/men/3.jpg",
+    url: "/review-3.webp",
     type: "Customer",
   },
 ];

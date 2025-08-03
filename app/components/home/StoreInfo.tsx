@@ -4,6 +4,27 @@ import { Button } from "@/components/ui/button";
 import { MapPin, PhoneCall } from "lucide-react";
 
 const StoreInfo = () => {
+  const handleGetDirections = () => {
+    // Replace with your actual store coordinates
+    const storeAddress = "Delhi NCR, India";
+    const encodedAddress = encodeURIComponent(storeAddress);
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
+  };
+
+  const handleCallUs = () => {
+    // Replace with your actual phone number
+    const phoneNumber = "9810107887";
+    window.open(`tel:${phoneNumber}`, '_self');
+  };
+
+  const handleWhatsApp = () => {
+    // Replace with your actual phone number and message
+    const phoneNumber = "919810107887";
+    const message = "Hi! I'm interested in your gluten-free products. Can you help me?";
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+  };
+
   return (
     <div className="bg-[#EDF2EE] flex flex-col md:flex-row py-8 md:py-[5%] px-4 md:px-[10%] gap-8 md:gap-24 items-center">
       <Image
@@ -21,7 +42,7 @@ const StoreInfo = () => {
             variant="h1"
             className="text-2xl md:text-h leading-8 md:leading-10 text-center md:text-left"
           >
-            Reach Our Delhi Store & <br /> Shop in Person!
+            Visit to shop in Person!
           </Typography>
 
           <Typography className="text-base md:text-h leading-6 text-gray-500 text-center md:text-left">
@@ -32,11 +53,15 @@ const StoreInfo = () => {
         </div>
 
         <div className="flex flex-col md:flex-row gap-3 md:gap-2 w-full md:w-auto items-center md:items-start justify-center md:justify-start">
-          <Button className="rounded-full w-full md:w-[11rem] bg-[#4CAF50] hover:bg-[#4CAF50] font-bold py-4 md:py-5 flex items-center justify-center gap-2">
+          <Button 
+            onClick={handleGetDirections}
+            className="rounded-full w-full md:w-[11rem] bg-[#4CAF50] hover:bg-[#4CAF50] font-bold py-4 md:py-5 flex items-center justify-center gap-2"
+          >
             <MapPin /> Get Directions
           </Button>
 
           <Button
+            onClick={handleCallUs}
             variant="outline"
             className="rounded-full border-1 border-black w-full md:w-[8rem] bg-transparent font-bold py-4 md:py-5 flex items-center justify-center gap-2"
           >
@@ -44,6 +69,7 @@ const StoreInfo = () => {
           </Button>
 
           <Button
+            onClick={handleWhatsApp}
             variant="outline"
             className="rounded-full border-1 border-black w-full md:w-[8rem] bg-transparent font-bold py-4 md:py-5 flex items-center justify-center gap-2"
           >

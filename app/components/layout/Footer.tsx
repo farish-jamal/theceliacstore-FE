@@ -2,22 +2,45 @@ import { Facebook, Instagram } from "lucide-react";
 import { Typography } from "../typography/Typography";
 import Image from "next/image";
 
+const CONTACT_INFO = {
+  phone: "+91 98101 07887",
+  email: "theceliacstore@gmail.com",
+  address: "A373, Defence Colony, New Delhi",
+};
+
+const SOCIAL_LINKS = {
+  facebook: "https://www.facebook.com/theceliacstore",
+  instagram: "https://www.instagram.com/theceliacstore/",
+};
+
 const paymentLogos = [
   {
+    name: "UPI",
+    src: "/upi.png",
+  },
+  {
     name: "Visa",
-    src: "https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png",
+    src: "/visa.png",
   },
   {
-    name: "MasterCard",
-    src: "https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg",
+    name: "Mastercard",
+    src: "/master_card.png",
   },
   {
-    name: "PayPal",
-    src: "https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg",
+    name: "RuPay",
+    src: "/rupay.png",
   },
   {
-    name: "Apple Pay",
-    src: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg",
+    name: "AMEX",
+    src: "/amex.png",
+  },
+  {
+    name: "Diners Club",
+    src: "/diners_club.png",
+  },
+  {
+    name: "Net Banking",
+    src: "/net_banking.jpg",
   },
 ];
 
@@ -43,10 +66,20 @@ const Footer = () => {
             Based Out Of Defence Colony, New Delhi.
           </p>
           <div className="flex gap-4 mt-4 justify-center md:justify-start flex-wrap">
-            <a href="#" aria-label="Facebook">
+            <a 
+              href={SOCIAL_LINKS.facebook} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+            >
               <Facebook className="text-blue-600" />
             </a>
-            <a href="#" aria-label="Instagram">
+            <a 
+              href={SOCIAL_LINKS.instagram} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+            >
               <Instagram className="text-pink-500" />
             </a>
           </div>
@@ -94,9 +127,9 @@ const Footer = () => {
         <div className="text-center md:text-left">
           <h3 className="font-bold text-lg mb-4">CONTACT</h3>
           <ul className="text-sm space-y-2">
-            <li>+91 12345 67890</li>
-            <li>info@theceliacstore.in</li>
-            <li>Defence Colony, New Delhi</li>
+            <li>{CONTACT_INFO.phone}</li>
+            <li>{CONTACT_INFO.email}</li>
+            <li>{CONTACT_INFO.address}</li>
           </ul>
         </div>
       </div>
@@ -115,7 +148,7 @@ const Footer = () => {
               alt={logo.name}
               width={150}
               height={150}
-              className="h-8 w-auto"
+              className="h-8 w-auto object-contain"
               loading="lazy"
             />
           ))}
