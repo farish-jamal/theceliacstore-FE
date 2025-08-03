@@ -6,11 +6,13 @@ import FilterButton from "../filters/FilterButton";
 import SidebarFilter from "../sidebar/SidebarFilter";
 import Link from "next/link";
 import Pagination from "../pagination/Pagination";
-import { getBundles, Bundle, BundleParams } from "../../apis/getBundles";
+import { getBundles, Bundle } from "../../apis/getBundles";
 import { getCategories, getBrands, Category, Brand } from "../../apis/getProducts";
+import { useBundleFilters } from "../../hooks/useBundleFilters";
+import SortFilter from "../filters/SortFilter";
+import { convertToNumber } from "@/app/utils/formatPrice";
 
-const DEFAULT_PRICE = 1500;
-const PER_PAGE = 36;
+const PER_PAGE = 10;
 
 // Fallback bundle data for when API is not available
 const fallbackBundles: Bundle[] = [
@@ -66,16 +68,12 @@ const BundleGrid = () => {
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
-  const [selectedPrice, setSelectedPrice] = useState<number>(DEFAULT_PRICE);
-  const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<string>("latest");
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+
+  // Use the URL-based filtering hook
+  const { filters, updateFilter, clearFilters, getApiParams } = useBundleFilters();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -106,28 +104,45 @@ const BundleGrid = () => {
       setLoading(true);
       setError(null);
       try {
-        const params: BundleParams = {
-          page: currentPage,
-          per_page: PER_PAGE,
-        };
-        if (selectedCategory) params.category = [selectedCategory];
-        if (selectedSubCategory) params.sub_category = [selectedSubCategory];
-        if (sortBy && sortBy !== "latest") {
-          if (sortBy === "price_asc") {
-            params.sort_by = "price";
-            params.sort_order = "asc";
-          } else if (sortBy === "price_desc") {
-            params.sort_by = "price";
-            params.sort_order = "desc";
-          }
+        const apiParams = getApiParams;
+        console.log("Fetching bundles with params:", apiParams);
+        
+        const res = await getBundles({ params: apiParams });
+        console.log("Bundles API Response:", res);
+        console.log("Response type:", typeof res);
+        console.log("Response.data type:", typeof res.data);
+        console.log("Is res.data an array?", Array.isArray(res.data));
+        if (res.data && typeof res.data === 'object') {
+          console.log("res.data keys:", Object.keys(res.data));
+          console.log("res.data.data type:", typeof (res.data as unknown as Record<string, unknown>).data);
+          console.log("Is res.data.data an array?", Array.isArray((res.data as unknown as Record<string, unknown>).data));
         }
-        if (selectedBrands.length > 0) params.brands = selectedBrands;
-        const res = await getBundles({ params });
-        console.log("Bundles API Response:", res); // Debug log
-        console.log("Bundles data:", res.data); // Debug log
-        console.log("Bundles length:", res.data?.length); // Debug log
-        setBundles(res.data || []);
-        setTotalPages(Math.ceil((res.data?.length || 1) / PER_PAGE));
+        
+        // Handle different possible response structures
+        let bundlesData: Bundle[] = [];
+        if (res.data && Array.isArray(res.data)) {
+          // Direct array response
+          bundlesData = res.data;
+          console.log("Using direct array response");
+        } else if (res.data && typeof res.data === 'object' && 'data' in res.data && Array.isArray((res.data as { data: Bundle[] }).data)) {
+          // Nested data structure: { data: { data: [...] } }
+          bundlesData = (res.data as { data: Bundle[] }).data;
+          console.log("Using nested data response");
+        } else if (Array.isArray(res)) {
+          // Response is directly an array
+          bundlesData = res;
+          console.log("Using direct response as array");
+        } else {
+          console.error("Unexpected bundles response structure:", res);
+          setError("Invalid response format from server");
+          setBundles([]);
+          setTotalPages(1);
+          return;
+        }
+        
+        console.log("Extracted bundles data:", bundlesData);
+        setBundles(bundlesData);
+        setTotalPages(Math.ceil((bundlesData.length || 1) / PER_PAGE));
       } catch (err) {
         console.error("Error fetching bundles:", err);
         setError("Unable to load bundles. Showing sample data.");
@@ -139,9 +154,47 @@ const BundleGrid = () => {
       }
     };
     fetchBundles();
-  }, [selectedCategory, selectedSubCategory, selectedPrice, selectedRatings, selectedBrands, sortBy, currentPage]);
+  }, [getApiParams]);
 
-  console.log("Current bundles state:", bundles); // Debug log
+  const handlePageChange = (page: number) => {
+    updateFilter("page", page);
+  };
+
+  const handleSearchChange = (search: string) => {
+    updateFilter("search", search);
+  };
+
+  const handlePriceRangeChange = (priceRange: string) => {
+    updateFilter("price_range", priceRange);
+  };
+
+  const handleCategoryChange = (category: string) => {
+    updateFilter("category", category);
+  };
+
+  const handleSubCategoryChange = (subCategory: string) => {
+    updateFilter("sub_category", subCategory);
+  };
+
+  const handleRatingChange = (rating: number | undefined) => {
+    updateFilter("rating", rating);
+  };
+
+  const handleBestSellerChange = (isBestSeller: boolean) => {
+    updateFilter("is_best_seller", isBestSeller);
+  };
+
+  const handleBrandChange = (brands: string[]) => {
+    updateFilter("brands", brands);
+  };
+
+  const handleSortByChange = (sortBy: string) => {
+    updateFilter("sort_by", sortBy);
+  };
+
+  const handleClearFilters = () => {
+    clearFilters();
+  };
 
   return (
     <div className="min-h-screen">
@@ -150,35 +203,25 @@ const BundleGrid = () => {
           <SidebarFilter
             isOpen={isFilterOpen}
             onClose={() => setIsFilterOpen(false)}
-            selectedCategory={selectedCategory}
-            onCategoryChange={(cat) => {
-              setSelectedCategory(cat);
-              setCurrentPage(1);
-            }}
-            selectedSubCategory={selectedSubCategory}
-            onSubCategoryChange={(subCat) => {
-              setSelectedSubCategory(subCat);
-              setCurrentPage(1);
-            }}
-            selectedPrice={selectedPrice}
-            onPriceChange={(price) => {
-              setSelectedPrice(price);
-              setCurrentPage(1);
-            }}
-            selectedRatings={selectedRatings}
-            onRatingsChange={(ratings) => {
-              setSelectedRatings(ratings);
-              setCurrentPage(1);
-            }}
-            selectedBrands={selectedBrands}
-            onBrandChange={(brands) => {
-              setSelectedBrands(brands);
-              setCurrentPage(1);
-            }}
+            search={filters.search || ""}
+            onSearchChange={handleSearchChange}
+            priceRange={filters.price_range || ""}
+            onPriceRangeChange={handlePriceRangeChange}
+            category={filters.category || ""}
+            onCategoryChange={handleCategoryChange}
+            subCategory={filters.sub_category || ""}
+            onSubCategoryChange={handleSubCategoryChange}
+            rating={filters.rating}
+            onRatingChange={handleRatingChange}
+            isBestSeller={filters.is_best_seller}
+            onBestSellerChange={handleBestSellerChange}
+            selectedBrands={filters.brands || []}
+            onBrandChange={handleBrandChange}
             categories={categories}
             brands={brands}
+            onClearFilters={handleClearFilters}
           />
-          <div className="flex-1 py-4 ">
+          <div className="flex-1 py-4">
             <div className="bg-white py-3 text-sm">
               <Link href="/" className="text-gray-500 hover:text-gray-700">
                 Home
@@ -199,68 +242,57 @@ const BundleGrid = () => {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm text-yellow-800">
+                    <h3 className="text-sm font-medium text-yellow-800">
                       {error}
-                    </p>
+                    </h3>
                   </div>
                 </div>
               </div>
             )}
-            
+
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-4">
                 <FilterButton onClick={() => setIsFilterOpen(true)} />
                 <p className="text-xs text-gray-600">
-                  Showing 1–{bundles.length} of {bundles.length} bundles
+                  Showing {((filters.page - 1) * PER_PAGE) + 1}–{Math.min(filters.page * PER_PAGE, bundles.length)} of {bundles.length} bundles
                 </p>
               </div>
-              <div className="text-xs">
-                <label htmlFor="sort" className="mr-2">
-                  Sort by:
-                </label>
-                <select
-                  id="sort"
-                  className="border border-gray-300 rounded px-2 py-1"
-                  value={sortBy}
-                  onChange={e => {
-                    setSortBy(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                >
-                  <option value="latest">Latest</option>
-                  <option value="price_asc">Price: Low to High</option>
-                  <option value="price_desc">Price: High to Low</option>
-                </select>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600">Sort by:</span>
+                <SortFilter value={filters.sort_by} onChange={handleSortByChange} />
               </div>
             </div>
+
             <div className="h-[calc(100vh-40px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
               {loading ? (
                 <div className="text-center py-10">Loading...</div>
+              ) : !Array.isArray(bundles) || bundles.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="text-gray-500">No bundles found matching your filters.</p>
+                  <button
+                    onClick={handleClearFilters}
+                    className="mt-2 text-green-600 hover:text-green-700 underline"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {bundles.map((bundle) => {
-                    // Aggregate all unique tags from all products in the bundle
-                    const allTags = bundle.products?.reduce((acc: string[], product) => {
-                      if (product.tags) {
-                        product.tags.forEach(tag => {
-                          if (!acc.includes(tag)) {
-                            acc.push(tag);
-                          }
-                        });
-                      }
-                      return acc;
-                    }, []) || [];
-
+                    // Convert MongoDB Decimal objects to numbers for calculations
+                    const bundlePrice = convertToNumber(bundle.price);
+                    const bundleDiscountedPrice = convertToNumber(bundle.discounted_price);
+                    
                     return (
                       <BundleCard
                         key={bundle._id}
                         name={bundle.name}
-                        price={bundle.discounted_price ?? bundle.price}
-                        originalPrice={bundle.price}
+                        price={bundleDiscountedPrice || bundlePrice}
+                        originalPrice={bundlePrice}
                         image={bundle.images?.[0] || ""}
                         bundleId={bundle._id}
                         productCount={bundle.products?.length || 0}
-                        tags={allTags}
+                        tags={bundle.products?.flatMap(product => product.tags || []) || []}
                       />
                     );
                   })}
@@ -268,11 +300,13 @@ const BundleGrid = () => {
               )}
             </div>
 
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={filters.page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
           </div>
         </div>
       </div>

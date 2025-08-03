@@ -1,11 +1,13 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { formatPrice, convertToNumber } from "@/app/utils/formatPrice";
+import { MongoDBDecimal } from "@/app/types/Product";
 
 interface BundleCardProps {
   name: string;
-  price: number;
-  originalPrice?: number;
+  price: MongoDBDecimal | number;
+  originalPrice?: MongoDBDecimal | number;
   image: string;
   bundleId: string;
   productCount?: number;
@@ -21,8 +23,12 @@ const BundleCard: React.FC<BundleCardProps> = ({
   productCount = 0,
   tags = [],
 }) => {
-  const savings = originalPrice ? originalPrice - price : 0;
-  const savingsPercentage = originalPrice ? Math.round((savings / originalPrice) * 100) : 0;
+  // Convert MongoDB Decimal objects to numbers for calculations
+  const priceNum = convertToNumber(price);
+  const originalPriceNum = originalPrice ? convertToNumber(originalPrice) : undefined;
+  
+  const savings = originalPriceNum ? originalPriceNum - priceNum : 0;
+  const savingsPercentage = originalPriceNum ? Math.round((savings / originalPriceNum) * 100) : 0;
 
   // Mapping of tags to their corresponding image files
   const tagImageMap: Record<string, string> = {
@@ -98,17 +104,17 @@ const BundleCard: React.FC<BundleCardProps> = ({
 
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-green-600">
-              ₹{price.toFixed(2)}
+              ₹{formatPrice(priceNum)}
             </span>
-            {originalPrice && originalPrice > price && (
+            {originalPriceNum && originalPriceNum > priceNum && (
               <span className="text-sm text-gray-500 line-through">
-                ₹{originalPrice.toFixed(2)}
+                ₹{formatPrice(originalPriceNum)}
               </span>
             )}
           </div>
           {savings > 0 && (
             <p className="text-xs text-green-600 font-medium mt-1">
-              You save ₹{savings.toFixed(2)}
+              You save ₹{formatPrice(savings)}
             </p>
           )}
         </div>

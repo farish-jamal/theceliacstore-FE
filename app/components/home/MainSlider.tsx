@@ -4,20 +4,20 @@ import { useRouter } from "next/navigation";
 
 const slides = [
   {
-    title: "Shop Gluten Free",
-    button: "Shop Now",
+    title: "Gluten Free",
+    button: "Discover",
     src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
     path: "/products?category=gluten-free",
   },
   {
-    title: "Shop Gluten Free Bestsellers",
-    button: "Shop Now",
+    title: "Shop Gluten Free Best Sellers",
+    button: "Book Now",
     src: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=800&q=80",
     path: "/products?category=gluten-free&filter=bestsellers",
   },
   {
     title: "Shop Lactose Free",
-    button: "Shop Now",
+    button: "See More",
     src: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
     path: "/products?category=lactose-free",
   },

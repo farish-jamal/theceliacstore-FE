@@ -14,6 +14,7 @@ export const endpoints = {
 
   // cart
   cart: "api/cart",
+  
   // categories
   categories: "api/category",
 
@@ -22,4 +23,11 @@ export const endpoints = {
 
   // brands
   brands: "api/brand",
+
+  // addresses
+  addresses: "api/address",
+  getUserAddresses: (userId: string) => `api/address/user/${userId}`,
+
+  // orders
+  order: "api/order",
 };

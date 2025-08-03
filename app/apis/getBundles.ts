@@ -1,35 +1,21 @@
 import { apiService } from "./apiService";
 import { endpoints } from "./endpoints";
+import { MongoDBDecimal, Product } from "@/app/types/Product";
 
-export interface BundleProduct {
+export interface BundleItem {
   _id: string;
-  name: string;
-  small_description: string;
-  price: number;
-  discounted_price: number;
-  tags: string[];
-  salesperson_discounted_price: number | null;
-  dnd_discounted_price: number | null;
-  instock: boolean;
-  banner_image: string;
-  images: string[];
-  meta_data?: Record<string, unknown>;
-  is_best_seller: boolean;
-  sub_category?: string;
-  category?: string[];
-  created_by_admin: string;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
+  product: Product;
+  variant_sku?: string;
+  quantity: number;
 }
 
 export interface Bundle {
   _id: string;
   name: string;
   description: string;
-  products: BundleProduct[];
-  price: number;
-  discounted_price: number;
+  products: BundleItem[];
+  price: MongoDBDecimal | number;
+  discounted_price: MongoDBDecimal | number;
   images: string[];
   is_active: boolean;
   meta_data?: Record<string, unknown>;
@@ -40,16 +26,16 @@ export interface Bundle {
 }
 
 export interface BundleParams {
-  page?: number;
-  per_page?: number;
-  sort_by?: string;
-  sort_order?: "asc" | "desc";
+  page: number;
+  per_page: number;
   search?: string;
-  min_price?: number;
-  max_price?: number;
+  price_range?: string; // Format: "min_max" e.g., "100_200"
   category?: string[];
   sub_category?: string[];
+  rating?: number; // Single rating value (1-5)
+  is_best_seller?: boolean;
   brands?: string[];
+  sort_by?: "created_at" | "low_to_high" | "high_to_low"; // Updated sort options
 }
 
 export interface BundleResponse {

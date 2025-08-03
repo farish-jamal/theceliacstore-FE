@@ -1,6 +1,7 @@
 import { Facebook, Instagram } from "lucide-react";
 import { Typography } from "../typography/Typography";
 import Image from "next/image";
+import Link from "next/link";
 
 const CONTACT_INFO = {
   phone: "+91 98101 07887",
@@ -61,9 +62,7 @@ const Footer = () => {
         <div className="text-center md:text-left">
           <h3 className="font-bold text-lg mb-4">THE CELIAC STORE</h3>
           <p className="text-sm mb-4">
-            Founded In 2016, We Stock Gluten Free, Organic & Lactose Free Brands
-            Across All Categories. We Offer Doorstep Delivery Across India And
-            Based Out Of Defence Colony, New Delhi.
+          We stock the best brands for Gluten Free Foods, Organic Food, Super Food and other Healthy Foods and we offer Doorstep Delivery across India from our retail location. Check out our products for more.
           </p>
           <div className="flex gap-4 mt-4 justify-center md:justify-start flex-wrap">
             <a 
@@ -90,16 +89,16 @@ const Footer = () => {
           <h3 className="font-bold text-lg mb-4">COMPANY</h3>
           <ul className="text-sm space-y-2">
             <li>
-              <a href="#">About Us</a>
+              <a href="/about">About Us</a>
             </li>
             <li>
-              <a href="#">Privacy Policy</a>
+              <a href="/privacy">Privacy Policy</a>
             </li>
             <li>
-              <a href="#">Terms & Conditions</a>
+              <a href="/terms-condition">Terms & Conditions</a>
             </li>
             <li>
-              <a href="#">Refund Policy</a>
+              <a href="/refund">Refund Policy</a>
             </li>
           </ul>
         </div>
@@ -109,16 +108,16 @@ const Footer = () => {
           <h3 className="font-bold text-lg mb-4">USEFUL LINKS</h3>
           <ul className="text-sm space-y-2">
             <li>
-              <a href="#">My Account</a>
+              <Link href="/account">My Account</Link>
             </li>
             <li>
-              <a href="#">Track Your Order</a>
+              <Link href="/orders">Track Your Order</Link>
             </li>
             <li>
-              <a href="#">FAQs</a>
+              <Link href="/help">FAQs</Link>
             </li>
             <li>
-              <a href="#">Contact Us</a>
+              <Link href="/help">Contact Us</Link>
             </li>
           </ul>
         </div>
@@ -140,7 +139,7 @@ const Footer = () => {
           Accepted Payments
         </Typography>
 
-        <div className="flex items-center justify-center gap-6 flex-wrap">
+        <div className="flex items-center justify-center gap-6 flex-wrap -mt-7">
           {paymentLogos.map((logo) => (
             <Image
               key={logo.name}

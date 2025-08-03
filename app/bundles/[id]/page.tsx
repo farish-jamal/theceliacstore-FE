@@ -6,16 +6,92 @@ import React, { useState, useEffect } from "react";
 import ProductSlider from "@/app/components/productsider/ProductSlider";
 import FrequentlyBought from "@/app/components/frequentlybought/FrequentlyBought";
 import { getBundle, Bundle } from "@/app/apis/getBundles";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { formatPrice, convertToNumber } from "@/app/utils/formatPrice";
+import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
+import { showSnackbar } from "@/app/slices/snackbarSlice";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateProductInCart } from "@/app/apis/updateProductInCart";
+import { motion, AnimatePresence } from "framer-motion";
+
+interface CartResponse {
+  success: boolean;
+  message?: string;
+  data?: unknown;
+}
 
 export default function BundleDetailPage() {
   const [selectedThumb, setSelectedThumb] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  
   const params = useParams();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
+  const auth = useAppSelector((state) => state.auth);
+  
   const bundleId = params.id as string;
+
+  // Add to cart mutation for bundles
+  const addToCartMutation = useMutation({
+    mutationFn: updateProductInCart,
+    onSuccess: (response) => {
+      const cartResponse = response?.response as CartResponse;
+      if (cartResponse?.success) {
+        setShowSuccessAnimation(true);
+        dispatch(showSnackbar({ 
+          message: "Bundle added to cart successfully!", 
+          type: "success" 
+        }));
+        // Invalidate cart query to refresh cart data
+        queryClient.invalidateQueries({ queryKey: ["cart"] });
+        
+        // Hide success animation after 1.5 seconds and redirect to cart
+        setTimeout(() => {
+          setShowSuccessAnimation(false);
+          router.push('/cart');
+        }, 1500);
+      } else {
+        dispatch(showSnackbar({ 
+          message: cartResponse?.message || "Failed to add bundle to cart", 
+          type: "error" 
+        }));
+      }
+    },
+    onError: (error) => {
+      console.error("Error adding bundle to cart:", error);
+      dispatch(showSnackbar({ 
+        message: "Failed to add bundle to cart. Please try again.", 
+        type: "error" 
+      }));
+    },
+    onSettled: () => {
+      setIsAddingToCart(false);
+    }
+  });
+
+  const handleAddToCart = () => {
+    if (!auth.user || !auth.token) {
+      // Redirect to login with current page as redirect parameter
+      const currentPath = `/bundles/${bundleId}`;
+      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
+      return;
+    }
+
+    if (!bundle) return;
+
+    setIsAddingToCart(true);
+    addToCartMutation.mutate({
+      bundle_id: bundle._id || bundleId,
+      quantity: quantity,
+      type: 'bundle'
+    });
+  };
 
   useEffect(() => {
     const fetchBundle = async () => {
@@ -72,8 +148,12 @@ export default function BundleDetailPage() {
     );
   }
 
-  const totalPrice = bundle.discounted_price ?? bundle.price;
-  const originalPrice = bundle.price;
+  // Convert MongoDB Decimal objects to numbers for calculations
+  const bundlePrice = convertToNumber(bundle.price);
+  const bundleDiscountedPrice = convertToNumber(bundle.discounted_price);
+  
+  const totalPrice = bundleDiscountedPrice || bundlePrice;
+  const originalPrice = bundlePrice;
   const savings = originalPrice - totalPrice;
   const savingsPercentage = Math.round((savings / originalPrice) * 100);
 
@@ -93,9 +173,9 @@ export default function BundleDetailPage() {
   };
 
   // Aggregate all unique tags from all products in the bundle
-  const allTags = bundle.products?.reduce((acc: string[], product) => {
-    if (product.tags) {
-      product.tags.forEach(tag => {
+  const allTags = bundle.products?.reduce((acc: string[], item) => {
+    if (item.product?.tags) {
+      item.product.tags.forEach(tag => {
         if (!acc.includes(tag)) {
           acc.push(tag);
         }
@@ -109,6 +189,42 @@ export default function BundleDetailPage() {
 
   return (
     <div className="bg-gray-50">
+      {/* Success Animation Overlay */}
+      <AnimatePresence>
+        {showSuccessAnimation && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="bg-green-500 text-white rounded-full p-8 shadow-2xl"
+            >
+              <motion.svg
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="w-16 h-16"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M5 13l4 4L19 7"
+                />
+              </motion.svg>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       <TopFloater />
       <Navbar />
       <div className="max-w-7xl mx-auto py-8 px-4 flex flex-col lg:flex-row gap-12">
@@ -188,9 +304,9 @@ export default function BundleDetailPage() {
             </span>
           </div>
           <div className="flex items-center gap-3 mb-4">
-            <span className="text-xl font-bold text-gray-900">₹{totalPrice.toFixed(2)}</span>
-            <span className="text-sm text-gray-400 line-through">₹{originalPrice.toFixed(2)}</span>
-            <span className="text-xs text-green-600">Save ₹{savings.toFixed(2)}</span>
+            <span className="text-xl font-bold text-gray-900">₹{formatPrice(totalPrice)}</span>
+            <span className="text-sm text-gray-400 line-through">₹{formatPrice(originalPrice)}</span>
+            <span className="text-xs text-green-600">Save ₹{formatPrice(savings)}</span>
             <span className="text-xs text-gray-500">
               (Inclusive of all taxes)
             </span>
@@ -199,24 +315,53 @@ export default function BundleDetailPage() {
           <div className="bg-white rounded-lg p-4 mb-6">
             <h3 className="font-medium mb-3">Bundle Contents:</h3>
             <div className="space-y-3">
-              {bundle.products?.map((product) => (
-                <div key={product._id} className="flex items-center gap-3">
-                  <div className="w-16 h-16 bg-gray-50 rounded-lg p-1">
-                    <img
-                      src={product.banner_image || product.images?.[0] || ""}
-                      alt={product.name}
-                      className="w-full h-full object-contain"
-                    />
+              {(bundle.products || []).map((item, idx) => {
+                // Support both { product, quantity } and direct product objects
+                let product, quantity;
+                if (item.product) {
+                  product = item.product;
+                  quantity = item.quantity || 1;
+                } else {
+                  product = item;
+                  quantity = item.quantity || 1;
+                }
+                if (!product) return null;
+                // Explicitly cast product as Product for property access
+                const prod = product as import("@/app/types/Product").Product;
+                let displayPrice = convertToNumber(prod.discounted_price ?? prod.price);
+                let productName = prod.name;
+                // If there's a variant selected, use variant details
+                if (item.variant_sku && prod.variants && prod.variants.length > 0) {
+                  const selectedVariant = prod.variants.find((v: import("@/app/types/Product").Variant) => v.sku === item.variant_sku);
+                  if (selectedVariant) {
+                    displayPrice = convertToNumber(selectedVariant.discounted_price ?? selectedVariant.price);
+                    productName = `${prod.name} (${selectedVariant.name})`;
+                  }
+                }
+                return (
+                  <div key={prod._id || idx} className="flex items-center gap-3">
+                    <div className="w-16 h-16 bg-gray-50 rounded-lg p-1">
+                      <img
+                        src={prod.banner_image || (prod.images && prod.images[0]) || ""}
+                        alt={prod.name}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium">{productName}</h4>
+                      <p className="text-xs text-gray-500">Quantity: {quantity}</p>
+                    </div>
+                    <div className="text-sm font-medium">
+                      ₹{formatPrice(displayPrice)}
+                      {quantity > 1 && (
+                        <span className="text-xs text-gray-500 block">
+                          ₹{formatPrice(displayPrice * quantity)} total
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-medium">{product.name}</h4>
-                    <p className="text-xs text-gray-500">Quantity: 1</p>
-                  </div>
-                  <div className="text-sm font-medium">
-                    ₹{(product.discounted_price ?? product.price).toFixed(2)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -225,6 +370,7 @@ export default function BundleDetailPage() {
               <button
                 className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-700"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                disabled={isAddingToCart}
               >
                 –
               </button>
@@ -238,13 +384,35 @@ export default function BundleDetailPage() {
               <button
                 className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-700"
                 onClick={() => setQuantity((q) => q + 1)}
+                disabled={isAddingToCart}
               >
                 +
               </button>
             </div>
-            <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-6 rounded-full text-sm transition-colors">
-              Add Bundle to Cart
-            </button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleAddToCart}
+              disabled={isAddingToCart}
+              className={`flex-1 font-medium py-2.5 px-6 rounded-full text-sm transition-colors ${
+                isAddingToCart
+                  ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700 text-white"
+              }`}
+            >
+              {isAddingToCart ? (
+                <div className="flex items-center justify-center gap-2">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                  />
+                  Adding...
+                </div>
+              ) : (
+                "Add Bundle to Cart"
+              )}
+            </motion.button>
           </div>
 
           <div className="space-y-2 text-sm text-gray-600">
@@ -254,11 +422,11 @@ export default function BundleDetailPage() {
             </div>
             <div>
               <span className="font-medium text-gray-900">Total Items:</span>{" "}
-              {bundle.products?.length || 0}
+              {bundle.products?.reduce((total, item) => total + item.quantity, 0) || 0}
             </div>
             <div>
               <span className="font-medium text-gray-900">Savings:</span>{" "}
-              ₹{savings.toFixed(2)} ({savingsPercentage}% off)
+              ₹{formatPrice(savings)} ({savingsPercentage}% off)
             </div>
           </div>
         </div>
@@ -289,7 +457,7 @@ export default function BundleDetailPage() {
       </div>
 
       <FrequentlyBought />
-      <ProductSlider title="You May Also Like" image={bundle.images?.[1] || ""} />
+      <ProductSlider title="You May Also Like" image={bundle.images?.[0] || ""} />
       <ProductSlider title="Best Sellers" image={bundle.images?.[0] || ""} />
       <Footer />
     </div>

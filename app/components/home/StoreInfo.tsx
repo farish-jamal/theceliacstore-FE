@@ -5,24 +5,21 @@ import { MapPin, PhoneCall } from "lucide-react";
 
 const StoreInfo = () => {
   const handleGetDirections = () => {
-    // Replace with your actual store coordinates
-    const storeAddress = "Delhi NCR, India";
-    const encodedAddress = encodeURIComponent(storeAddress);
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
+    window.open(
+      "https://www.google.com/maps/dir//A-373,+Defence+Colony,+New+Delhi,+Delhi+110024/@28.5733491,77.1473385,12z/data=!4m8!4m7!1m0!1m5!1m1!1s0x390ce2570b6dafd3:0x5457894f8ba41e70!2m2!1d77.2297399!2d28.573374?entry=ttu&g_ep=EgoyMDI1MDcyOS4wIKXMDSoASAFQAw%3D%3D",
+      "_blank"
+    );
   };
 
   const handleCallUs = () => {
-    // Replace with your actual phone number
-    const phoneNumber = "9810107887";
-    window.open(`tel:${phoneNumber}`, '_self');
+    window.open("tel:+919810107887", "_self");
   };
 
   const handleWhatsApp = () => {
-    // Replace with your actual phone number and message
     const phoneNumber = "919810107887";
-    const message = "Hi! I'm interested in your gluten-free products. Can you help me?";
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+    const message = "Hi! I'm interested in your products. Can you help me?";
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   return (
@@ -42,7 +39,7 @@ const StoreInfo = () => {
             variant="h1"
             className="text-2xl md:text-h leading-8 md:leading-10 text-center md:text-left"
           >
-            Visit to shop in Person!
+            Contact our Delhi Store or <br /> Visit to shop in person
           </Typography>
 
           <Typography className="text-base md:text-h leading-6 text-gray-500 text-center md:text-left">
@@ -55,7 +52,7 @@ const StoreInfo = () => {
         <div className="flex flex-col md:flex-row gap-3 md:gap-2 w-full md:w-auto items-center md:items-start justify-center md:justify-start">
           <Button 
             onClick={handleGetDirections}
-            className="rounded-full w-full md:w-[11rem] bg-[#4CAF50] hover:bg-[#4CAF50] font-bold py-4 md:py-5 flex items-center justify-center gap-2"
+            className="rounded-full w-full md:w-[11rem] bg-[#4CAF50] hover:bg-[#4CAF50] font-bold py-4 md:py-5 flex items-center justify-center gap-2 cursor-pointer"
           >
             <MapPin /> Get Directions
           </Button>
@@ -63,7 +60,7 @@ const StoreInfo = () => {
           <Button
             onClick={handleCallUs}
             variant="outline"
-            className="rounded-full border-1 border-black w-full md:w-[8rem] bg-transparent font-bold py-4 md:py-5 flex items-center justify-center gap-2"
+            className="rounded-full border-1 border-black w-full md:w-[8rem] bg-transparent font-bold py-4 md:py-5 flex items-center justify-center gap-2 cursor-pointer"
           >
             <PhoneCall /> Call Us
           </Button>
@@ -71,7 +68,7 @@ const StoreInfo = () => {
           <Button
             onClick={handleWhatsApp}
             variant="outline"
-            className="rounded-full border-1 border-black w-full md:w-[8rem] bg-transparent font-bold py-4 md:py-5 flex items-center justify-center gap-2"
+            className="rounded-full border-1 border-black w-full md:w-[8rem] bg-transparent font-bold py-4 md:py-5 flex items-center justify-center gap-2 cursor-pointer"
           >
             Whatsapp
           </Button>

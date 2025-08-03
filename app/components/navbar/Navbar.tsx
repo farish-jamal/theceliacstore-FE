@@ -42,7 +42,7 @@ const navItems = [
   { label: "Blog", path: "/blogs" },
   {
     label: "About us",
-    // icon: <ChevronDown className="ml-1 h-5 w-5" />,
+    icon:  "",
     path: "/about",
   },
 ];

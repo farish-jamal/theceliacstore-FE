@@ -40,6 +40,7 @@ const reviews = [
 
 const ReviewSection = () => {
   const isMobile = useIsMobile();
+  
   return (
     <div className="mt-10 px-2 sm:px-4 lg:px-0 gap-12">
       <Typography variant="h1" className="text-center text-3xl font-bold mb-4">
@@ -49,8 +50,9 @@ const ReviewSection = () => {
       <div className="w-full max-w-full lg:w-4/5 mx-auto rounded-lg overflow-x-hidden">
         <Carousel
           opts={{
-            align: "center",
+            align: "start",
             loop: true,
+            slidesToScroll: 1,
           }}
           className="p-0 sm:p-4"
         >
@@ -60,8 +62,8 @@ const ReviewSection = () => {
                 key={index}
                 className={
                   isMobile
-                    ? "min-w-0 w-full flex-shrink-0"
-                    : "md:basis-1/2 lg:basis-1/3"
+                    ? "pl-4 basis-full"
+                    : "pl-4 md:basis-1/2 lg:basis-1/3"
                 }
               >
                 <ReviewCard
@@ -75,7 +77,7 @@ const ReviewSection = () => {
             ))}
           </CarouselContent>
           {isMobile ? (
-            <div className="flex justify-center items-center gap-4 mt-2">
+            <div className="flex justify-center items-center gap-4 mt-4">
               <CarouselPrevious />
               <CarouselNext />
             </div>

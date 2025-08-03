@@ -122,21 +122,21 @@ const HelpPage = () => {
                   <Phone className="h-6 w-6 text-green-600" />
                   <div>
                     <h4 className="font-semibold">Phone</h4>
-                    <p className="text-gray-600">+91 9810107887</p>
+                    <p className="text-gray-600">+919810107887</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <Mail className="h-6 w-6 text-green-600" />
                   <div>
                     <h4 className="font-semibold">Email</h4>
-                    <p className="text-gray-600">info@theceliacstore.in</p>
+                    <p className="text-gray-600">theceliacstore@gmail.com</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <MapPin className="h-6 w-6 text-green-600" />
                   <div>
                     <h4 className="font-semibold">Address</h4>
-                    <p className="text-gray-600">Defence Colony, New Delhi</p>
+                    <p className="text-gray-600">A373, Defence Colony, New Delhi</p>
                   </div>
                 </div>
               </div>

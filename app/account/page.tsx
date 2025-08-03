@@ -1,24 +1,37 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../components/layout/Header";
 import Navbar from "../components/navbar/Navbar";
 import Footer from "../components/layout/Footer";
 import Image from "next/image";
 import { X } from "lucide-react";
-
-const userData = {
-  name: "John Doe",
-  email: "john.doe@example.com",
-  phone: "+91 98765 43210",
-  avatar: "https://res.cloudinary.com/dacwig3xk/image/upload/v1748708075/ab0df74c3f8d1807d7434a10a51793aec32c56a7_ihzbsj.jpg",
-  preferences: {
-    dietary: ["Gluten Free", "Lactose Free"]
-  }
-};
+import { useAppSelector } from "../hooks/reduxHooks";
+import { useRouter } from "next/navigation";
 
 const AccountPage = () => {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const { user, token } = useAppSelector((state) => state.auth);
+  const router = useRouter();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user || !token) {
+      router.push("/login?redirect=/account");
+    }
+  }, [user, token, router]);
+
+  // Show loading or redirect if not authenticated
+  if (!user || !token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const PasswordChangeModal = () => {
     if (!isPasswordModalOpen) return null;
@@ -85,15 +98,15 @@ const AccountPage = () => {
             <div className="flex items-center gap-4 mb-8 pb-6 border-b">
               <div className="relative w-20 h-20">
                 <Image
-                  src={userData.avatar}
-                  alt={userData.name}
+                  src="https://res.cloudinary.com/dacwig3xk/image/upload/v1748708075/ab0df74c3f8d1807d7434a10a51793aec32c56a7_ihzbsj.jpg"
+                  alt={user.name}
                   fill
                   className="object-cover rounded-full"
                 />
               </div>
               <div className="flex-1">
                 <h1 className="text-2xl font-bold">My Account</h1>
-                <p className="text-gray-500">{userData.email}</p>
+                <p className="text-gray-500">{user.email}</p>
               </div>
               <button
                 onClick={() => setIsPasswordModalOpen(true)}
@@ -112,7 +125,7 @@ const AccountPage = () => {
                     <label className="block text-sm text-gray-500 mb-1">Full Name</label>
                     <input
                       type="text"
-                      value={userData.name}
+                      value={user.name}
                       className="w-full px-3 py-2 border rounded-md"
                       readOnly
                     />
@@ -121,7 +134,7 @@ const AccountPage = () => {
                     <label className="block text-sm text-gray-500 mb-1">Email</label>
                     <input
                       type="email"
-                      value={userData.email}
+                      value={user.email}
                       className="w-full px-3 py-2 border rounded-md"
                       readOnly
                     />
@@ -130,7 +143,7 @@ const AccountPage = () => {
                     <label className="block text-sm text-gray-500 mb-1">Phone</label>
                     <input
                       type="tel"
-                      value={userData.phone}
+                      value={user.phone || "Not provided"}
                       className="w-full px-3 py-2 border rounded-md"
                       readOnly
                     />
@@ -142,14 +155,12 @@ const AccountPage = () => {
               <div className="pt-6 border-t">
                 <h2 className="text-lg font-semibold mb-4">Dietary Preferences</h2>
                 <div className="flex gap-2">
-                  {userData.preferences.dietary.map((pref) => (
-                    <span
-                      key={pref}
-                      className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-sm"
-                    >
-                      {pref}
-                    </span>
-                  ))}
+                  <span className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-sm">
+                    Gluten Free
+                  </span>
+                  <span className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-sm">
+                    Lactose Free
+                  </span>
                 </div>
               </div>
             </div>

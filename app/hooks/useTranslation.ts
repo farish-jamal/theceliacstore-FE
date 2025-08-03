@@ -225,6 +225,7 @@ const translations = {
   },
 };
 
+
 export function useTranslation() {
   const { code } = useAppSelector((state) => state.language);
   return useMemo(() => translations[code as keyof typeof translations] || translations.en, [code]);

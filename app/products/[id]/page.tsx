@@ -6,13 +6,14 @@ import React, { useState, useEffect } from "react";
 import FrequentlyBought from "@/app/components/frequentlybought/FrequentlyBought";
 import { useParams, useRouter } from "next/navigation";
 import { getProduct } from "@/app/apis/getProducts";
-import { Product } from "@/app/types/Product";
+import { Product, Variant } from "@/app/types/Product";
 import ProductSlider from "@/app/components/productsider/ProductSlider";
 import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
 import { showSnackbar } from "@/app/slices/snackbarSlice";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatPrice, convertToNumber } from "@/app/utils/formatPrice";
 
 interface CartResponse {
   success: boolean;
@@ -30,13 +31,12 @@ export default function ProductDetailPage() {
   const productId = params.id as string;
   
   const [selectedThumb, setSelectedThumb] = useState(0);
-  const [selectedWeight, setSelectedWeight] = useState(1);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
-  const weights = ["500 g", "1000 g"];
 
   // Add to cart mutation
   const addToCartMutation = useMutation({
@@ -83,7 +83,13 @@ export default function ProductDetailPage() {
       setLoading(true);
       try {
         const response = await getProduct(productId);
-        setProduct(response.data || null);
+        const productData = response.data || null;
+        setProduct(productData);
+        
+        // Auto-select first variant if available
+        if (productData?.variants && productData.variants.length > 0) {
+          setSelectedVariant(productData.variants[0]);
+        }
       } catch (error) {
         console.error("Error fetching product:", error);
       } finally {
@@ -93,6 +99,11 @@ export default function ProductDetailPage() {
 
     fetchProduct();
   }, [productId]);
+
+  // Reset thumbnail selection when variant changes
+  useEffect(() => {
+    setSelectedThumb(0);
+  }, [selectedVariant]);
 
   const handleAddToCart = () => {
     if (!auth.user || !auth.token) {
@@ -104,10 +115,21 @@ export default function ProductDetailPage() {
 
     if (!product) return;
 
+    // Check if variant selection is required and selected
+    if (product.variants && product.variants.length > 0 && !selectedVariant) {
+      dispatch(showSnackbar({ 
+        message: "Please select a variant before adding to cart", 
+        type: "error" 
+      }));
+      return;
+    }
+
     setIsAddingToCart(true);
     addToCartMutation.mutate({
       product_id: product._id || productId,
-      quantity: quantity
+      quantity: quantity,
+      variant_sku: selectedVariant?.sku,
+      type: 'product'
     });
   };
 
@@ -136,9 +158,11 @@ export default function ProductDetailPage() {
   }
 
   const allImages = [product.banner_image, ...(product.images || [])].filter(Boolean);
-  const discountPercentage = product.discounted_price && product.price 
-    ? Math.round(((product.price - product.discounted_price) / product.price) * 100)
-    : 0;
+  
+  // Use variant images if a variant is selected, otherwise use product images
+  const displayImages = selectedVariant && selectedVariant.images && selectedVariant.images.length > 0
+    ? selectedVariant.images
+    : allImages;
 
   // Mapping of tags to their corresponding image files
   const tagImageMap: Record<string, string> = {
@@ -157,6 +181,23 @@ export default function ProductDetailPage() {
 
   // Filter out valid tags that have corresponding images
   const validTags = product.tags?.filter(tag => tagImageMap[tag]) || [];
+
+  // Check if product has variants
+  const hasVariants = product.variants && product.variants.length > 0;
+  const isVariantInStock = selectedVariant ? selectedVariant.inventory > 0 : (product.inventory ? product.inventory > 0 : product.instock);
+
+  // Determine what price to show
+  const showVariantPricing = hasVariants && selectedVariant;
+  const displayPrice = showVariantPricing ? selectedVariant!.discounted_price || selectedVariant!.price : product.discounted_price || product.price;
+  const displayOriginalPrice = showVariantPricing ? selectedVariant!.price : product.price;
+  
+  // Convert to numbers for calculations
+  const displayPriceNum = convertToNumber(displayPrice);
+  const displayOriginalPriceNum = convertToNumber(displayOriginalPrice);
+  
+  const displayDiscountPercentage = displayPriceNum && displayOriginalPriceNum && displayPriceNum < displayOriginalPriceNum
+    ? Math.round(((displayOriginalPriceNum - displayPriceNum) / displayOriginalPriceNum) * 100)
+    : 0;
 
   return (
     <div className="bg-gray-50">
@@ -205,7 +246,7 @@ export default function ProductDetailPage() {
           <div className="flex gap-6">
             {/* Thumbnails on the left */}
             <div className="flex flex-col gap-3">
-              {allImages.map((src, idx) => (
+              {displayImages.map((src, idx) => (
                 <div
                   key={idx}
                   className={`w-24 h-24 p-2 bg-white rounded-lg shadow-sm cursor-pointer ${
@@ -224,7 +265,7 @@ export default function ProductDetailPage() {
             {/* Main image */}
             <div className="flex-1 aspect-square rounded-lg max-h-[400px]">
               <img
-                src={allImages[selectedThumb]}
+                src={displayImages[selectedThumb]}
                 alt={product.name}
                 className="w-full h-full object-contain"
               />
@@ -266,14 +307,14 @@ export default function ProductDetailPage() {
           </div>
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xl font-bold text-gray-900">
-              ₹{product.discounted_price?.toFixed(2) || product.price.toFixed(2)}
+              ₹{formatPrice(displayPrice)}
             </span>
-            {product.discounted_price && product.price > product.discounted_price && (
+            {displayPrice && displayOriginalPrice && displayPrice < displayOriginalPrice && (
               <>
                 <span className="text-sm text-gray-400 line-through">
-                  ₹{product.price.toFixed(2)}
+                  ₹{formatPrice(displayOriginalPrice)}
                 </span>
-                <span className="text-xs text-red-500">({discountPercentage}% Off)</span>
+                <span className="text-xs text-red-500">({displayDiscountPercentage}% Off)</span>
               </>
             )}
             <span className="text-xs text-gray-500">
@@ -318,21 +359,48 @@ export default function ProductDetailPage() {
           <p className="text-gray-600 mb-6 text-sm leading-relaxed">
             {product.small_description}
           </p>
-          <div className="flex gap-3 mb-6">
-            {weights.map((w, idx) => (
-              <button
-                key={w}
-                onClick={() => setSelectedWeight(idx)}
-                className={`px-6 py-2 rounded-full border-2 text-sm font-medium transition-all ${
-                  selectedWeight === idx
-                    ? "border-green-500 bg-green-50 text-green-700"
-                    : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                {w}
-              </button>
-            ))}
-          </div>
+          
+          {/* Variant Selection */}
+          {hasVariants && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Select Variant:</h3>
+              <div className="flex flex-wrap gap-3">
+                {product.variants?.map((variant) => (
+                  <button
+                    key={variant._id}
+                    onClick={() => setSelectedVariant(variant)}
+                    disabled={!variant.inventory || variant.inventory <= 0}
+                    className={`px-6 py-3 rounded-full border-2 text-sm font-medium transition-all ${
+                      selectedVariant?._id === variant._id
+                        ? "border-green-500 bg-green-50 text-green-700"
+                        : variant.inventory && variant.inventory > 0
+                        ? "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+                        : "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="font-medium">{variant.name}</div>
+                      <div className="text-xs font-medium">
+                        ₹{formatPrice(variant.discounted_price || variant.price)}
+                      </div>
+                      {variant.discounted_price && variant.price > variant.discounted_price && (
+                        <div className="text-xs text-gray-400 line-through">
+                          ₹{formatPrice(variant.price)}
+                        </div>
+                      )}
+                      {(!variant.inventory || variant.inventory <= 0) && (
+                        <div className="text-xs text-red-500">Out of Stock</div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {!selectedVariant && (
+                <p className="text-red-500 text-sm mt-2">Please select a variant to continue</p>
+              )}
+            </div>
+          )}
+          
           <div className="flex items-center gap-3 mb-6">
             <div className="flex items-center border border-gray-300 rounded-full">
               <button
@@ -361,9 +429,9 @@ export default function ProductDetailPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleAddToCart}
-              disabled={isAddingToCart || !product.instock}
+              disabled={isAddingToCart || !isVariantInStock || (hasVariants && !selectedVariant)}
               className={`flex-1 font-medium py-2.5 px-6 rounded-full text-sm transition-colors relative overflow-hidden ${
-                isAddingToCart || !product.instock
+                isAddingToCart || !isVariantInStock || (hasVariants && !selectedVariant)
                   ? "bg-gray-400 text-gray-600 cursor-not-allowed"
                   : "bg-green-600 hover:bg-green-700 text-white"
               }`}
@@ -377,8 +445,10 @@ export default function ProductDetailPage() {
                   />
                   Adding...
                 </div>
-              ) : !product.instock ? (
+              ) : !isVariantInStock ? (
                 "Out of Stock"
+              ) : hasVariants && !selectedVariant ? (
+                "Select Variant"
               ) : (
                 "Add to Cart"
               )}
@@ -387,8 +457,14 @@ export default function ProductDetailPage() {
           <div className="space-y-2 text-sm text-gray-600">
             <div>
               <span className="font-medium text-gray-900">Stock:</span>{" "}
-              {product.instock ? "In Stock" : "Out of Stock"}
+              {isVariantInStock ? "In Stock" : "Out of Stock"}
             </div>
+            {selectedVariant && (
+              <div>
+                <span className="font-medium text-gray-900">Selected Variant:</span>{" "}
+                {selectedVariant.name}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -408,8 +484,8 @@ export default function ProductDetailPage() {
         <div className="flex flex-col lg:flex-row gap-12 py-8 px-[10%]">
           <div className="w-full lg:w-1/2 text-sm space-y-3">
             <div className="flex">
-              <span className="w-40 text-gray-600">Weight:</span>{" "}
-              <span>03</span>
+              <span className="w-40 text-gray-600">Variant:</span>{" "}
+              <span>{selectedVariant?.name || "N/A"}</span>
             </div>
             <div className="flex">
               <span className="w-40 text-gray-600">Type:</span>{" "}
@@ -421,7 +497,7 @@ export default function ProductDetailPage() {
             </div>
             <div className="flex">
               <span className="w-40 text-gray-600">Stock Status:</span>{" "}
-              <span>Available (5,413)</span>
+              <span>{isVariantInStock ? "Available" : "Out of Stock"}</span>
             </div>
             <div className="flex">
               <span className="w-40 text-gray-600">Manufactured by:</span>{" "}

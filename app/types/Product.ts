@@ -1,10 +1,27 @@
+/**
+ * Type for MongoDB Decimal128 objects
+ */
+export type MongoDBDecimal = {
+  $numberDecimal: string;
+};
+
+export type Variant = {
+  _id: string;
+  name: string;
+  price: MongoDBDecimal | number;
+  discounted_price?: MongoDBDecimal | number | null;
+  inventory: number;
+  sku?: string;
+  images?: string[];
+};
+
 export type Product = {
   _id?: string;
   name: string;
   small_description?: string;
   full_description?: string;
-  price: number;
-  discounted_price?: number | null;
+  price: MongoDBDecimal | number;
+  discounted_price?: MongoDBDecimal | number | null;
   tags?: (
     | "no_palm_oil"
     | "organic"
@@ -18,9 +35,10 @@ export type Product = {
     | "lactose_free"
     | "no_flavor_enhancer"
   )[];
-  salesperson_discounted_price?: number | null;
-  dnd_discounted_price?: number | null;
+  salesperson_discounted_price?: MongoDBDecimal | number | null;
+  dnd_discounted_price?: MongoDBDecimal | number | null;
   instock?: boolean;
+  inventory?: number;
   manufacturer?: string;
   consumed_type?: string;
   banner_image?: string;
@@ -33,16 +51,18 @@ export type Product = {
   created_by_admin: string;
   createdAt?: string;
   updatedAt?: string;
+  variants?: Variant[];
 };
 
 export type ProductParams = {
   page: number;
   per_page: number;
-  category?: string[];
-  sub_category?: string[];
   search?: string;
-  sort_by?: "price" | "name" | "createdAt";
-  sort_order?: "asc" | "desc";
-  tags?: string[];
+  price_range?: string; // Format: "min_max" e.g., "100_200"
+  category?: string;
+  sub_category?: string[];
+  rating?: number; // Single rating value (1-5)
+  is_best_seller?: boolean;
   brands?: string[];
+  sort_by?: "created_at" | "low_to_high" | "high_to_low"; // Updated sort options
 };
