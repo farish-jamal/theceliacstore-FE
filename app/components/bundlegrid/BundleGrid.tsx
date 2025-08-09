@@ -169,11 +169,11 @@ const BundleGrid = () => {
     updateFilter("price_range", priceRange);
   };
 
-  const handleCategoryChange = (category: string) => {
+  const handleCategoryChange = (category: string[]) => {
     updateFilter("category", category);
   };
 
-  const handleSubCategoryChange = (subCategory: string) => {
+  const handleSubCategoryChange = (subCategory: string[]) => {
     updateFilter("sub_category", subCategory);
   };
 
@@ -208,9 +208,9 @@ const BundleGrid = () => {
             onSearchChange={handleSearchChange}
             priceRange={filters.price_range || ""}
             onPriceRangeChange={handlePriceRangeChange}
-            category={filters.category || ""}
+            category={filters.category || []}
             onCategoryChange={handleCategoryChange}
-            subCategory={filters.sub_category || ""}
+            subCategory={filters.sub_category || []}
             onSubCategoryChange={handleSubCategoryChange}
             rating={filters.rating}
             onRatingChange={handleRatingChange}
@@ -260,7 +260,7 @@ const BundleGrid = () => {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-600">Sort by:</span>
-                <SortFilter value={filters.sort_by} onChange={handleSortByChange} />
+                <SortFilter value={filters.sort_by || ""} onChange={handleSortByChange} />
               </div>
             </div>
 

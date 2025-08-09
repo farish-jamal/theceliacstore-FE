@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { Category, Brand, SubCategory, getSubCategories } from "../../apis/getProducts";
 import SearchFilter from "../filters/SearchFilter";
-import PriceRangeFilter from "../filters/PriceRangeFilter";
+import PriceRangeSlider from "../filters/PriceRangeSlider";
 import RatingFilter from "../filters/RatingFilter";
 import { useRouter } from "next/navigation";
 
@@ -331,7 +331,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
 
           {/* Price Range Filter */}
           <div className="mb-6">
-            <PriceRangeFilter value={priceRange} onChange={onPriceRangeChange} />
+            <PriceRangeSlider value={priceRange} onChange={onPriceRangeChange} />
           </div>
 
           {/* Rating Filter */}
