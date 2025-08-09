@@ -1,10 +1,12 @@
+"use client";
+
 import React, { useState } from "react";
-import BrandChips, { BrandChipsProps } from "../brandchip/BrandChips";
+import { Checkbox } from "../../../components/ui/checkbox";
 import { Category, Brand, SubCategory, getSubCategories } from "../../apis/getProducts";
 import SearchFilter from "../filters/SearchFilter";
 import PriceRangeFilter from "../filters/PriceRangeFilter";
 import RatingFilter from "../filters/RatingFilter";
-import BestSellerFilter from "../filters/BestSellerFilter";
+import { useRouter } from "next/navigation";
 
 interface SidebarFilterProps {
   isOpen: boolean;
@@ -14,16 +16,16 @@ interface SidebarFilterProps {
   onSearchChange: (value: string) => void;
   priceRange: string;
   onPriceRangeChange: (value: string) => void;
-  category: string;
-  onCategoryChange: (category: string) => void;
-  subCategory: string;
-  onSubCategoryChange: (subCategory: string) => void;
+  category: string[];
+  onCategoryChange: (category: string[]) => void;
+  subCategory: string[];
+  onSubCategoryChange: (subCategory: string[]) => void;
   rating: number | undefined;
   onRatingChange: (rating: number | undefined) => void;
   isBestSeller: boolean;
   onBestSellerChange: (value: boolean) => void;
-  selectedBrands: BrandChipsProps["selectedBrands"];
-  onBrandChange: BrandChipsProps["onBrandChange"];
+  selectedBrands: string[];
+  onBrandChange: (brands: string[]) => void;
   categories: Category[];
   brands: Brand[];
   onClearFilters: () => void;
@@ -53,6 +55,17 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
   const [categorySubCategories, setCategorySubCategories] = useState<Record<string, SubCategory[]>>({});
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [isImportedPicks, setIsImportedPicks] = useState(false);
+  const [isBakeryDelhi, setIsBakeryDelhi] = useState(false);
+  const router = useRouter();
+
+  const handleImportedPicksChange = (checked: boolean | "indeterminate") => {
+    setIsImportedPicks(checked === true);
+  };
+
+  const handleBakeryDelhiChange = (checked: boolean | "indeterminate") => {
+    setIsBakeryDelhi(checked === true);
+  };
 
   const toggleCategory = async (categoryId: string) => {
     const newExpandedCategories = new Set(expandedCategories);
@@ -87,29 +100,9 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
     }
   };
 
-  const handleSubCategorySelect = (subCategoryId: string, parentCategoryId: string) => {
-    if (subCategory === subCategoryId) {
-      // Deselect if already selected
-      onSubCategoryChange("");
-      onCategoryChange("");
-    } else {
-      // Select new sub-category
-      onSubCategoryChange(subCategoryId);
-      onCategoryChange(parentCategoryId);
-    }
+  const handleBrowseBundlesClick = () => {
+    router.push('/bundles');
   };
-
-  const getSelectedCategoryId = () => {
-    if (!subCategory) return category || "";
-    for (const [categoryId, subCats] of Object.entries(categorySubCategories)) {
-      if (subCats.some(sub => sub._id === subCategory)) {
-        return categoryId;
-      }
-    }
-    return category || "";
-  };
-
-  const selectedCategoryId = getSelectedCategoryId();
 
   return (
     <div
@@ -154,25 +147,73 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                 const isExpanded = expandedCategories.has(cat._id);
                 const subCategories = categorySubCategories[cat._id] || [];
                 const isLoading = loadingStates[cat._id];
-                const hasSelectedSubCategory = selectedCategoryId === cat._id;
+                const isCategorySelected = category.includes(cat._id);
                 
                 return (
                   <div key={cat._id} className="border border-gray-200 rounded-lg overflow-hidden">
                     <div 
                       className={`flex items-center justify-between p-3 cursor-pointer transition-all duration-200 ${
-                        hasSelectedSubCategory 
+                        isCategorySelected 
                           ? 'bg-green-50 border-green-300' 
                           : 'bg-white hover:bg-gray-50'
                       }`}
                       onClick={() => toggleCategory(cat._id)}
                     >
                       <div className="flex items-center gap-3">
-                        <span className={`font-medium text-sm ${
-                          hasSelectedSubCategory ? 'text-green-700' : 'text-gray-700'
-                        }`}>
+                        <Checkbox
+                          id={`category-${cat._id}`}
+                          checked={isCategorySelected}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              onCategoryChange([...category, cat._id]);
+                              // Auto-expand category when selected
+                              if (!expandedCategories.has(cat._id)) {
+                                const newExpandedCategories = new Set(expandedCategories);
+                                newExpandedCategories.add(cat._id);
+                                setExpandedCategories(newExpandedCategories);
+                                
+                                // Fetch sub-categories if not already loaded
+                                if (!categorySubCategories[cat._id]) {
+                                  setLoadingStates(prev => ({ ...prev, [cat._id]: true }));
+                                  getSubCategories(cat._id).then(response => {
+                                    setCategorySubCategories(prev => ({ 
+                                      ...prev, 
+                                      [cat._id]: response.data || [] 
+                                    }));
+                                  }).catch(error => {
+                                    console.error("Error fetching sub-categories:", error);
+                                    setCategorySubCategories(prev => ({ 
+                                      ...prev, 
+                                      [cat._id]: [] 
+                                    }));
+                                  }).finally(() => {
+                                    setLoadingStates(prev => ({ ...prev, [cat._id]: false }));
+                                  });
+                                }
+                              }
+                            } else {
+                              onCategoryChange(category.filter(id => id !== cat._id));
+                              // Auto-collapse category when deselected
+                              if (expandedCategories.has(cat._id)) {
+                                const newExpandedCategories = new Set(expandedCategories);
+                                newExpandedCategories.delete(cat._id);
+                                setExpandedCategories(newExpandedCategories);
+                              }
+                            }
+                          }}
+                          className="border-gray-400 data-[state=checked]:border-green-600"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <label 
+                          htmlFor={`category-${cat._id}`}
+                          className={`font-medium text-sm cursor-pointer ${
+                            isCategorySelected ? 'text-green-700' : 'text-gray-700'
+                          }`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           {cat.name}
-                        </span>
-                        {hasSelectedSubCategory && (
+                        </label>
+                        {isCategorySelected && (
                           <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
                             Active
                           </span>
@@ -207,18 +248,25 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                                 key={subCat._id} 
                                 className="flex items-center gap-3 p-2 rounded-md hover:bg-white transition-colors"
                               >
-                                <input
-                                  type="radio"
-                                  name="subCategory"
+                                <Checkbox
                                   id={subCat._id}
-                                  className="accent-green-600 w-3 h-3"
-                                  checked={subCategory === subCat._id}
-                                  onChange={() => handleSubCategorySelect(subCat._id, cat._id)}
+                                  className="border-gray-400 data-[state=checked]:border-green-600"
+                                  checked={subCategory.includes(subCat._id)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      onSubCategoryChange([...subCategory, subCat._id]);
+                                      if (!category.includes(cat._id)) {
+                                        onCategoryChange([...category, cat._id]);
+                                      }
+                                    } else {
+                                      onSubCategoryChange(subCategory.filter(id => id !== subCat._id));
+                                    }
+                                  }}
                                 />
                                 <label 
                                   htmlFor={subCat._id} 
                                   className={`text-xs cursor-pointer flex-1 ${
-                                    subCategory === subCat._id 
+                                    subCategory.includes(subCat._id) 
                                       ? 'text-green-700 font-medium' 
                                       : 'text-gray-600'
                                   }`}
@@ -241,6 +289,46 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
             </div>
           </div>
 
+          {/* Quick Categories */}
+          <div className="mb-6">
+            <h3 className="font-semibold mb-3 text-gray-800">Quick Categories</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="best-sellers"
+                  checked={isBestSeller}
+                  onCheckedChange={onBestSellerChange}
+                  className="border-gray-400 data-[state=checked]:border-green-600"
+                />
+                <label htmlFor="best-sellers" className="text-sm cursor-pointer text-gray-700">
+                  Best Sellers
+                </label>
+              </div>
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="imported-picks"
+                  checked={isImportedPicks}
+                  onCheckedChange={handleImportedPicksChange}
+                  className="border-gray-400 data-[state=checked]:border-green-600"
+                />
+                <label htmlFor="imported-picks" className={`text-sm cursor-pointer text-gray-700 ${isImportedPicks ? 'text-green-700 font-medium' : ''}`}>
+                  Imported Picks
+                </label>
+              </div>
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="bakery-delhi"
+                  checked={isBakeryDelhi}
+                  onCheckedChange={handleBakeryDelhiChange}
+                  className="border-gray-400 data-[state=checked]:border-green-600"
+                />
+                <label htmlFor="bakery-delhi" className={`text-sm cursor-pointer text-gray-700 ${isBakeryDelhi ? 'text-green-700 font-medium' : ''}`}>
+                  Bakery (Delhi NCR only)
+                </label>
+              </div>
+            </div>
+          </div>
+
           {/* Price Range Filter */}
           <div className="mb-6">
             <PriceRangeFilter value={priceRange} onChange={onPriceRangeChange} />
@@ -251,14 +339,30 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
             <RatingFilter value={rating} onChange={onRatingChange} />
           </div>
 
-          {/* Best Seller Filter */}
-          <div className="mb-6">
-            <BestSellerFilter value={isBestSeller} onChange={onBestSellerChange} />
-          </div>
-
           {/* Brands */}
           <div className="mb-6">
-            <BrandChips selectedBrands={selectedBrands} onBrandChange={onBrandChange} brands={brands} />
+            <h3 className="font-semibold mb-3 text-gray-800">Brands</h3>
+            <div className="space-y-2">
+              {brands.map((brand) => (
+                <div key={brand._id} className="flex items-center gap-3">
+                  <Checkbox
+                    id={`brand-${brand._id}`}
+                    checked={selectedBrands.includes(brand._id)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        onBrandChange([...selectedBrands, brand._id]);
+                      } else {
+                        onBrandChange(selectedBrands.filter(id => id !== brand._id));
+                      }
+                    }}
+                    className="border-gray-400 data-[state=checked]:border-green-600"
+                  />
+                  <label htmlFor={`brand-${brand._id}`} className="text-sm cursor-pointer text-gray-700">
+                    {brand.name}
+                  </label>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Clear Filters Button */}
@@ -274,7 +378,10 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
           <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-4 text-center mt-6">
             <p className="text-lg font-semibold text-green-700">Browse</p>
             <p className="text-lg font-semibold text-green-700">Bundles</p>
-            <button className="text-green-600 text-sm mt-3 flex items-center justify-center w-full hover:text-green-700 transition-colors">
+            <button 
+              onClick={handleBrowseBundlesClick}
+              className="text-green-600 text-sm mt-3 flex items-center justify-center w-full hover:text-green-700 transition-colors"
+            >
               Shop Now <span className="ml-1">→</span>
             </button>
           </div>

@@ -2,6 +2,7 @@ import { Facebook, Instagram } from "lucide-react";
 import { Typography } from "../typography/Typography";
 import Image from "next/image";
 import Link from "next/link";
+import GoogleReviewCard from "../common/GoogleReviewCard";
 
 const CONTACT_INFO = {
   phone: "+91 98101 07887",
@@ -132,6 +133,9 @@ const Footer = () => {
           </ul>
         </div>
       </div>
+
+      {/* Google Review Card */}
+      <GoogleReviewCard />
 
       {/* Bottom Section with Payment Logos */}
       <div className="flex flex-col items-center justify-center gap-8 w-full">

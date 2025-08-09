@@ -14,6 +14,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatPrice, convertToNumber } from "@/app/utils/formatPrice";
+import ProductDetailSkeleton from "@/app/components/loaders/ProductDetailSkeleton";
 
 interface CartResponse {
   success: boolean;
@@ -134,15 +135,7 @@ export default function ProductDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className="bg-gray-50">
-        <TopFloater />
-        <Navbar />
-        <div className="max-w-7xl mx-auto py-8 px-4">
-          <div className="text-center py-10">Loading...</div>
-        </div>
-      </div>
-    );
+    return <ProductDetailSkeleton />;
   }
 
   if (!product) {

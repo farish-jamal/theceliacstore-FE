@@ -10,6 +10,7 @@ import {
 } from "../carousel/CustomCarousel";
 import ReviewCard from "../cards/ReviewCard";
 import { useIsMobile } from "@/app/hooks/useIsMobile";
+import GoogleReviewCard from "../common/GoogleReviewCard";
 
 const reviews = [
   {
@@ -88,6 +89,11 @@ const ReviewSection = () => {
             </>
           )}
         </Carousel>
+      </div>
+
+      {/* Google Review Card */}
+      <div className="flex flex-col items-center justify-center gap-8 w-full mt-8">
+        <GoogleReviewCard />
       </div>
     </div>
   );

@@ -59,7 +59,7 @@ export type ProductParams = {
   per_page: number;
   search?: string;
   price_range?: string; // Format: "min_max" e.g., "100_200"
-  category?: string;
+  category?: string[];
   sub_category?: string[];
   rating?: number; // Single rating value (1-5)
   is_best_seller?: boolean;

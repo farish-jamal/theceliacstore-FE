@@ -8,6 +8,8 @@ import { getProducts, getCategories, getBrands, Category, Brand } from "../../ap
 import { Product } from "../../types/Product";
 import { useProductFilters } from "../../hooks/useProductFilters";
 import SortFilter from "../filters/SortFilter";
+import ProductGridSkeleton from "../loaders/ProductSkeleton";
+import { convertToNumber } from "../../utils/formatPrice";
 
 const PER_PAGE = 10;
 
@@ -79,12 +81,12 @@ const ProductGrid = () => {
     updateFilter("price_range", priceRange);
   };
 
-  const handleCategoryChange = (category: string) => {
-    updateFilter("category", category);
+  const handleCategoryChange = (categories: string[]) => {
+    updateFilter("category", categories);
   };
 
-  const handleSubCategoryChange = (subCategory: string) => {
-    updateFilter("sub_category", subCategory);
+  const handleSubCategoryChange = (subCategories: string[]) => {
+    updateFilter("sub_category", subCategories);
   };
 
   const handleRatingChange = (rating: number | undefined) => {
@@ -118,9 +120,9 @@ const ProductGrid = () => {
             onSearchChange={handleSearchChange}
             priceRange={filters.price_range || ""}
             onPriceRangeChange={handlePriceRangeChange}
-            category={filters.category || ""}
+            category={filters.category || []}
             onCategoryChange={handleCategoryChange}
-            subCategory={filters.sub_category || ""}
+            subCategory={filters.sub_category || []}
             onSubCategoryChange={handleSubCategoryChange}
             rating={filters.rating}
             onRatingChange={handleRatingChange}
@@ -152,12 +154,12 @@ const ProductGrid = () => {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-600">Sort by:</span>
-                <SortFilter value={filters.sort_by} onChange={handleSortByChange} />
+                <SortFilter value={filters.sort_by || ""} onChange={handleSortByChange} />
               </div>
             </div>
             <div className="h-[calc(100vh-40px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
               {loading ? (
-                <div className="text-center py-10">Loading...</div>
+                <ProductGridSkeleton />
               ) : products.length === 0 ? (
                 <div className="text-center py-10">
                   <p className="text-gray-500">No products found matching your filters.</p>
@@ -170,17 +172,24 @@ const ProductGrid = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {products.map((product) => (
-                    <ProductCard
-                      key={product._id}
-                      name={product.name}
-                      price={product.discounted_price ?? product.price}
-                      image={product.banner_image || product.images?.[0] || ""}
-                      productId={product._id || ""}
-                      tags={product.tags}
-                      instock={product.instock}
-                    />
-                  ))}
+                  {products.map((product) => {
+                    // Convert MongoDB Decimal objects to numbers for calculations
+                    const productPrice = convertToNumber(product.price);
+                    const productDiscountedPrice = convertToNumber(product.discounted_price);
+                    
+                    return (
+                      <ProductCard
+                        key={product._id}
+                        name={product.name}
+                        price={productDiscountedPrice || productPrice}
+                        image={product.banner_image || product.images?.[0] || ""}
+                        productId={product._id || ""}
+                        tags={product.tags}
+                        instock={product.instock}
+                        productData={product}
+                      />
+                    );
+                  })}
                 </div>
               )}
             </div>

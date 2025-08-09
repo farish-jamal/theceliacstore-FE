@@ -11,6 +11,7 @@ import { getCategories, getBrands, Category, Brand } from "../../apis/getProduct
 import { useBundleFilters } from "../../hooks/useBundleFilters";
 import SortFilter from "../filters/SortFilter";
 import { convertToNumber } from "@/app/utils/formatPrice";
+import BundleGridSkeleton from "../loaders/BundleSkeleton";
 
 const PER_PAGE = 10;
 
@@ -265,7 +266,7 @@ const BundleGrid = () => {
 
             <div className="h-[calc(100vh-40px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
               {loading ? (
-                <div className="text-center py-10">Loading...</div>
+                <BundleGridSkeleton />
               ) : !Array.isArray(bundles) || bundles.length === 0 ? (
                 <div className="text-center py-10">
                   <p className="text-gray-500">No bundles found matching your filters.</p>
@@ -292,7 +293,8 @@ const BundleGrid = () => {
                         image={bundle.images?.[0] || ""}
                         bundleId={bundle._id}
                         productCount={bundle.products?.length || 0}
-                        tags={bundle.products?.flatMap(product => product.tags || []) || []}
+                        tags={[]}
+                        bundleData={bundle}
                       />
                     );
                   })}

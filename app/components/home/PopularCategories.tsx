@@ -3,34 +3,21 @@
 import React, { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Typography } from "../typography/Typography";
-import { ProductParams } from "@/app/types/Product";
+import { useQuery } from "@tanstack/react-query";
+import { getSubCategories, SubCategory } from "../../apis/getProducts";
+import { useRouter } from "next/navigation";
 
-interface Category {
-  _id: string;
-  name: string;
-  description: string;
-  discount_label_text?: string;
-  meta_data?: Record<string, unknown>;
-  newly_launched?: boolean;
-  is_active?: boolean;
-  images: string[];
-  tags?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-type PopularCategoriesProps = {
-  params: ProductParams;
-  setParams: React.Dispatch<React.SetStateAction<ProductParams>>;
-  categories: Category[];
-};
-
-const PopularCategories: React.FC<PopularCategoriesProps> = ({
-  params,
-  setParams,
-  categories,
-}) => {
+const PopularCategories: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['subcategories'],
+    queryFn: async () => {
+      const response = await getSubCategories();
+      return response.data || [];
+    },
+  });
 
   const scroll = (direction: "left" | "right") => {
     const container = containerRef.current;
@@ -42,6 +29,43 @@ const PopularCategories: React.FC<PopularCategoriesProps> = ({
       behavior: "smooth",
     });
   };
+
+  const handleSubCategoryClick = (subCategory: SubCategory) => {
+    router.push(`/products?sub_category=${subCategory._id}`);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center py-6 px-4 gap-8">
+        <Typography variant="h1">Popular Categories</Typography>
+        <div className="flex items-center gap-2">
+          <button className="p-2 rounded-full bg-white border border-green-500 text-green-500 hover:bg-green-50">
+            <ChevronLeft size={20} />
+          </button>
+          <div className="flex overflow-x-auto no-scrollbar space-x-3 py-1 px-1 w-[70vw] max-w-full justify-center">
+            {[1, 2, 3, 4, 5, 6].map((item) => (
+              <div 
+                key={item} 
+                className="px-5 py-2 rounded-full border border-gray-200 bg-gray-100 animate-pulse w-32 h-8 flex-shrink-0"
+              />
+            ))}
+          </div>
+          <button className="p-2 rounded-full bg-white border border-green-500 text-green-500 hover:bg-green-50">
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data || data.length === 0) {
+    return (
+      <div className="flex flex-col items-center py-6 px-4 gap-8">
+        <Typography variant="h1">Popular Categories</Typography>
+        <div className="text-gray-500">No subcategories available</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center py-6 px-4 gap-8">
@@ -57,20 +81,15 @@ const PopularCategories: React.FC<PopularCategoriesProps> = ({
 
         <div
           ref={containerRef}
-          className="flex overflow-x-auto no-scrollbar space-x-3 py-1 px-1 w-[70vw] max-w-full"
+          className="flex overflow-x-auto no-scrollbar space-x-3 py-1 px-1 w-[70vw] max-w-full justify-center"
         >
-          {categories.map((category) => (
+          {data.map((subCategory) => (
             <button
-              key={category._id}
-              onClick={() => setParams((prev) => ({ ...prev, category: category._id }))}
-              className={`px-5 py-2 rounded-full border text-sm font-medium whitespace-nowrap transition-all duration-200
-                ${
-                  Array.isArray(params.category) && params.category.includes(category.name)
-                    ? "bg-green-500 text-white"
-                    : "border-green-500 text-black hover:bg-green-100"
-                }`}
+              key={subCategory._id}
+              onClick={() => handleSubCategoryClick(subCategory)}
+              className="px-5 py-2 rounded-full border border-green-500 text-black hover:bg-green-100 text-sm font-medium whitespace-nowrap transition-all duration-200"
             >
-              {category.name}
+              {subCategory.name}
             </button>
           ))}
         </div>
