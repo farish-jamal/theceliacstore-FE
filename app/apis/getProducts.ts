@@ -56,8 +56,6 @@ export const getProducts = async ({
     params: params,
   });
 
-  console.log("API Response:", apiResponse);
-
   return apiResponse.response as ProductResponse;
 };
 

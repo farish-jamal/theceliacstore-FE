@@ -39,10 +39,6 @@ const ProductCard = ({ name, price, image, productId, tags = [], onClick, instoc
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [showQuickView, setShowQuickView] = useState(false);
 
-  // Debug logging
-  console.log("ProductCard tags:", tags);
-  console.log("ProductCard name:", name);
-
   // Add to cart mutation
   const addToCartMutation = useMutation({
     mutationFn: updateProductInCart,

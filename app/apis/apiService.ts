@@ -33,7 +33,6 @@ export const apiService = async <T = unknown>({
       token = getCookie("token");
     }
 
-    console.log("TOKENN", token);
     const requestHeaders: Record<string, string> = {
       "ngrok-skip-browser-warning": "true",
       ...headers,

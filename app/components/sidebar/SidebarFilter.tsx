@@ -52,6 +52,8 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
   brands,
   onClearFilters,
 }) => {
+  console.log("SidebarFilter render - search prop:", search);
+  console.log("SidebarFilter render - search type:", typeof search);
   const [categorySubCategories, setCategorySubCategories] = useState<Record<string, SubCategory[]>>({});
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
@@ -136,7 +138,13 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
 
           {/* Search Filter */}
           <div className="mb-6">
-            <SearchFilter value={search} onChange={onSearchChange} />
+            <SearchFilter 
+              value={search} 
+              onChange={(value) => {
+                console.log("SidebarFilter onSearchChange called with:", value);
+                onSearchChange(value);
+              }} 
+            />
           </div>
 
           {/* Categories */}

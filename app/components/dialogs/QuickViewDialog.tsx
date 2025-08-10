@@ -68,7 +68,7 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
     >
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b">
+        <div className="flex justify-between items-center py-4 px-6 border-b">
           <h2 className="text-xl font-semibold">Quick View</h2>
           <button
             onClick={onClose}
