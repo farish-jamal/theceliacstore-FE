@@ -34,7 +34,6 @@ const BrandChips: React.FC<BrandChipsProps> = ({ selectedBrands, onBrandChange, 
           </button>
         ))}
       </div>
-      <button className="text-green-600 mt-3 text-xs">More...</button>
     </div>
   );
 };

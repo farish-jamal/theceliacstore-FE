@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronDown,
   Search,
@@ -24,7 +24,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Typography } from "../typography/Typography";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
 import { logout as logoutAction } from "@/app/slices/authSlice";
 import { removeCookie } from "@/app/utils/removeCookie";
@@ -39,7 +39,7 @@ const navItems = [
     label: "Bundles",
     path: "/bundles",
   },
-  { label: "Blog", path: "/blogs" },
+  // { label: "Blog", path: "/blogs" },
   {
     label: "About us",
     icon:  "",
@@ -47,11 +47,11 @@ const navItems = [
   },
 ];
 
-const categoriesItems = [
-  { label: "Best Sellers" },
-  { label: "Imported Picks" },
-  { label: "Fresh Cakes (Delhi NCR)" },
-];
+// const categoriesItems = [
+//   { label: "Best Sellers" },
+//   { label: "Imported Picks" },
+//   { label: "Bakery (Delhi NCR only)" },
+// ];
 
 const Navbar = () => {
   const [active, setActive] = useState("Home");
@@ -60,6 +60,20 @@ const Navbar = () => {
   const auth = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const currentPath = pathname.split("/")[1];
+    if (currentPath === "products") {
+      setActive("Shop");
+    } else if (currentPath === "bundles") {
+      setActive("Bundles");
+    } else if (currentPath === "about") {
+      setActive("About us");
+    } else {
+      setActive("Home");
+    }
+  }, [pathname]);
 
   const handleLogout = () => {
     dispatch(logoutAction());
@@ -271,20 +285,20 @@ const CategoryItem = ({
   mobile?: boolean;
 }) => (
   <ul className={`flex ${mobile ? "flex-col gap-4" : "items-center gap-8"}`}>
-    {categoriesItems.map((item) => (
-      <li key={item.label}>
-        <button
-          type="button"
-          onClick={() => setActive(item.label)}
-          className={`flex items-center font-bold text-[14px] transition-colors cursor-pointer bg-transparent outline-none
-            ${active === item.label ? "text-[#F76C6B]" : "text-[#333333]"}
-            hover:text-[#F76C6B]`}
-          aria-current={active === item.label ? "page" : undefined}
-        >
-          {item.label}
-        </button>
-      </li>
-    ))}
+    {/* {categoriesItems.map((item) => ( */}
+    {/* <li key={item.label}> */}
+    {/* <button */}
+    {/* type="button" */}
+    {/* onClick={() => setActive(item.label)} */}
+    {/* className={`flex items-center font-bold text-[14px] transition-colors cursor-pointer bg-transparent outline-none */}
+    {/* ${active === item.label ? "text-[#F76C6B]" : "text-[#333333]"} */}
+    {/* hover:text-[#F76C6B]`} */}
+    {/* aria-current={active === item.label ? "page" : undefined} */}
+    {/* > */}
+    {/* {item.label} */}
+    {/* </button> */}
+    {/* </li> */}
+    {/* ))} */}
   </ul>
 );
 

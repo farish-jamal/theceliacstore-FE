@@ -2,11 +2,47 @@ import { Facebook, Instagram } from "lucide-react";
 import { Typography } from "../typography/Typography";
 import Image from "next/image";
 import Link from "next/link";
+import GoogleReviewCard from "../common/GoogleReviewCard";
+
+const CONTACT_INFO = {
+  phone: "+91 98101 07887",
+  email: "theceliacstore@gmail.com",
+  address: "A373, Defence Colony, New Delhi",
+};
+
+const SOCIAL_LINKS = {
+  facebook: "https://www.facebook.com/theceliacstore",
+  instagram: "https://www.instagram.com/theceliacstore/",
+};
 
 const paymentLogos = [
   {
+    name: "UPI",
+    src: "/upi.png",
+  },
+  {
     name: "Visa",
-    src: "https://i0.wp.com/theceliacstore.com/wp-content/uploads/2023/11/Untitled-design-1.png?w=692&ssl=1",
+    src: "/visa.png",
+  },
+  {
+    name: "Mastercard",
+    src: "/master_card.png",
+  },
+  {
+    name: "RuPay",
+    src: "/rupay.png",
+  },
+  {
+    name: "AMEX",
+    src: "/amex.png",
+  },
+  {
+    name: "Diners Club",
+    src: "/diners_club.png",
+  },
+  {
+    name: "Net Banking",
+    src: "/net_banking.jpg",
   },
 ];
 
@@ -30,10 +66,20 @@ const Footer = () => {
           We stock the best brands for Gluten Free Foods, Organic Food, Super Food and other Healthy Foods and we offer Doorstep Delivery across India from our retail location. Check out our products for more.
           </p>
           <div className="flex gap-4 mt-4 justify-center md:justify-start flex-wrap">
-            <a href="https://www.facebook.com/theceliacstore" aria-label="Facebook">
+            <a 
+              href={SOCIAL_LINKS.facebook} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+            >
               <Facebook className="text-blue-600" />
             </a>
-            <a href="https://www.instagram.com/theceliacstore" aria-label="Instagram">
+            <a 
+              href={SOCIAL_LINKS.instagram} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+            >
               <Instagram className="text-pink-500" />
             </a>
           </div>
@@ -81,12 +127,15 @@ const Footer = () => {
         <div className="text-center md:text-left">
           <h3 className="font-bold text-lg mb-4">CONTACT</h3>
           <ul className="text-sm space-y-2">
-            <li>A373, Defence Colony, New Delhi</li>
-            <li>theceliacstore@gmail.com</li>
-            <li>+919810107887</li>
+            <li>{CONTACT_INFO.phone}</li>
+            <li>{CONTACT_INFO.email}</li>
+            <li>{CONTACT_INFO.address}</li>
           </ul>
         </div>
       </div>
+
+      {/* Google Review Card */}
+      <GoogleReviewCard />
 
       {/* Bottom Section with Payment Logos */}
       <div className="flex flex-col items-center justify-center gap-8 w-full">
@@ -100,9 +149,9 @@ const Footer = () => {
               key={logo.name}
               src={logo.src}
               alt={logo.name}
-              width={200}
-              height={200}
-              className="h-12 w-auto"
+              width={150}
+              height={150}
+              className="h-8 w-auto object-contain"
               loading="lazy"
             />
           ))}

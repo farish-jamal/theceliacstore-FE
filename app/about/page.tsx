@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Image from "next/image";
 import Navbar from "../components/navbar/Navbar";
@@ -11,7 +13,7 @@ const AboutPage = () => {
     <div className="min-h-screen">
       <Header />
       <Navbar />
-      {/* Hero Section */}
+      {/* Hero Sections */}
       <section className="container mx-auto px-4 md:py-8 flex flex-col md:flex-row items-center justify-between gap-8 lg:px-[7%]">
         <div className="flex-1 max-w-xl">
           <h1 className="text-4xl md:text-5xl font-bold mb-8">

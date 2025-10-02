@@ -11,6 +11,7 @@ import { getCategories, getBrands, Category, Brand } from "../../apis/getProduct
 import { useBundleFilters } from "../../hooks/useBundleFilters";
 import SortFilter from "../filters/SortFilter";
 import { convertToNumber } from "@/app/utils/formatPrice";
+import BundleGridSkeleton from "../loaders/BundleSkeleton";
 
 const PER_PAGE = 10;
 
@@ -168,11 +169,11 @@ const BundleGrid = () => {
     updateFilter("price_range", priceRange);
   };
 
-  const handleCategoryChange = (category: string) => {
+  const handleCategoryChange = (category: string[]) => {
     updateFilter("category", category);
   };
 
-  const handleSubCategoryChange = (subCategory: string) => {
+  const handleSubCategoryChange = (subCategory: string[]) => {
     updateFilter("sub_category", subCategory);
   };
 
@@ -207,9 +208,9 @@ const BundleGrid = () => {
             onSearchChange={handleSearchChange}
             priceRange={filters.price_range || ""}
             onPriceRangeChange={handlePriceRangeChange}
-            category={filters.category || ""}
+            category={filters.category || []}
             onCategoryChange={handleCategoryChange}
-            subCategory={filters.sub_category || ""}
+            subCategory={filters.sub_category || []}
             onSubCategoryChange={handleSubCategoryChange}
             rating={filters.rating}
             onRatingChange={handleRatingChange}
@@ -259,13 +260,13 @@ const BundleGrid = () => {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-600">Sort by:</span>
-                <SortFilter value={filters.sort_by} onChange={handleSortByChange} />
+                <SortFilter value={filters.sort_by || ""} onChange={handleSortByChange} />
               </div>
             </div>
 
             <div className="h-[calc(100vh-40px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
               {loading ? (
-                <div className="text-center py-10">Loading...</div>
+                <BundleGridSkeleton />
               ) : !Array.isArray(bundles) || bundles.length === 0 ? (
                 <div className="text-center py-10">
                   <p className="text-gray-500">No bundles found matching your filters.</p>
@@ -292,7 +293,8 @@ const BundleGrid = () => {
                         image={bundle.images?.[0] || ""}
                         bundleId={bundle._id}
                         productCount={bundle.products?.length || 0}
-                        tags={bundle.products?.flatMap(product => product.tags || []) || []}
+                        tags={[]}
+                        bundleData={bundle}
                       />
                     );
                   })}

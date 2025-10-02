@@ -53,15 +53,18 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: "/brand-favicon.png", type: "image/png", sizes: "32x32" },
+      { url: "/brand-favicon.png", type: "image/png", sizes: "16x16" },
       { url: "/brand-favicon.png", type: "image/png", sizes: "512x512" },
-      { url: "/brand-favicon.png", type: "image/png" },
-      { url: "/favicon.ico", type: "image/x-icon" },
     ],
     shortcut: [
       { url: "/brand-favicon.png", type: "image/png" },
     ],
     apple: [
-      { url: "/brand-favicon.png", type: "image/png" },
+      { url: "/brand-favicon.png", type: "image/png", sizes: "180x180" },
+    ],
+    other: [
+      { url: "/brand-favicon.png", type: "image/png", sizes: "192x192" },
     ],
   },
 };
@@ -73,6 +76,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" type="image/png" sizes="32x32" href="/brand-favicon.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/brand-favicon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/brand-favicon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/brand-favicon.png" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased `}
       >

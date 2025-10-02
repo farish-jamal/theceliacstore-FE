@@ -56,8 +56,6 @@ export const getProducts = async ({
     params: params,
   });
 
-  console.log("API Response:", apiResponse);
-
   return apiResponse.response as ProductResponse;
 };
 
@@ -123,9 +121,13 @@ export type SubCategoryResponse = {
   message?: string;
 };
 
-export const getSubCategories = async (categoryId: string): Promise<SubCategoryResponse> => {
+export const getSubCategories = async (categoryId?: string): Promise<SubCategoryResponse> => {
+  const endpoint = categoryId 
+    ? `${endpoints.subCategories}?category=${categoryId}`
+    : endpoints.subCategories;
+    
   const apiResponse = await apiService<SubCategoryResponse>({
-    endpoint: `${endpoints.subCategories}?category=${categoryId}`,
+    endpoint,
   });
   return apiResponse.response as SubCategoryResponse;
 };

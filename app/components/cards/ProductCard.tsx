@@ -7,6 +7,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatPrice } from "../../utils/formatPrice";
+import QuickViewButton from "../buttons/QuickViewButton";
+import QuickViewDialog from "../dialogs/QuickViewDialog";
+import { Product } from "../../types/Product";
 
 interface CartResponse {
   success: boolean;
@@ -22,9 +25,10 @@ type ProductCardProps = {
   tags?: string[];
   onClick?: () => void;
   instock?: boolean;
+  productData?: Product; // Add product data for quick view
 };
 
-const ProductCard = ({ name, price, image, productId, tags = [], onClick, instock = true }: ProductCardProps) => {
+const ProductCard = ({ name, price, image, productId, tags = [], onClick, instock = true, productData }: ProductCardProps) => {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
@@ -33,10 +37,7 @@ const ProductCard = ({ name, price, image, productId, tags = [], onClick, instoc
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
-
-  // Debug logging
-  console.log("ProductCard tags:", tags);
-  console.log("ProductCard name:", name);
+  const [showQuickView, setShowQuickView] = useState(false);
 
   // Add to cart mutation
   const addToCartMutation = useMutation({
@@ -92,9 +93,10 @@ const ProductCard = ({ name, price, image, productId, tags = [], onClick, instoc
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't navigate if clicking on quantity controls or add to cart button
+    // Don't navigate if clicking on quantity controls, add to cart button, or quick view button
     if ((e.target as HTMLElement).closest('.quantity-controls') || 
-        (e.target as HTMLElement).closest('.add-to-cart-btn')) {
+        (e.target as HTMLElement).closest('.add-to-cart-btn') ||
+        (e.target as HTMLElement).closest('[data-quick-view]')) {
       e.stopPropagation();
       return;
     }
@@ -198,14 +200,28 @@ const ProductCard = ({ name, price, image, productId, tags = [], onClick, instoc
           </div>
         )}
 
-        <Image
-          src={image}
-          alt={name}
-          width={200}
-          height={200}
-          className="object-cover w-[200px] h-[200px] transition-transform duration-200 group-hover:scale-110"
-          style={{ width: "200px", height: "200px" }}
-        />
+        <div className="relative">
+          <Image
+            src={image}
+            alt={name}
+            width={200}
+            height={200}
+            className="object-cover w-[200px] h-[200px] transition-transform duration-200 group-hover:scale-110"
+            style={{ width: "200px", height: "200px" }}
+          />
+          
+          {/* Quick View Button */}
+          {productData && (
+            <div 
+              className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <QuickViewButton
+                onClick={() => setShowQuickView(true)}
+              />
+            </div>
+          )}
+        </div>
         <h3 className="text-center text-sm min-h-[2.5em] flex items-center justify-center w-full">
           {name}
         </h3>
@@ -272,6 +288,16 @@ const ProductCard = ({ name, price, image, productId, tags = [], onClick, instoc
           </motion.button>
         </div>
       </div>
+
+      {/* Quick View Dialog */}
+      {productData && (
+        <QuickViewDialog
+          isOpen={showQuickView}
+          onClose={() => setShowQuickView(false)}
+          data={productData}
+          type="product"
+        />
+      )}
     </>
   );
 };

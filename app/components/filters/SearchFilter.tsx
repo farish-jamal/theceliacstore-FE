@@ -18,12 +18,21 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
     setLocalValue(value);
   }, [value]);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setLocalValue(newValue);
+    console.log("Search input changed:", newValue);
+    onChange(newValue); // Call onChange immediately
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Form submitted with value:", localValue);
     onChange(localValue);
   };
 
   const handleClear = () => {
+    console.log("Clearing search");
     setLocalValue("");
     onChange("");
   };
@@ -35,7 +44,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
         <input
           type="text"
           value={localValue}
-          onChange={(e) => setLocalValue(e.target.value)}
+          onChange={handleInputChange}
           placeholder={placeholder}
           className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />

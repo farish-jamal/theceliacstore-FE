@@ -8,6 +8,7 @@ import { getProducts } from "@/app/apis/getProducts";
 import { Product, ProductParams } from "@/app/types/Product";
 import PrimaryLoader from "@/app/components/loaders/PrimaryLoader";
 import { useRouter } from "next/navigation";
+import { convertToNumber } from "../../utils/formatPrice";
 
 type ProductGridProps = {
   params: ProductParams;
@@ -51,7 +52,7 @@ const ProductGrid = ({ params }: ProductGridProps) => {
             <ProductCard
               key={product._id || product.name}
               name={product.name}
-              price={product.price}
+              price={convertToNumber(product.price)}
               image={
                 product.banner_image ||
                 (product.images && product.images[0]) ||
@@ -61,6 +62,7 @@ const ProductGrid = ({ params }: ProductGridProps) => {
               tags={product.tags}
               instock={product.instock}
               onClick={() => product._id && router.push(`/products/${product._id}`)}
+              productData={product}
             />
           ))}
 
@@ -68,7 +70,7 @@ const ProductGrid = ({ params }: ProductGridProps) => {
             <ProductCard
               key={product._id || product.name}
               name={product.name}
-              price={product.price}
+              price={convertToNumber(product.price)}
               image={
                 product.banner_image ||
                 (product.images && product.images[0]) ||
@@ -78,6 +80,7 @@ const ProductGrid = ({ params }: ProductGridProps) => {
               tags={product.tags}
               instock={product.instock}
               onClick={() => product._id && router.push(`/products/${product._id}`)}
+              productData={product}
             />
           ))}
 

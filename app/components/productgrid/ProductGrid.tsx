@@ -8,6 +8,8 @@ import { getProducts, getCategories, getBrands, Category, Brand } from "../../ap
 import { Product } from "../../types/Product";
 import { useProductFilters } from "../../hooks/useProductFilters";
 import SortFilter from "../filters/SortFilter";
+import ProductGridSkeleton from "../loaders/ProductSkeleton";
+import { convertToNumber } from "../../utils/formatPrice";
 
 const PER_PAGE = 10;
 
@@ -51,8 +53,7 @@ const ProductGrid = () => {
       setLoading(true);
       try {
         const apiParams = getApiParams;
-        console.log("Fetching products with params:", apiParams);
-        
+
         const res = await getProducts({ params: apiParams });
         setProducts(res.data?.data || []);
         setTotalPages(Math.ceil((res.data?.total || 1) / PER_PAGE));
@@ -79,12 +80,12 @@ const ProductGrid = () => {
     updateFilter("price_range", priceRange);
   };
 
-  const handleCategoryChange = (category: string) => {
-    updateFilter("category", category);
+  const handleCategoryChange = (categories: string[]) => {
+    updateFilter("category", categories);
   };
 
-  const handleSubCategoryChange = (subCategory: string) => {
-    updateFilter("sub_category", subCategory);
+  const handleSubCategoryChange = (subCategories: string[]) => {
+    updateFilter("sub_category", subCategories);
   };
 
   const handleRatingChange = (rating: number | undefined) => {
@@ -118,9 +119,9 @@ const ProductGrid = () => {
             onSearchChange={handleSearchChange}
             priceRange={filters.price_range || ""}
             onPriceRangeChange={handlePriceRangeChange}
-            category={filters.category || ""}
+            category={filters.category || []}
             onCategoryChange={handleCategoryChange}
-            subCategory={filters.sub_category || ""}
+            subCategory={filters.sub_category || []}
             onSubCategoryChange={handleSubCategoryChange}
             rating={filters.rating}
             onRatingChange={handleRatingChange}
@@ -152,35 +153,84 @@ const ProductGrid = () => {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-600">Sort by:</span>
-                <SortFilter value={filters.sort_by} onChange={handleSortByChange} />
+                <SortFilter value={filters.sort_by || ""} onChange={handleSortByChange} />
               </div>
             </div>
             <div className="h-[calc(100vh-40px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
               {loading ? (
-                <div className="text-center py-10">Loading...</div>
+                <ProductGridSkeleton />
               ) : products.length === 0 ? (
-                <div className="text-center py-10">
-                  <p className="text-gray-500">No products found matching your filters.</p>
-                  <button
-                    onClick={handleClearFilters}
-                    className="mt-2 text-green-600 hover:text-green-700 underline"
-                  >
-                    Clear all filters
-                  </button>
+                <div className="text-center py-16">
+                  <div className="max-w-md mx-auto">
+                    {/* Empty State Icon */}
+                    <div className="mb-6">
+                      <div className="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                        <svg
+                          className="w-12 h-12 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Empty State Text */}
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      No products found
+                    </h3>
+                    <p className="text-gray-500 mb-6">
+                      We couldn&apos;t find any products matching your current filters. Try adjusting your search criteria or browse our full collection.
+                    </p>
+
+                    {/* Action Button */}
+                    <div className="flex justify-center">
+                      <button
+                        onClick={handleClearFilters}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
+                      >
+                        Clear All Filters
+                      </button>
+                    </div>
+
+                    {/* Search Tips */}
+                    <div className="mt-8 text-sm text-gray-400">
+                      <p className="mb-2">Search tips:</p>
+                      <ul className="space-y-1 text-left max-w-xs mx-auto">
+                        <li>• Try different keywords or product names</li>
+                        <li>• Check your spelling</li>
+                        <li>• Use broader category filters</li>
+                        <li>• Adjust price range</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {products.map((product) => (
-                    <ProductCard
-                      key={product._id}
-                      name={product.name}
-                      price={product.discounted_price ?? product.price}
-                      image={product.banner_image || product.images?.[0] || ""}
-                      productId={product._id || ""}
-                      tags={product.tags}
-                      instock={product.instock}
-                    />
-                  ))}
+                  {products.map((product) => {
+                    // Convert MongoDB Decimal objects to numbers for calculations
+                    const productPrice = convertToNumber(product.price);
+                    const productDiscountedPrice = convertToNumber(product.discounted_price);
+
+                    return (
+                      <ProductCard
+                        key={product._id}
+                        name={product.name}
+                        price={productDiscountedPrice || productPrice}
+                        image={product.banner_image || product.images?.[0] || ""}
+                        productId={product._id || ""}
+                        tags={product.tags}
+                        instock={product.instock}
+                        productData={product}
+                      />
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -21,7 +21,7 @@ const features = [
     icon: <ProductBoxIcon />,
   },
   {
-    title: "Fresh Cakes in Delhi NCR",
+    title: "Bakery (Delhi NCR only)",
     subtitle: "Gluten Free Cakes in Delhi NCR",
     icon: <CakeIcon />,
   },

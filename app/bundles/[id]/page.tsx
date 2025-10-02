@@ -100,7 +100,6 @@ export default function BundleDetailPage() {
       setLoading(true);
       try {
         const response = await getBundle(bundleId);
-        console.log("Bundle detail API response:", response); // Debug log
         if (response.success && response.data) {
           setBundle(response.data);
         } else {

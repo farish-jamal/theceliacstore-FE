@@ -56,15 +56,24 @@ const ProductsPage = () => {
     fetchSubCategories();
   }, [filters.category]);
 
-  const handleRemoveFilter = (key: string) => {
-    updateFilter(key as keyof typeof filters, undefined);
+  const handleRemoveFilter = (key: string, value?: string | number | boolean | string[]) => {
+    // Use a more direct approach to avoid TypeScript issues
+    const updateFilterAny = updateFilter as (key: string, value: any) => void;
+    
+    if (key === "category" || key === "sub_category" || key === "brands") {
+      // For array-based filters, pass the updated array
+      updateFilterAny(key, value);
+    } else {
+      // For other filters, clear them by setting to undefined
+      updateFilterAny(key, undefined);
+    }
   };
 
   return (
     <>
       <TopFloater />
       <Navbar />
-      <div className="bg-white py-4 border-b border-gray-100">
+      <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
           <ActiveFilters 
             filters={filters} 
