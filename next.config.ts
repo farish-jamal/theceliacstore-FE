@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
       "upload.wikimedia.org",
       "res.cloudinary.com",
       "i0.wp.com",
+      "theceliacstore.com",
     ],
   },
   typescript: {
