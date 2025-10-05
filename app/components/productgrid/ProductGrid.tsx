@@ -162,9 +162,15 @@ const ProductGrid = () => {
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-4">
                 <FilterButton onClick={() => setIsFilterOpen(true)} />
-                <p className="text-xs text-gray-600">
-                  Showing {((filters.page - 1) * PER_PAGE) + 1}–{Math.min(filters.page * PER_PAGE, totalProducts)} of {totalProducts} products
-                </p>
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-32"></div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-600">
+                    Showing {((filters.page - 1) * PER_PAGE) + 1}–{Math.min(filters.page * PER_PAGE, totalProducts)} of {totalProducts} products
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-600">Sort by:</span>
