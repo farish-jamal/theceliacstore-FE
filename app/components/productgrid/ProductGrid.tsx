@@ -11,7 +11,7 @@ import SortFilter from "../filters/SortFilter";
 import ProductGridSkeleton from "../loaders/ProductSkeleton";
 import { convertToNumber } from "../../utils/formatPrice";
 
-const PER_PAGE = 10;
+const PER_PAGE = 52;
 
 const ProductGrid = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);

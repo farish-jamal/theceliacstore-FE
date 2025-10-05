@@ -13,7 +13,7 @@ export const useProductFilters = () => {
     
     const filters = {
       page: parseInt(params.get("page") || "1"),
-      per_page: parseInt(params.get("per_page") || "10"),
+      per_page: parseInt(params.get("per_page") || "52"),
       search: params.get("search") || undefined,
       price_range: params.get("price_range") || undefined,
       category: params.get("category") ? params.get("category")!.split(",") : [],
