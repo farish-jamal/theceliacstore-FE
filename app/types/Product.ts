@@ -63,6 +63,8 @@ export type ProductParams = {
   sub_category?: string[];
   rating?: number; // Single rating value (1-5)
   is_best_seller?: boolean;
+  is_imported_picks?: boolean;
+  is_bakery?: boolean;
   brands?: string[];
   sort_by?: "created_at" | "low_to_high" | "high_to_low"; // Updated sort options
 };

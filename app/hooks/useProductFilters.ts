@@ -20,6 +20,8 @@ export const useProductFilters = () => {
       sub_category: params.get("sub_category") ? params.get("sub_category")!.split(",") : [],
       rating: params.get("rating") ? parseInt(params.get("rating")!) : undefined,
       is_best_seller: params.get("is_best_seller") === "true",
+      is_imported_picks: params.get("is_imported_picks") === "true",
+      is_bakery: params.get("is_bakery") === "true",
       brands: params.get("brands") ? params.get("brands")!.split(",") : [],
       sort_by: params.get("sort_by") || undefined,
     };
@@ -42,6 +44,9 @@ export const useProductFilters = () => {
         } else {
           params.delete(key);
         }
+      } else if (typeof value === 'boolean' && value === false) {
+        // Don't add false boolean values to URL
+        params.delete(key);
       } else {
         params.set(key, String(value));
       }
@@ -70,8 +75,8 @@ export const useProductFilters = () => {
   }, [router, pathname]);
 
   // Get API params for the backend
-  const getApiParams = useMemo((): ProductParams => {
-    const params: ProductParams = {
+  const getApiParams = useMemo(() => {
+    const params: any = {
       page: currentFilters.page,
       per_page: currentFilters.per_page,
     };
@@ -80,12 +85,20 @@ export const useProductFilters = () => {
       params.search = currentFilters.search;
     }
     if (currentFilters.price_range) params.price_range = currentFilters.price_range;
-    if (currentFilters.category) params.category = currentFilters.category;
-    if (currentFilters.sub_category) params.sub_category = currentFilters.sub_category;
+    if (currentFilters.category && currentFilters.category.length > 0) {
+      params.category = currentFilters.category.join(",");
+    }
+    if (currentFilters.sub_category && currentFilters.sub_category.length > 0) {
+      params.sub_category = currentFilters.sub_category.join(",");
+    }
     if (currentFilters.rating) params.rating = currentFilters.rating;
-    if (currentFilters.is_best_seller) params.is_best_seller = currentFilters.is_best_seller;
-    if (currentFilters.brands) params.brands = currentFilters.brands;
-    if (currentFilters.sort_by) params.sort_by = currentFilters.sort_by as ProductParams["sort_by"];
+    if (currentFilters.is_best_seller === true) params.is_best_seller = currentFilters.is_best_seller;
+    if (currentFilters.is_imported_picks === true) params.is_imported_picks = currentFilters.is_imported_picks;
+    if (currentFilters.is_bakery === true) params.is_bakery = currentFilters.is_bakery;
+    if (currentFilters.brands && currentFilters.brands.length > 0) {
+      params.brands = currentFilters.brands.join(",");
+    }
+    if (currentFilters.sort_by) params.sort_by = currentFilters.sort_by;
 
     return params;
   }, [currentFilters]);

@@ -63,43 +63,43 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4"
       onClick={handleOverlayClick}
     >
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
-        <div className="flex justify-between items-center py-4 px-6 border-b">
-          <h2 className="text-xl font-semibold">Quick View</h2>
+        <div className="flex justify-between items-center py-3 px-4 sm:py-4 sm:px-6 border-b">
+          <h2 className="text-lg sm:text-xl font-semibold">Quick View</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="p-3 sm:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
             {/* Image Section */}
-            <div className="space-y-4">
-              <div className="aspect-square relative overflow-hidden rounded-lg">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="relative overflow-hidden rounded-lg max-w-sm mx-auto sm:max-w-none" style={{ aspectRatio: '1 / 0.7' }}>
                 <Image
                   src={images?.[selectedImage] || "/product-1.png"}
                   alt={name || ""}
                   fill
-                  className="object-cover"
+                  className="object-contain"
                 />
               </div>
               
               {/* Thumbnail Images */}
               {images && images.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto">
+                <div className="flex gap-2 overflow-x-auto justify-center sm:justify-start">
                   {images.slice(0, 4).map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`flex-shrink-0 w-16 h-16 relative overflow-hidden rounded border-2 ${
+                      className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 relative overflow-hidden rounded border-2 ${
                         selectedImage === index ? "border-green-500" : "border-gray-200"
                       }`}
                     >
@@ -107,7 +107,7 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
                         src={image}
                         alt={`${name} ${index + 1}`}
                         fill
-                        className="object-cover"
+                        className="object-contain"
                       />
                     </button>
                   ))}
@@ -116,9 +116,9 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
             </div>
 
             {/* Details Section */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
                   {name}
                 </h3>
                 {description && (
@@ -129,17 +129,17 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
               </div>
 
               {/* Price */}
-              <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold text-green-600">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <span className="text-xl sm:text-2xl font-bold text-green-600">
                   ₹{discountedPrice || price}
                 </span>
                 {discountedPrice && discountedPrice < price && (
-                  <span className="text-lg text-gray-500 line-through">
+                  <span className="text-base sm:text-lg text-gray-500 line-through">
                     ₹{price}
                   </span>
                 )}
                 {discountedPrice && discountedPrice < price && (
-                  <span className="text-sm text-green-600 font-medium">
+                  <span className="text-xs sm:text-sm text-green-600 font-medium">
                     {Math.round(((price - discountedPrice) / price) * 100)}% OFF
                   </span>
                 )}
@@ -191,18 +191,18 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
                 <button
                   onClick={handleAddToCart}
                   disabled={!isInStock}
-                  className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 bg-green-600 text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <ShoppingCart className="w-4 h-4" />
                   Add to Cart
                 </button>
                 <button
                   onClick={handleViewFullDetails}
-                  className="flex-1 border border-green-600 text-green-600 py-3 px-6 rounded-lg font-medium hover:bg-green-50 transition-colors"
+                  className="flex-1 border border-green-600 text-green-600 py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg font-medium hover:bg-green-50 transition-colors"
                 >
                   View Full Details
                 </button>

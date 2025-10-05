@@ -10,6 +10,7 @@ import { formatPrice } from "../../utils/formatPrice";
 import QuickViewButton from "../buttons/QuickViewButton";
 import QuickViewDialog from "../dialogs/QuickViewDialog";
 import { Product } from "../../types/Product";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 interface CartResponse {
   success: boolean;
@@ -33,6 +34,7 @@ const ProductCard = ({ name, price, image, productId, tags = [], onClick, instoc
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
   const auth = useAppSelector((state) => state.auth);
+  const isMobile = useIsMobile();
   
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -200,6 +202,40 @@ const ProductCard = ({ name, price, image, productId, tags = [], onClick, instoc
           </div>
         )}
 
+        {/* Mobile Quick View Button - Top Right */}
+        {isMobile && productData && (
+          <div 
+            className="absolute top-4 right-4 z-20"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowQuickView(true)}
+              className="bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-md border border-gray-200 hover:bg-white transition-colors duration-200"
+              aria-label="Quick View"
+            >
+              <svg
+                className="w-4 h-4 text-gray-700"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+            </button>
+          </div>
+        )}
+
         <div className="relative">
           <Image
             src={image}
@@ -210,8 +246,8 @@ const ProductCard = ({ name, price, image, productId, tags = [], onClick, instoc
             style={{ width: "200px", height: "200px" }}
           />
           
-          {/* Quick View Button */}
-          {productData && (
+          {/* Quick View Button - Desktop only (hover) */}
+          {!isMobile && productData && (
             <div 
               className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
               onClick={(e) => e.stopPropagation()}

@@ -24,6 +24,10 @@ interface SidebarFilterProps {
   onRatingChange: (rating: number | undefined) => void;
   isBestSeller: boolean;
   onBestSellerChange: (value: boolean) => void;
+  isImportedPicks: boolean;
+  onImportedPicksChange: (value: boolean) => void;
+  isBakery: boolean;
+  onBakeryChange: (value: boolean) => void;
   selectedBrands: string[];
   onBrandChange: (brands: string[]) => void;
   categories: Category[];
@@ -46,6 +50,10 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
   onRatingChange,
   isBestSeller,
   onBestSellerChange,
+  isImportedPicks,
+  onImportedPicksChange,
+  isBakery,
+  onBakeryChange,
   selectedBrands,
   onBrandChange,
   categories,
@@ -57,8 +65,6 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
   const [categorySubCategories, setCategorySubCategories] = useState<Record<string, SubCategory[]>>({});
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [isImportedPicks, setIsImportedPicks] = useState(false);
-  const [isBakeryDelhi, setIsBakeryDelhi] = useState(false);
 
   // Auto-expand categories when sub-categories are selected
   useEffect(() => {
@@ -183,7 +189,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
           </div>
 
           {/* Search Filter */}
-          <div className="mb-6">
+          <div className="mb-4">
             <SearchFilter
               value={search}
               onChange={(value) => {
@@ -358,7 +364,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                 <Checkbox
                   id="imported-picks"
                   checked={isImportedPicks}
-                  onCheckedChange={handleImportedPicksChange}
+                  onCheckedChange={onImportedPicksChange}
                   className="border-gray-400 data-[state=checked]:border-green-600"
                 />
                 <label htmlFor="imported-picks" className={`text-sm cursor-pointer text-gray-700 ${isImportedPicks ? 'text-green-700 font-medium' : ''}`}>
@@ -367,13 +373,13 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
               </div>
               <div className="flex items-center gap-3">
                 <Checkbox
-                  id="bakery-delhi"
-                  checked={isBakeryDelhi}
-                  onCheckedChange={handleBakeryDelhiChange}
+                  id="bakery"
+                  checked={isBakery}
+                  onCheckedChange={onBakeryChange}
                   className="border-gray-400 data-[state=checked]:border-green-600"
                 />
-                <label htmlFor="bakery-delhi" className={`text-sm cursor-pointer text-gray-700 ${isBakeryDelhi ? 'text-green-700 font-medium' : ''}`}>
-                  Bakery (Delhi NCR only)
+                <label htmlFor="bakery" className={`text-sm cursor-pointer text-gray-700 ${isBakery ? 'text-green-700 font-medium' : ''}`}>
+                  Bakery
                 </label>
               </div>
             </div>
@@ -392,7 +398,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
           {/* Brands */}
           <div className="mb-6">
             <h3 className="font-semibold mb-3 text-gray-800">Brands</h3>
-            <div className="space-y-2">
+            <div className="max-h-60 overflow-y-auto space-y-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
               {brands.map((brand) => (
                 <div key={brand._id} className="flex items-center gap-3">
                   <Checkbox

@@ -10,6 +10,8 @@ interface ActiveFiltersProps {
     sub_category?: string[];
     rating?: number;
     is_best_seller?: boolean;
+    is_imported_picks?: boolean;
+    is_bakery?: boolean;
     brands?: string[];
     sort_by?: string;
   };
@@ -40,6 +42,10 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
         return "⭐";
       case "is_best_seller":
         return "🏆";
+      case "is_imported_picks":
+        return "🌍";
+      case "is_bakery":
+        return "🥖";
       case "brands":
         return "🏷️";
       case "sort_by":
@@ -166,6 +172,12 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
           break;
         case "is_best_seller":
           label = "Best Sellers";
+          break;
+        case "is_imported_picks":
+          label = "Imported Picks";
+          break;
+        case "is_bakery":
+          label = "Bakery";
           break;
         case "sort_by":
           if (typeof value === "string") {

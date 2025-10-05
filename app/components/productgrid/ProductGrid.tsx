@@ -18,6 +18,7 @@ const ProductGrid = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalProducts, setTotalProducts] = useState<number>(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
 
@@ -56,10 +57,12 @@ const ProductGrid = () => {
 
         const res = await getProducts({ params: apiParams });
         setProducts(res.data?.data || []);
+        setTotalProducts(res.data?.total || 0);
         setTotalPages(Math.ceil((res.data?.total || 1) / PER_PAGE));
       } catch (error) {
         console.error("Error fetching products:", error);
         setProducts([]);
+        setTotalProducts(0);
         setTotalPages(1);
       } finally {
         setLoading(false);
@@ -96,6 +99,14 @@ const ProductGrid = () => {
     updateFilter("is_best_seller", isBestSeller);
   };
 
+  const handleImportedPicksChange = (isImportedPicks: boolean) => {
+    updateFilter("is_imported_picks", isImportedPicks);
+  };
+
+  const handleBakeryChange = (isBakery: boolean) => {
+    updateFilter("is_bakery", isBakery);
+  };
+
   const handleBrandChange = (brands: string[]) => {
     updateFilter("brands", brands);
   };
@@ -127,13 +138,17 @@ const ProductGrid = () => {
             onRatingChange={handleRatingChange}
             isBestSeller={filters.is_best_seller}
             onBestSellerChange={handleBestSellerChange}
+            isImportedPicks={filters.is_imported_picks}
+            onImportedPicksChange={handleImportedPicksChange}
+            isBakery={filters.is_bakery}
+            onBakeryChange={handleBakeryChange}
             selectedBrands={filters.brands || []}
             onBrandChange={handleBrandChange}
             categories={categories}
             brands={brands}
             onClearFilters={handleClearFilters}
           />
-          <div className="flex-1 py-4">
+          <div className="flex-1 py-2">
             <div className="bg-white py-3 text-sm">
               <Link href="/" className="text-gray-500 hover:text-gray-700">
                 Home
@@ -141,14 +156,14 @@ const ProductGrid = () => {
               <span className="mx-2 text-gray-400">›</span>
               <span className="text-gray-700">All Products</span>
             </div>
-            <div className="bg-green-500 text-white text-center py-3 text-sm -mx-[5%] mb-5 w-[105%]">
+            <div className="bg-green-500 text-white text-center py-3 text-sm -mx-[5%] mb-5 ">
               500+ health-first picks, all in one place.
             </div>
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-4">
                 <FilterButton onClick={() => setIsFilterOpen(true)} />
                 <p className="text-xs text-gray-600">
-                  Showing {((filters.page - 1) * PER_PAGE) + 1}–{Math.min(filters.page * PER_PAGE, products.length)} of {products.length} products
+                  Showing {((filters.page - 1) * PER_PAGE) + 1}–{Math.min(filters.page * PER_PAGE, totalProducts)} of {totalProducts} products
                 </p>
               </div>
               <div className="flex items-center gap-2">
