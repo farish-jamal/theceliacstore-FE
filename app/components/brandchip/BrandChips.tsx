@@ -7,7 +7,7 @@ export type BrandChipsProps = {
   brands: Brand[];
 };
 
-const BrandChips: React.FC<BrandChipsProps> = ({ selectedBrands, onBrandChange, brands }) => {
+const BrandChips = ({ selectedBrands, onBrandChange, brands }: BrandChipsProps) => {
   const toggleBrand = (brandId: string) => {
     if (selectedBrands.includes(brandId)) {
       onBrandChange(selectedBrands.filter((b) => b !== brandId));
@@ -24,11 +24,10 @@ const BrandChips: React.FC<BrandChipsProps> = ({ selectedBrands, onBrandChange, 
           <button
             key={brand._id}
             onClick={() => toggleBrand(brand._id)}
-            className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
-              selectedBrands.includes(brand._id)
+            className={`px-3 py-1.5 rounded-full text-xs transition-colors ${selectedBrands.includes(brand._id)
                 ? "bg-green-100 border border-green-500 text-green-700"
                 : "bg-gray-50 border border-gray-200 hover:bg-gray-100"
-            }`}
+              }`}
           >
             {brand.name}
           </button>

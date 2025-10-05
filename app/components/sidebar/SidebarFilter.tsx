@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { Category, Brand, SubCategory, getSubCategories } from "../../apis/getProducts";
 import SearchFilter from "../filters/SearchFilter";
@@ -52,14 +52,61 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
   brands,
   onClearFilters,
 }) => {
-  console.log("SidebarFilter render - search prop:", search);
-  console.log("SidebarFilter render - search type:", typeof search);
+  const router = useRouter();
+
   const [categorySubCategories, setCategorySubCategories] = useState<Record<string, SubCategory[]>>({});
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [isImportedPicks, setIsImportedPicks] = useState(false);
   const [isBakeryDelhi, setIsBakeryDelhi] = useState(false);
-  const router = useRouter();
+
+  // Auto-expand categories when sub-categories are selected
+  useEffect(() => {
+    if (subCategory.length > 0) {
+      // Find which categories have selected sub-categories
+      const categoriesToExpand = new Set<string>();
+
+      // For each selected sub-category, find its parent category and expand it
+      subCategory.forEach(subCatId => {
+        // Find the parent category for this sub-category
+        categories.forEach(cat => {
+          if (categorySubCategories[cat._id]) {
+            const hasSubCategory = categorySubCategories[cat._id].some(subCat => subCat._id === subCatId);
+            if (hasSubCategory) {
+              categoriesToExpand.add(cat._id);
+            }
+          }
+        });
+      });
+
+      // Expand the categories and fetch sub-categories if needed
+      categoriesToExpand.forEach(async (catId) => {
+        if (!expandedCategories.has(catId)) {
+          setExpandedCategories(prev => new Set([...prev, catId]));
+
+          // Fetch sub-categories if not already loaded
+          if (!categorySubCategories[catId]) {
+            setLoadingStates(prev => ({ ...prev, [catId]: true }));
+            try {
+              const response = await getSubCategories(catId);
+              setCategorySubCategories(prev => ({
+                ...prev,
+                [catId]: response.data || []
+              }));
+            } catch (error) {
+              console.error("Error fetching sub-categories:", error);
+              setCategorySubCategories(prev => ({
+                ...prev,
+                [catId]: []
+              }));
+            } finally {
+              setLoadingStates(prev => ({ ...prev, [catId]: false }));
+            }
+          }
+        }
+      });
+    }
+  }, [subCategory, categories, categorySubCategories, expandedCategories]);
 
   const handleImportedPicksChange = (checked: boolean | "indeterminate") => {
     setIsImportedPicks(checked === true);
@@ -71,7 +118,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
 
   const toggleCategory = async (categoryId: string) => {
     const newExpandedCategories = new Set(expandedCategories);
-    
+
     if (newExpandedCategories.has(categoryId)) {
       // Collapse category
       newExpandedCategories.delete(categoryId);
@@ -80,20 +127,20 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
       // Expand category and fetch sub-categories if not already loaded
       newExpandedCategories.add(categoryId);
       setExpandedCategories(newExpandedCategories);
-      
+
       if (!categorySubCategories[categoryId]) {
         setLoadingStates(prev => ({ ...prev, [categoryId]: true }));
         try {
           const response = await getSubCategories(categoryId);
-          setCategorySubCategories(prev => ({ 
-            ...prev, 
-            [categoryId]: response.data || [] 
+          setCategorySubCategories(prev => ({
+            ...prev,
+            [categoryId]: response.data || []
           }));
         } catch (error) {
           console.error("Error fetching sub-categories:", error);
-          setCategorySubCategories(prev => ({ 
-            ...prev, 
-            [categoryId]: [] 
+          setCategorySubCategories(prev => ({
+            ...prev,
+            [categoryId]: []
           }));
         } finally {
           setLoadingStates(prev => ({ ...prev, [categoryId]: false }));
@@ -108,15 +155,14 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
 
   return (
     <div
-      className={`${
-        isOpen ? "fixed inset-0 z-50 bg-black bg-opacity-50 lg:bg-opacity-0" : ""
-      } lg:relative`}
+      className={`${isOpen ? "fixed inset-0 z-50 lg:bg-opacity-0" : ""
+        } lg:relative`}
     >
       <div
         className={`
-          fixed inset-y-0 left-0 w-[280px] bg-white transform transition-transform duration-300 ease-in-out z-50
+          fixed inset-y-0 left-0 w-full bg-white transform transition-transform duration-300 ease-in-out z-50
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
-          lg:translate-x-0 lg:static lg:w-[260px] lg:shrink-0
+          lg:translate-x-0 lg:static lg:w-full lg:shrink-0
         `}
       >
         <div className="p-4 text-sm h-full overflow-y-auto">
@@ -138,12 +184,12 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
 
           {/* Search Filter */}
           <div className="mb-6">
-            <SearchFilter 
-              value={search} 
+            <SearchFilter
+              value={search}
               onChange={(value) => {
                 console.log("SidebarFilter onSearchChange called with:", value);
                 onSearchChange(value);
-              }} 
+              }}
             />
           </div>
 
@@ -156,15 +202,14 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                 const subCategories = categorySubCategories[cat._id] || [];
                 const isLoading = loadingStates[cat._id];
                 const isCategorySelected = category.includes(cat._id);
-                
+
                 return (
                   <div key={cat._id} className="border border-gray-200 rounded-lg overflow-hidden">
-                    <div 
-                      className={`flex items-center justify-between p-3 cursor-pointer transition-all duration-200 ${
-                        isCategorySelected 
-                          ? 'bg-green-50 border-green-300' 
+                    <div
+                      className={`flex items-center justify-between p-3 cursor-pointer transition-all duration-200 ${isCategorySelected
+                          ? 'bg-green-50 border-green-300'
                           : 'bg-white hover:bg-gray-50'
-                      }`}
+                        }`}
                       onClick={() => toggleCategory(cat._id)}
                     >
                       <div className="flex items-center gap-3">
@@ -179,20 +224,20 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                                 const newExpandedCategories = new Set(expandedCategories);
                                 newExpandedCategories.add(cat._id);
                                 setExpandedCategories(newExpandedCategories);
-                                
+
                                 // Fetch sub-categories if not already loaded
                                 if (!categorySubCategories[cat._id]) {
                                   setLoadingStates(prev => ({ ...prev, [cat._id]: true }));
                                   getSubCategories(cat._id).then(response => {
-                                    setCategorySubCategories(prev => ({ 
-                                      ...prev, 
-                                      [cat._id]: response.data || [] 
+                                    setCategorySubCategories(prev => ({
+                                      ...prev,
+                                      [cat._id]: response.data || []
                                     }));
                                   }).catch(error => {
                                     console.error("Error fetching sub-categories:", error);
-                                    setCategorySubCategories(prev => ({ 
-                                      ...prev, 
-                                      [cat._id]: [] 
+                                    setCategorySubCategories(prev => ({
+                                      ...prev,
+                                      [cat._id]: []
                                     }));
                                   }).finally(() => {
                                     setLoadingStates(prev => ({ ...prev, [cat._id]: false }));
@@ -212,11 +257,10 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                           className="border-gray-400 data-[state=checked]:border-green-600"
                           onClick={(e) => e.stopPropagation()}
                         />
-                        <label 
+                        <label
                           htmlFor={`category-${cat._id}`}
-                          className={`font-medium text-sm cursor-pointer ${
-                            isCategorySelected ? 'text-green-700' : 'text-gray-700'
-                          }`}
+                          className={`font-medium text-sm cursor-pointer ${isCategorySelected ? 'text-green-700' : 'text-gray-700'
+                            }`}
                           onClick={(e) => e.stopPropagation()}
                         >
                           {cat.name}
@@ -228,9 +272,8 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                         )}
                       </div>
                       <svg
-                        className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
-                          isExpanded ? 'rotate-180' : ''
-                        }`}
+                        className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''
+                          }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -238,7 +281,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
-                    
+
                     {/* Sub-categories section - only show when this category is expanded */}
                     {isExpanded && (
                       <div className="bg-gray-50 border-t border-gray-200">
@@ -252,8 +295,8 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                               Sub-Categories
                             </h4>
                             {subCategories.map((subCat) => (
-                              <div 
-                                key={subCat._id} 
+                              <div
+                                key={subCat._id}
                                 className="flex items-center gap-3 p-2 rounded-md hover:bg-white transition-colors"
                               >
                                 <Checkbox
@@ -271,13 +314,12 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                                     }
                                   }}
                                 />
-                                <label 
-                                  htmlFor={subCat._id} 
-                                  className={`text-xs cursor-pointer flex-1 ${
-                                    subCategory.includes(subCat._id) 
-                                      ? 'text-green-700 font-medium' 
+                                <label
+                                  htmlFor={subCat._id}
+                                  className={`text-xs cursor-pointer flex-1 ${subCategory.includes(subCat._id)
+                                      ? 'text-green-700 font-medium'
                                       : 'text-gray-600'
-                                  }`}
+                                    }`}
                                 >
                                   {subCat.name}
                                 </label>
@@ -386,7 +428,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
           <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-4 text-center mt-6">
             <p className="text-lg font-semibold text-green-700">Browse</p>
             <p className="text-lg font-semibold text-green-700">Bundles</p>
-            <button 
+            <button
               onClick={handleBrowseBundlesClick}
               className="text-green-600 text-sm mt-3 flex items-center justify-center w-full hover:text-green-700 transition-colors"
             >
