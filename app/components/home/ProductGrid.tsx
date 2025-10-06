@@ -71,7 +71,7 @@ const ProductGrid = ({ params }: ProductGridProps) => {
             );
           })}
 
-          {productsData.slice(0, 4).map((product: Product) => {
+          {productsData.slice(4, 8).map((product: Product) => {
             // Calculate stock status the same way as product detail page
             const isInStock = product.inventory ? product.inventory > 0 : product.instock;
             
