@@ -5,12 +5,19 @@ import Navbar from "@/app/components/navbar/Navbar";
 import React, { useState, useEffect } from "react";
 import FrequentlyBought from "@/app/components/frequentlybought/FrequentlyBought";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { getProduct } from "@/app/apis/getProducts";
+import { getReviews } from "@/app/apis/getReviews";
+import { addReview } from "@/app/apis/addReview";
 import { Product, Variant } from "@/app/types/Product";
+import { AddReviewRequest } from "@/app/types/Review";
 import ProductSlider from "@/app/components/productsider/ProductSlider";
+import ProductReviewCard from "@/app/components/cards/ProductReviewCard";
+import ReviewsSummary from "@/app/components/cards/ReviewsSummary";
+import AddReviewForm from "@/app/components/forms/AddReviewForm";
 import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
 import { showSnackbar } from "@/app/slices/snackbarSlice";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatPrice, convertToNumber } from "@/app/utils/formatPrice";
@@ -39,6 +46,38 @@ export default function ProductDetailPage() {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'reviews'>('info');
+  const [showAddReviewForm, setShowAddReviewForm] = useState(false);
+
+  // Fetch reviews
+  const { data: reviewsRaw, isLoading: reviewsLoading, error: reviewsError } = useQuery({
+    queryKey: ['reviews', productId],
+    queryFn: () => getReviews(productId),
+    enabled: !!productId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Transform backend response (array) into summary shape expected by UI
+  const reviewsData = React.useMemo(() => {
+    const reviews = reviewsRaw?.data || [];
+    const totalReviews = reviews.length;
+    const averageRating = totalReviews
+      ? reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / totalReviews
+      : 0;
+    const ratingDistribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    reviews.forEach((r) => {
+      const key = Math.round(Number(r.rating) || 0) as 1|2|3|4|5;
+      if (ratingDistribution[key] !== undefined) ratingDistribution[key] += 1;
+    });
+    return {
+      data: {
+        reviews,
+        totalReviews,
+        averageRating,
+        ratingDistribution,
+      },
+      success: true,
+    };
+  }, [reviewsRaw]);
 
   // Add to cart mutation
   const addToCartMutation = useMutation({
@@ -75,6 +114,34 @@ export default function ProductDetailPage() {
     },
     onSettled: () => {
       setIsAddingToCart(false);
+    }
+  });
+
+  // Add review mutation
+  const addReviewMutation = useMutation({
+    mutationFn: (reviewData: AddReviewRequest) => addReview(productId, reviewData),
+    onSuccess: (response) => {
+      if (response.success) {
+        dispatch(showSnackbar({ 
+          message: "Review submitted successfully!", 
+          type: "success" 
+        }));
+        // Invalidate reviews query to refresh reviews data
+        queryClient.invalidateQueries({ queryKey: ["reviews", productId] });
+        setShowAddReviewForm(false);
+      } else {
+        dispatch(showSnackbar({ 
+          message: response.message || "Failed to submit review", 
+          type: "error" 
+        }));
+      }
+    },
+    onError: (error) => {
+      console.error("Error adding review:", error);
+      dispatch(showSnackbar({ 
+        message: "Failed to submit review. Please try again.", 
+        type: "error" 
+      }));
     }
   });
 
@@ -181,6 +248,28 @@ export default function ProductDetailPage() {
       // If user cancels share, silently ignore; otherwise fallback to copy
       await copyToClipboard(url, 'Product link copied to clipboard');
     }
+  };
+
+  const handleAddReview = (reviewData: AddReviewRequest) => {
+    if (!auth.user || !auth.token) {
+      // Redirect to login with current page as redirect parameter
+      const currentPath = `/products/${productId}`;
+      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
+      return;
+    }
+    
+    addReviewMutation.mutate(reviewData);
+  };
+
+  const handleShowAddReviewForm = () => {
+    if (!auth.user || !auth.token) {
+      // Redirect to login with current page as redirect parameter
+      const currentPath = `/products/${productId}`;
+      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
+      return;
+    }
+    
+    setShowAddReviewForm(true);
   };
 
   if (loading) {
@@ -296,22 +385,30 @@ export default function ProductDetailPage() {
                     selectedThumb === idx ? "border-2 border-green-500" : ""
                   }`}
                 >
-                  <img
-                    src={src}
-                    alt={`${product.name} ${idx + 1}`}
-                    className="w-full h-full object-contain"
-                    onClick={() => setSelectedThumb(idx)}
-                  />
+                  {src && (
+                    <Image
+                      src={src}
+                      alt={`${product.name} ${idx + 1}`}
+                      width={96}
+                      height={96}
+                      className="w-full h-full object-contain cursor-pointer"
+                      onClick={() => setSelectedThumb(idx)}
+                    />
+                  )}
                 </div>
               ))}
             </div>
             {/* Main image */}
             <div className="flex-1 aspect-square rounded-lg max-h-[400px]">
-              <img
-                src={displayImages[selectedThumb]}
-                alt={product.name}
-                className="w-full h-full object-contain"
-              />
+              {displayImages[selectedThumb] && (
+                <Image
+                  src={displayImages[selectedThumb]}
+                  alt={product.name}
+                  width={400}
+                  height={400}
+                  className="w-full h-full object-contain"
+                />
+              )}
             </div>
           </div>
         </div>
@@ -326,9 +423,11 @@ export default function ProductDetailPage() {
             <div className="flex flex-wrap gap-2 mb-3">
               {validTags.map((tag) => (
                 <div key={tag} className="relative group/tag">
-                  <img
+                  <Image
                     src={tagImageMap[tag]}
                     alt={tag.replace(/_/g, ' ')}
+                    width={32}
+                    height={32}
                     className="w-8 h-8 object-contain transition-transform duration-200 group-hover/tag:scale-110"
                   />
                   {/* Tooltip */}
@@ -582,10 +681,156 @@ export default function ProductDetailPage() {
                 </div>
               )}
             </div>
+            
+            {/* Quick Review Button in Info Tab */}
+            <div className="w-full lg:w-1/3">
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h4 className="font-semibold text-gray-900 mb-4">Share Your Experience</h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  Help other customers by sharing your review of this product.
+                </p>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setActiveTab('reviews');
+                    setTimeout(() => {
+                      handleShowAddReviewForm();
+                    }, 100);
+                  }}
+                  disabled={addReviewMutation.isPending}
+                  className="w-full px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Write a Review
+                </motion.button>
+              </div>
+            </div>
           </div>
         ) : (
-          <div className="py-10 text-center text-gray-500">
-            Reviews will be available soon.
+          <div className="py-8">
+            {reviewsLoading ? (
+              <div className="text-center py-10">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                <p className="mt-2 text-gray-500">Loading reviews...</p>
+              </div>
+            ) : reviewsError ? (
+              <div className="text-center py-10 text-red-500">
+                Failed to load reviews. Please try again later.
+              </div>
+            ) : reviewsData?.data ? (
+              <div className="space-y-6">
+                {/* Reviews Summary */}
+                <ReviewsSummary reviewsData={reviewsData.data} />
+                
+                {/* Add Review Button */}
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Customer Reviews ({reviewsData.data.totalReviews})
+                  </h3>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleShowAddReviewForm}
+                    disabled={addReviewMutation.isPending}
+                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Write a Review
+                  </motion.button>
+                </div>
+
+                {/* Add Review Form */}
+                <AnimatePresence>
+                  {showAddReviewForm && (
+                    <AddReviewForm
+                      onSubmit={handleAddReview}
+                      isSubmitting={addReviewMutation.isPending}
+                      onCancel={() => setShowAddReviewForm(false)}
+                    />
+                  )}
+                </AnimatePresence>
+                
+                {/* Individual Reviews */}
+                {reviewsData.data.reviews.length > 0 ? (
+                  <div className="grid gap-4">
+                    {reviewsData.data.reviews.map((review) => (
+                      <ProductReviewCard key={review._id} review={review} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-10">
+                    <div className="text-gray-400 mb-4">
+                      <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No reviews yet</h3>
+                    <p className="text-gray-500 mb-4">Be the first to review this product!</p>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleShowAddReviewForm}
+                      disabled={addReviewMutation.isPending}
+                      className="px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Write the First Review
+                    </motion.button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Show review form even when no reviews data */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Customer Reviews
+                    </h3>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleShowAddReviewForm}
+                      disabled={addReviewMutation.isPending}
+                      className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Write a Review
+                    </motion.button>
+                  </div>
+
+                  {/* Add Review Form */}
+                  <AnimatePresence>
+                    {showAddReviewForm && (
+                      <AddReviewForm
+                        onSubmit={handleAddReview}
+                        isSubmitting={addReviewMutation.isPending}
+                        onCancel={() => setShowAddReviewForm(false)}
+                      />
+                    )}
+                  </AnimatePresence>
+
+                  {!showAddReviewForm && (
+                    <div className="text-center py-10">
+                      <div className="text-gray-400 mb-4">
+                        <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No reviews yet</h3>
+                      <p className="text-gray-500 mb-4">Be the first to review this product!</p>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleShowAddReviewForm}
+                        disabled={addReviewMutation.isPending}
+                        className="px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Write the First Review
+                      </motion.button>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            )}
           </div>
         )}
       </div>
