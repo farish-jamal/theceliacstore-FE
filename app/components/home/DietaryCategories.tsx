@@ -23,9 +23,9 @@ interface Category {
 
 // Hardcoded background colors mapper
 const bgColorMapper = {
-  0: "bg-green-200",
-  1: "bg-blue-200", 
-  2: "bg-yellow-200",
+  0: "bg-green-100",
+  1: "bg-blue-100", 
+  2: "bg-yellow-100",
 };
 
 const DietaryNeeds: React.FC = () => {
@@ -102,7 +102,7 @@ const DietaryNeeds: React.FC = () => {
                 alt={category.name}
                 width={120}
                 height={120}
-                className="object-contain relative z-10"
+                className="object-contain relative z-10 rounded-lg"
               />
             </div>
             <h3 className="text-xl font-medium text-gray-700 text-center mt-4">
