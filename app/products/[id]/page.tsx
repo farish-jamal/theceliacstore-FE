@@ -835,7 +835,11 @@ export default function ProductDetailPage() {
         )}
       </div>
       <FrequentlyBought currentProductId={productId} />
-      <ProductSlider title="Recommended for you" image={"https://res.cloudinary.com/dacwig3xk/image/upload/v1748809663/uploads/images/a7qwl65t93onu0ino3pg.png"} />
+      <ProductSlider
+        title="Recommended for you"
+        image={"https://res.cloudinary.com/dacwig3xk/image/upload/v1748809663/uploads/images/a7qwl65t93onu0ino3pg.png"}
+        productIdForRecommendations={productId}
+      />
       <ProductSlider title="Best Sellers" image={"https://res.cloudinary.com/dacwig3xk/image/upload/v1748809663/uploads/images/a7qwl65t93onu0ino3pg.png"} fetchBestSellers={true} />
       <Footer />
     </div>

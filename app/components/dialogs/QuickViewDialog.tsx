@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import ReactDOM from "react-dom";
 import Image from "next/image";
 import { X, Star, ShoppingCart } from "lucide-react";
 import { Product } from "../../types/Product";
@@ -52,7 +53,31 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
     },
   });
 
-  if (!isOpen) return null;
+  // Create a portal root to avoid clipping by transformed/scroll parents
+  const portalElement = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    const el = document.createElement('div');
+    el.setAttribute('id', 'quick-view-portal');
+    return el;
+  }, []);
+
+  useEffect(() => {
+    if (!portalElement) return;
+    document.body.appendChild(portalElement);
+    return () => {
+      try { document.body.removeChild(portalElement); } catch {}
+    };
+  }, [portalElement]);
+
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = originalOverflow; };
+  }, [isOpen]);
+
+  if (!isOpen || !portalElement) return null;
 
   const isProduct = type === "product";
   const product = isProduct ? data as Product : null;
@@ -102,9 +127,9 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div 
-      className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4"
+      className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4"
       onClick={handleOverlayClick}
     >
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -254,6 +279,8 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
       </div>
     </div>
   );
+
+  return ReactDOM.createPortal(modalContent, portalElement);
 };
 
 export default QuickViewDialog; 

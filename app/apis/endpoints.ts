@@ -5,6 +5,7 @@ export const endpoints = {
 
   // products
   products: "api/product",
+  productRecommendations: "api/product/recommendations",
 
   // bundles
   bundles: "api/bundles",

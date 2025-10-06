@@ -40,6 +40,9 @@ export type ProductResponse = {
   data?: {
     total: number;
     data: Product[];
+    page?: number;
+    per_page?: number;
+    total_pages?: number;
   };
   message?: string;
 };
@@ -101,6 +104,22 @@ export const getProduct = async (id: string): Promise<SingleProductResponse> => 
     endpoint: `${endpoints.products}/${id}`,
   });
   return apiResponse.response as SingleProductResponse;
+};
+
+export type ProductRecommendationsParams = {
+  product_id: string;
+  page?: number;
+  per_page?: number;
+};
+
+export const getProductRecommendations = async (
+  params: ProductRecommendationsParams
+): Promise<ProductResponse> => {
+  const apiResponse = await apiService<ProductResponse>({
+    endpoint: endpoints.productRecommendations,
+    params,
+  });
+  return apiResponse.response as ProductResponse;
 };
 
 export type SubCategory = {

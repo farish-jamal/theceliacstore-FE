@@ -356,7 +356,15 @@ const CartPage = () => {
         </div>
       </main>
 
-      <ProductSlider title="Recommended for you" image={thumbnails[1]} />
+      <ProductSlider
+        title="Recommended for you"
+        image={thumbnails[1]}
+        productIdForRecommendations={
+          cart?.items?.[0]?.type === "product" 
+            ? cart.items[0].product._id 
+            : "68e16239e9dceb0798c28534"
+        }
+      />
       <ProductSlider title="Best Sellers" image={thumbnails[0]} fetchBestSellers={true} />
 
       {showAddAddress && (

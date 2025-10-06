@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import ProductCard from "../cards/ProductCard";
 import { useQuery } from "@tanstack/react-query";
-import { getProducts } from "../../apis/getProducts";
+import { getProducts, getProductRecommendations } from "../../apis/getProducts";
 import { ProductParams } from "../../types/Product";
 import PrimaryLoader from "../loaders/PrimaryLoader";
 
@@ -9,9 +9,10 @@ interface ProductSliderProps {
   title: string;
   image: string;
   fetchBestSellers?: boolean;
+  productIdForRecommendations?: string;
 }
 
-const ProductSlider = ({ title, image, fetchBestSellers = false }: ProductSliderProps) => {
+const ProductSlider = ({ title, image, fetchBestSellers = false, productIdForRecommendations }: ProductSliderProps) => {
   const sliderRef = useRef<HTMLDivElement>(null);
 
   // Set up query parameters
@@ -21,16 +22,25 @@ const ProductSlider = ({ title, image, fetchBestSellers = false }: ProductSlider
     ...(fetchBestSellers && { is_best_seller: true })
   };
 
-  // Fetch products using React Query
+  // Fetch data: best sellers or recommendations
   const {
     data: productsData,
     isLoading,
     error
   } = useQuery({
-    queryKey: ["products", queryParams],
-    queryFn: async () => await getProducts({ params: queryParams }),
-    enabled: fetchBestSellers, // Only fetch when fetchBestSellers is true
+    queryKey: [
+      productIdForRecommendations ? "product_recommendations" : "products",
+      productIdForRecommendations ? { product_id: productIdForRecommendations, page: 1, per_page: 10 } : queryParams
+    ],
+    queryFn: async () => {
+      if (productIdForRecommendations) {
+        return await getProductRecommendations({ product_id: productIdForRecommendations, page: 1, per_page: 10 });
+      }
+      return await getProducts({ params: queryParams });
+    },
+    enabled: !!productIdForRecommendations || fetchBestSellers,
     select: (data) => data?.data?.data || [],
+    staleTime: 5 * 60 * 1000,
   });
 
   const products = productsData || [];
@@ -113,7 +123,7 @@ const ProductSlider = ({ title, image, fetchBestSellers = false }: ProductSlider
               WebkitOverflowScrolling: "touch",
             }}
           >
-            {fetchBestSellers ? (
+            {fetchBestSellers || productIdForRecommendations ? (
               isLoading ? (
                 <div className="flex items-center justify-center w-full">
                   <PrimaryLoader />
@@ -136,13 +146,14 @@ const ProductSlider = ({ title, image, fetchBestSellers = false }: ProductSlider
                         productId={product._id || ''}
                         tags={product.tags || []}
                         instock={isInStock}
+                        productData={product}
                       />
                     </div>
                   );
                 })
               ) : (
                 <div className="flex items-center justify-center w-full text-gray-500">
-                  No best sellers found
+                  No products found
                 </div>
               )
             ) : (
