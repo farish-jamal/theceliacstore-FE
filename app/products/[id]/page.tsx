@@ -38,6 +38,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [activeTab, setActiveTab] = useState<'info' | 'reviews'>('info');
 
   // Add to cart mutation
   const addToCartMutation = useMutation({
@@ -174,6 +175,7 @@ export default function ProductDetailPage() {
 
   // Filter out valid tags that have corresponding images
   const validTags = product.tags?.filter(tag => tagImageMap[tag]) || [];
+  const formattedAllTags = product.tags?.map((tag) => tag.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())) || [];
 
   // Check if product has variants
   const hasVariants = product.variants && product.variants.length > 0;
@@ -464,88 +466,81 @@ export default function ProductDetailPage() {
       {/* Tabs */}
       <div className="max-w-6xl mx-auto px-4 mt-8">
         <div className="flex border-b justify-center items-center">
-          <button className="px-6 py-3 text-gray-500 hover:text-gray-700">
-            Descriptions
-          </button>
-          <button className="px-6 py-3 border-b-2 border-green-500 text-green-600 font-medium">
+          <button
+            className={`px-6 py-3 ${activeTab === 'info' ? 'border-b-2 border-green-500 text-green-600 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
+            onClick={() => setActiveTab('info')}
+          >
             Additional Information
           </button>
-          <button className="px-6 py-3 text-gray-500 hover:text-gray-700">
+          <button
+            className={`px-6 py-3 ${activeTab === 'reviews' ? 'border-b-2 border-green-500 text-green-600 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
+            onClick={() => setActiveTab('reviews')}
+          >
             Reviews
           </button>
         </div>
-        <div className="flex flex-col lg:flex-row gap-12 py-8 px-[10%]">
-          <div className="w-full lg:w-1/2 text-sm space-y-3">
-            <div className="flex">
-              <span className="w-40 text-gray-600">Variant:</span>{" "}
-              <span>{selectedVariant?.name || "N/A"}</span>
-            </div>
-            <div className="flex">
-              <span className="w-40 text-gray-600">Type:</span>{" "}
-              <span>Gluten Free</span>
-            </div>
-            <div className="flex">
-              <span className="w-40 text-gray-600">Category:</span>{" "}
-              <span>Flour</span>
-            </div>
-            <div className="flex">
-              <span className="w-40 text-gray-600">Stock Status:</span>{" "}
-              <span>{isVariantInStock ? "Available" : "Out of Stock"}</span>
-            </div>
-            <div className="flex">
-              <span className="w-40 text-gray-600">Manufactured by:</span>{" "}
-              <span>xyz</span>
-            </div>
-            <div className="flex">
-              <span className="w-40 text-gray-600">Manufacturer Address:</span>{" "}
-              <span>xyz</span>
-            </div>
-            <div className="flex">
-              <span className="w-40 text-gray-600">Date of MFD:</span>{" "}
-              <span>xyz</span>
-            </div>
-            <div className="flex">
-              <span className="w-40 text-gray-600">Expire Date:</span>{" "}
-              <span>xyz</span>
-            </div>
-            <div className="flex">
-              <span className="w-40 text-gray-600">Customer Care:</span>{" "}
-              <span>xyz</span>
-            </div>
-            <div className="flex">
-              <span className="w-40 text-gray-600">Batch Number:</span>{" "}
-              <span>xyz</span>
-            </div>
-            <div className="flex">
-              <span className="w-40 text-gray-600">Country of Origin:</span>{" "}
-              <span>xyz</span>
-            </div>
-            <div className="mt-6 flex items-center  justify-center gap-3 border py-6 px-4 rounded-lg max-w-fit">
-              <div className="w-10 h-10 rounded-full items-center justify-center">
-                <img
-                  src="https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747550786/Vector_ru0gp0.jpg?_s=public-apps"
-                  alt="Wheafree"
-                  className="h-10"
-                />
+        {activeTab === 'info' ? (
+          <div className="flex flex-col lg:flex-row gap-12 py-8 px-[10%]">
+            <div className="w-full lg:w-2/3 text-sm space-y-3">
+              <div className="flex">
+                <span className="w-48 text-gray-600">Variant:</span>{" "}
+                <span>{selectedVariant?.name || "N/A"}</span>
               </div>
-              <div className="flex flex-col">
-                <span className="font-medium">100% Gluten Free</span>
-                <span className="text-gray-500">Certified Gluten Free</span>
+              <div className="flex">
+                <span className="w-48 text-gray-600">SKU:</span>{" "}
+                <span>{product.sku || "N/A"}</span>
               </div>
+              <div className="flex">
+                <span className="w-48 text-gray-600">Brand:</span>{" "}
+                <span>{product.brand?.name || "N/A"}</span>
+              </div>
+              <div className="flex">
+                <span className="w-48 text-gray-600">Stock Status:</span>{" "}
+                <span>{isVariantInStock ? "Available" : "Out of Stock"}</span>
+              </div>
+              <div className="flex">
+                <span className="w-48 text-gray-600">Status:</span>{" "}
+                <span>{product.status || "N/A"}</span>
+              </div>
+              <div className="flex">
+                <span className="w-48 text-gray-600">Tags:</span>{" "}
+                <span>{formattedAllTags.length ? formattedAllTags.join(', ') : 'N/A'}</span>
+              </div>
+              <div className="flex">
+                <span className="w-48 text-gray-600">Weight:</span>{" "}
+                <span>{product.weight_in_grams ? `${product.weight_in_grams} g` : 'N/A'}</span>
+              </div>
+              <div className="flex">
+                <span className="w-48 text-gray-600">Type:</span>{" "}
+                <span>{product.tags?.includes('gluten_free') ? 'Gluten Free' : 'N/A'}</span>
+              </div>
+              <div className="flex">
+                <span className="w-48 text-gray-600">Inventory:</span>{" "}
+                <span>{typeof product.inventory === 'number' ? product.inventory : (isVariantInStock ? 'Available' : 'Out of Stock')}</span>
+              </div>
+              <div className="flex">
+                <span className="w-48 text-gray-600">Best Seller:</span>{" "}
+                <span>{product.is_best_seller ? 'Yes' : 'No'}</span>
+              </div>
+              <div className="flex">
+                <span className="w-48 text-gray-600">Price:</span>{" "}
+                <span>₹{formatPrice(displayPrice)}</span>
+              </div>
+              {displayOriginalPrice && displayPrice && displayPrice < displayOriginalPrice && (
+                <div className="flex">
+                  <span className="w-48 text-gray-600">MRP:</span>{" "}
+                  <span className="line-through text-gray-400">₹{formatPrice(displayOriginalPrice)}</span>
+                </div>
+              )}
             </div>
           </div>
-          <div className="w-full lg:w-1/2 flex justify-center">
-            <div className="aspect-square -mt-10 rounded-lg max-h-[450px]">
-              <img
-                src={"https://res.cloudinary.com/dacwig3xk/image/upload/v1748809663/uploads/images/a7qwl65t93onu0ino3pg.png"}
-                alt="back"
-                className="w-full h-full object-contain"
-              />
-            </div>
+        ) : (
+          <div className="py-10 text-center text-gray-500">
+            Reviews will be available soon.
           </div>
-        </div>
+        )}
       </div>
-      <FrequentlyBought />
+      <FrequentlyBought currentProductId={productId} />
       <ProductSlider title="Recommended for you" image={"https://res.cloudinary.com/dacwig3xk/image/upload/v1748809663/uploads/images/a7qwl65t93onu0ino3pg.png"} />
       <ProductSlider title="Best Sellers" image={"https://res.cloudinary.com/dacwig3xk/image/upload/v1748809663/uploads/images/a7qwl65t93onu0ino3pg.png"} />
       <Footer />

@@ -18,6 +18,7 @@ export type Variant = {
 export type Product = {
   _id?: string;
   name: string;
+  sku?: string;
   small_description?: string;
   full_description?: string;
   price: MongoDBDecimal | number;
@@ -45,8 +46,21 @@ export type Product = {
   images?: string[];
   expiry_date?: string | Date;
   meta_data?: Record<string, unknown>;
+  brand?: {
+    _id: string;
+    name: string;
+    meta_data?: Record<string, unknown>;
+    newly_launched?: boolean;
+    is_active?: boolean;
+    images?: string[];
+    createdAt?: string;
+    updatedAt?: string;
+    __v?: number;
+  };
   uploaded_by_brand?: string;
   is_best_seller?: boolean;
+  status?: string;
+  weight_in_grams?: number | null;
   sub_category: string;
   created_by_admin: string;
   createdAt?: string;

@@ -1,32 +1,102 @@
-import React from "react";
-import { formatPrice } from "@/app/utils/formatPrice";
+"use client";
+import React, { useEffect, useMemo, useState } from "react";
+import { formatPrice, convertToNumber } from "@/app/utils/formatPrice";
+import { getProducts } from "@/app/apis/getProducts";
+import { Product } from "@/app/types/Product";
+import { updateProductInCart } from "@/app/apis/updateProductInCart";
+import { useAppDispatch, useAppSelector } from "@/app/hooks/reduxHooks";
+import { showSnackbar } from "@/app/slices/snackbarSlice";
+import { useRouter } from "next/navigation";
 
-const FrequentlyBought = () => {
-  const products = [
-    {
-      id: 1,
-      name: "Wheafree Gluten Free Multigrain Flour 1000 Gms",
-      price: 170.0,
-      image:
-        "https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747513129/183b94b37929bc9eee61fb523d8bef99602cb329_rabkid.jpg?_s=public-apps",
-    },
-    {
-      id: 2,
-      name: "Sai Healthy Atta 1000 Gms",
-      price: 160.0,
-      image:
-        "https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747513129/828c7686eb0e33b2b2a9b791c342983d6fee1747_ubi5ay.jpg?_s=public-apps",
-    },
-    {
-      id: 3,
-      name: "Dr. Gluten Platinum Chapati Flour 1000 Gms",
-      price: 180.0,
-      image:
-        "https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747513129/828c7686eb0e33b2b2a9b791c342983d6fee1747_ubi5ay.jpg?_s=public-apps",
-    },
-  ];
+type FrequentlyBoughtProps = {
+  currentProductId?: string;
+};
 
-  const totalPrice = products.reduce((sum, product) => sum + product.price, 0);
+const FrequentlyBought = ({ currentProductId }: FrequentlyBoughtProps) => {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const auth = useAppSelector((state) => state.auth);
+
+  const [allFirstPageProducts, setAllFirstPageProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [adding, setAdding] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchFirstPage = async () => {
+      setLoading(true);
+      try {
+        const res = await getProducts({ params: { page: 1, per_page: 24 } });
+        const list = res.data?.data || [];
+        setAllFirstPageProducts(list.filter(Boolean));
+      } catch (e) {
+        console.error("Failed to load products for FrequentlyBought", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFirstPage();
+  }, []);
+
+  const randomThree = useMemo(() => {
+    const pool = allFirstPageProducts.filter(
+      (p) => (p._id || "") !== (currentProductId || "")
+    );
+    if (pool.length <= 3) return pool;
+    const picked: Product[] = [];
+    const used = new Set<number>();
+    while (picked.length < 3) {
+      const idx = Math.floor(Math.random() * pool.length);
+      if (!used.has(idx)) {
+        used.add(idx);
+        picked.push(pool[idx]);
+      }
+    }
+    return picked;
+  }, [allFirstPageProducts, currentProductId]);
+
+  const totalPrice = useMemo(() => {
+    return randomThree.reduce((sum, p) => {
+      const price = (p.discounted_price as number) || (p.price as number) || 0;
+      return sum + (typeof price === "number" ? price : 0);
+    }, 0);
+  }, [randomThree]);
+
+  const handleAddAllToCart = async () => {
+    if (!auth.user || !auth.token) {
+      router.push("/login");
+      return;
+    }
+    if (!randomThree.length) return;
+    setAdding(true);
+    try {
+      await Promise.all(
+        randomThree.map((p) =>
+          updateProductInCart({
+            product_id: p._id || "",
+            quantity: 1,
+            variant_sku: p.variants && p.variants[0]?.sku ? p.variants[0]?.sku : undefined,
+            type: "product",
+          })
+        )
+      );
+      dispatch(
+        showSnackbar({
+          message: "Added all to cart successfully",
+          type: "success",
+        })
+      );
+    } catch (e) {
+      console.error("Failed adding frequently bought items", e);
+      dispatch(
+        showSnackbar({
+          message: "Failed to add items to cart",
+          type: "error",
+        })
+      );
+    } finally {
+      setAdding(false);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
@@ -34,58 +104,92 @@ const FrequentlyBought = () => {
         Frequently bought together
       </h2>
 
-      <div className="flex items-center justify-center mb-6">
-        {products.map((product, index) => (
-          <React.Fragment key={product.id}>
-            {index > 0 && (
-              <div className="mx-5 text-xl font-light text-gray-400">+</div>
-            )}
-            <div className="flex flex-col items-center mx-2">
-              <div className="relative mb-3">
-                <div className="absolute -top-2 -left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="3"
-                  >
-                    <path d="M5 12l5 5L20 7"></path>
-                  </svg>
+      {loading ? (
+        <div className="text-center text-sm text-gray-500">Loading...</div>
+      ) : !randomThree.length ? (
+        <div className="text-center text-sm text-gray-500">No suggestions available</div>
+      ) : (
+        <div className="flex items-center justify-center mb-6">
+          {randomThree.map((product, index) => {
+            const variant = product.variants && product.variants[0];
+            const imageSrc =
+              (variant?.images && variant.images[0]) ||
+              (product.images && product.images[0]) ||
+              product.banner_image ||
+              "/product-1.png";
+
+            const displayPrice = convertToNumber(
+              variant?.discounted_price ??
+              variant?.price ??
+              product.discounted_price ??
+              product.price
+            );
+            const originalPrice = convertToNumber(variant?.price ?? product.price);
+
+            const hasDiscount = originalPrice && displayPrice && displayPrice < originalPrice;
+            const truncatedName = product.name && product.name.length > 100
+              ? product.name.slice(0, 100) + "..."
+              : product.name;
+
+            return (
+            <React.Fragment key={product._id || index}>
+              {index > 0 && (
+                <div className="mx-5 text-xl font-light text-gray-400">+</div>
+              )}
+              <div className="flex flex-col items-center mx-2">
+                <div className="relative mb-3">
+                  <div className="absolute -top-2 -left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="white"
+                      strokeWidth="3"
+                    >
+                      <path d="M5 12l5 5L20 7"></path>
+                    </svg>
+                  </div>
+                  <div className="w-24 h-24 p-1 bg-white rounded border border-gray-200 shadow-sm">
+                    <img
+                      src={imageSrc}
+                      alt={product.name}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
                 </div>
-                <div className="w-24 h-24 p-1 bg-white rounded border border-gray-200 shadow-sm">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-contain"
-                  />
+                <h3 className="text-xs text-center font-medium max-w-[100px]">
+                  {truncatedName}
+                </h3>
+                <div className="text-xs mt-1 flex items-center gap-1">
+                  <span className="font-bold">₹{formatPrice(displayPrice)}</span>
+                  {hasDiscount && (
+                    <span className="text-gray-400 line-through">₹{formatPrice(originalPrice)}</span>
+                  )}
                 </div>
               </div>
-              <h3 className="text-xs text-center font-medium max-w-[100px]">
-                {product.name}
-              </h3>
-              <p className="text-xs font-bold mt-1">
-                ₹{formatPrice(product.price)}
-              </p>
+            </React.Fragment>
+          );})}
+
+          <div className="mx-5 text-xl font-light text-gray-400">=</div>
+
+          <div className="flex flex-col items-center mx-2">
+            <div className="text-lg font-semibold text-gray-900 mb-1">
+              Total: ₹{formatPrice(totalPrice)}
             </div>
-          </React.Fragment>
-        ))}
-
-        <div className="mx-5 text-xl font-light text-gray-400">=</div>
-
-        <div className="flex flex-col items-center mx-2">
-          <div className="text-lg font-semibold text-gray-900 mb-1">
-            Total: ₹{formatPrice(totalPrice)}
+            <div className="text-xs text-gray-500 mb-3">
+              For {randomThree.length} Items
+            </div>
+            <button
+              onClick={handleAddAllToCart}
+              disabled={adding}
+              className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-medium py-2 px-5 rounded text-sm transition-colors"
+            >
+              {adding ? "Adding..." : "Add All to Cart"}
+            </button>
           </div>
-          <div className="text-xs text-gray-500 mb-3">
-            For {products.length} Items
-          </div>
-          <button className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-5 rounded text-sm transition-colors">
-            Add to Cart
-          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 };
