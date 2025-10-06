@@ -238,6 +238,9 @@ const ProductGrid = () => {
                     // Convert MongoDB Decimal objects to numbers for calculations
                     const productPrice = convertToNumber(product.price);
                     const productDiscountedPrice = convertToNumber(product.discounted_price);
+                    
+                    // Calculate stock status the same way as product detail page
+                    const isInStock = product.inventory ? product.inventory > 0 : product.instock;
 
                     return (
                       <ProductCard
@@ -247,7 +250,7 @@ const ProductGrid = () => {
                         image={product.banner_image || product.images?.[0] || ""}
                         productId={product._id || ""}
                         tags={product.tags}
-                        instock={product.instock}
+                        instock={isInStock}
                         productData={product}
                       />
                     );

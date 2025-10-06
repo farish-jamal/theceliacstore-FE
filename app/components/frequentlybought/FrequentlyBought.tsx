@@ -109,7 +109,7 @@ const FrequentlyBought = ({ currentProductId }: FrequentlyBoughtProps) => {
       ) : !randomThree.length ? (
         <div className="text-center text-sm text-gray-500">No suggestions available</div>
       ) : (
-        <div className="flex items-center justify-center mb-6">
+        <div className="flex items-center justify-center mb-6 flex-col gap-6 md:flex-row md:gap-0">
           {randomThree.map((product, index) => {
             const variant = product.variants && product.variants[0];
             const imageSrc =
@@ -134,7 +134,7 @@ const FrequentlyBought = ({ currentProductId }: FrequentlyBoughtProps) => {
             return (
             <React.Fragment key={product._id || index}>
               {index > 0 && (
-                <div className="mx-5 text-xl font-light text-gray-400">+</div>
+                <div className="text-xl font-light text-gray-400 my-3 md:my-0 md:mx-5">+</div>
               )}
               <div className="flex flex-col items-center mx-2">
                 <div className="relative mb-3">
@@ -150,7 +150,7 @@ const FrequentlyBought = ({ currentProductId }: FrequentlyBoughtProps) => {
                       <path d="M5 12l5 5L20 7"></path>
                     </svg>
                   </div>
-                  <div className="w-24 h-24 p-1 bg-white rounded border border-gray-200 shadow-sm">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 p-1 bg-white rounded border border-gray-200 shadow-sm">
                     <img
                       src={imageSrc}
                       alt={product.name}
@@ -158,10 +158,10 @@ const FrequentlyBought = ({ currentProductId }: FrequentlyBoughtProps) => {
                     />
                   </div>
                 </div>
-                <h3 className="text-xs text-center font-medium max-w-[100px]">
+                <h3 className="text-[11px] sm:text-xs text-center font-medium max-w-[120px] md:max-w-[160px]">
                   {truncatedName}
                 </h3>
-                <div className="text-xs mt-1 flex items-center gap-1">
+                <div className="text-[11px] sm:text-xs mt-1 flex items-center gap-1">
                   <span className="font-bold">₹{formatPrice(displayPrice)}</span>
                   {hasDiscount && (
                     <span className="text-gray-400 line-through">₹{formatPrice(originalPrice)}</span>
@@ -171,19 +171,19 @@ const FrequentlyBought = ({ currentProductId }: FrequentlyBoughtProps) => {
             </React.Fragment>
           );})}
 
-          <div className="mx-5 text-xl font-light text-gray-400">=</div>
+          <div className="text-xl font-light text-gray-400 my-5 md:my-0 md:mx-5">=</div>
 
           <div className="flex flex-col items-center mx-2">
-            <div className="text-lg font-semibold text-gray-900 mb-1">
+            <div className="text-base sm:text-lg font-semibold text-gray-900 mb-1">
               Total: ₹{formatPrice(totalPrice)}
             </div>
-            <div className="text-xs text-gray-500 mb-3">
+            <div className="text-[11px] sm:text-xs text-gray-500 mb-3">
               For {randomThree.length} Items
             </div>
             <button
               onClick={handleAddAllToCart}
               disabled={adding}
-              className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-medium py-2 px-5 rounded text-sm transition-colors"
+              className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-medium py-2 px-5 rounded text-sm transition-colors w-full sm:w-auto"
             >
               {adding ? "Adding..." : "Add All to Cart"}
             </button>

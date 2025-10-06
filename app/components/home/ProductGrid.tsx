@@ -48,41 +48,51 @@ const ProductGrid = ({ params }: ProductGridProps) => {
             />
           </div>
 
-          {productsData.slice(0, 4).map((product: Product) => (
-            <ProductCard
-              key={product._id || product.name}
-              name={product.name}
-              price={convertToNumber(product.price)}
-              image={
-                product.banner_image ||
-                (product.images && product.images[0]) ||
-                "/product-1.png"
-              }
-              productId={product._id || ""}
-              tags={product.tags}
-              instock={product.instock}
-              onClick={() => product._id && router.push(`/products/${product._id}`)}
-              productData={product}
-            />
-          ))}
+          {productsData.slice(0, 4).map((product: Product) => {
+            // Calculate stock status the same way as product detail page
+            const isInStock = product.inventory ? product.inventory > 0 : product.instock;
+            
+            return (
+              <ProductCard
+                key={product._id || product.name}
+                name={product.name}
+                price={convertToNumber(product.price)}
+                image={
+                  product.banner_image ||
+                  (product.images && product.images[0]) ||
+                  "/product-1.png"
+                }
+                productId={product._id || ""}
+                tags={product.tags}
+                instock={isInStock}
+                onClick={() => product._id && router.push(`/products/${product._id}`)}
+                productData={product}
+              />
+            );
+          })}
 
-          {productsData.slice(0, 4).map((product: Product) => (
-            <ProductCard
-              key={product._id || product.name}
-              name={product.name}
-              price={convertToNumber(product.price)}
-              image={
-                product.banner_image ||
-                (product.images && product.images[0]) ||
-                "/product-1.png"
-              }
-              productId={product._id || ""}
-              tags={product.tags}
-              instock={product.instock}
-              onClick={() => product._id && router.push(`/products/${product._id}`)}
-              productData={product}
-            />
-          ))}
+          {productsData.slice(0, 4).map((product: Product) => {
+            // Calculate stock status the same way as product detail page
+            const isInStock = product.inventory ? product.inventory > 0 : product.instock;
+            
+            return (
+              <ProductCard
+                key={product._id || product.name}
+                name={product.name}
+                price={convertToNumber(product.price)}
+                image={
+                  product.banner_image ||
+                  (product.images && product.images[0]) ||
+                  "/product-1.png"
+                }
+                productId={product._id || ""}
+                tags={product.tags}
+                instock={isInStock}
+                onClick={() => product._id && router.push(`/products/${product._id}`)}
+                productData={product}
+              />
+            );
+          })}
 
           {/* Static Promo - last column of second row */}
           <PromoCard

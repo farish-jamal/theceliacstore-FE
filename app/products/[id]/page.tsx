@@ -135,6 +135,54 @@ export default function ProductDetailPage() {
     });
   };
 
+  const getProductUrl = (): string => {
+    const relativeUrl = `/products/${productId}`;
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      return `${window.location.origin}${relativeUrl}`;
+    }
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+    return `${siteUrl}${relativeUrl}`;
+  };
+
+  const copyToClipboard = async (text: string, successMessage?: string) => {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const tempInput = document.createElement('input');
+        tempInput.value = text;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+      }
+      if (successMessage) {
+        dispatch(showSnackbar({ message: successMessage, type: 'success' }));
+      }
+    } catch {
+      dispatch(showSnackbar({ message: 'Failed to copy to clipboard', type: 'error' }));
+    }
+  };
+
+  const handleShare = async () => {
+    const url = getProductUrl();
+    const shareData: ShareData = {
+      title: product?.name || 'Product',
+      text: product?.small_description || 'Check this out',
+      url,
+    };
+    try {
+      if (navigator?.share) {
+        await navigator.share(shareData);
+      } else {
+        await copyToClipboard(url, 'Product link copied to clipboard');
+      }
+    } catch {
+      // If user cancels share, silently ignore; otherwise fallback to copy
+      await copyToClipboard(url, 'Product link copied to clipboard');
+    }
+  };
+
   if (loading) {
     return <ProductDetailSkeleton />;
   }
@@ -318,18 +366,14 @@ export default function ProductDetailPage() {
           </div>
           <div className="flex items-center gap-2 mb-4">
             <span className="text-sm text-gray-600">Brand:</span>
+            <span className="text-sm text-gray-600">{product.brand?.name}</span>
             <div className="ml-auto flex gap-3 items-center text-gray-400">
-              <button className="hover:text-gray-600">
-                <svg
-                  width="20"
-                  height="20"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M13.5 3a1.5 1.5 0 0 0-3 0h3zM12 22a1 1 0 0 0 1-1h-2a1 1 0 0 0 1 1zm7-3a1 1 0 0 0 0-2v2zM5 19a1 1 0 0 0 0-2v2zm7-16v16h2V3h-2zm8 16v-2h-2v2h2zm-16 0h16v-2H4v2z" />
-                </svg>
-              </button>
-              <button className="hover:text-gray-600">
+              <button
+                className="hover:text-gray-600"
+                aria-label="More info"
+                title="More info"
+                onClick={() => setActiveTab('info')}
+              >
                 <svg
                   width="20"
                   height="20"
@@ -339,7 +383,12 @@ export default function ProductDetailPage() {
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
                 </svg>
               </button>
-              <button className="hover:text-gray-600">
+              <button
+                className="hover:text-gray-600"
+                aria-label="Share product"
+                title="Share product"
+                onClick={handleShare}
+              >
                 <svg
                   width="20"
                   height="20"
@@ -542,7 +591,7 @@ export default function ProductDetailPage() {
       </div>
       <FrequentlyBought currentProductId={productId} />
       <ProductSlider title="Recommended for you" image={"https://res.cloudinary.com/dacwig3xk/image/upload/v1748809663/uploads/images/a7qwl65t93onu0ino3pg.png"} />
-      <ProductSlider title="Best Sellers" image={"https://res.cloudinary.com/dacwig3xk/image/upload/v1748809663/uploads/images/a7qwl65t93onu0ino3pg.png"} />
+      <ProductSlider title="Best Sellers" image={"https://res.cloudinary.com/dacwig3xk/image/upload/v1748809663/uploads/images/a7qwl65t93onu0ino3pg.png"} fetchBestSellers={true} />
       <Footer />
     </div>
   );

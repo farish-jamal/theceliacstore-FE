@@ -1,8 +1,39 @@
 import React, { useRef } from "react";
 import ProductCard from "../cards/ProductCard";
+import { useQuery } from "@tanstack/react-query";
+import { getProducts } from "../../apis/getProducts";
+import { ProductParams } from "../../types/Product";
+import PrimaryLoader from "../loaders/PrimaryLoader";
 
-const ProductSlider = ({ title, image }: { title: string; image: string }) => {
+interface ProductSliderProps {
+  title: string;
+  image: string;
+  fetchBestSellers?: boolean;
+}
+
+const ProductSlider = ({ title, image, fetchBestSellers = false }: ProductSliderProps) => {
   const sliderRef = useRef<HTMLDivElement>(null);
+
+  // Set up query parameters
+  const queryParams: ProductParams = {
+    page: 1,
+    per_page: 10,
+    ...(fetchBestSellers && { is_best_seller: true })
+  };
+
+  // Fetch products using React Query
+  const {
+    data: productsData,
+    isLoading,
+    error
+  } = useQuery({
+    queryKey: ["products", queryParams],
+    queryFn: async () => await getProducts({ params: queryParams }),
+    enabled: fetchBestSellers, // Only fetch when fetchBestSellers is true
+    select: (data) => data?.data?.data || [],
+  });
+
+  const products = productsData || [];
 
   const scrollLeft = () => {
     if (sliderRef.current) {
@@ -82,18 +113,52 @@ const ProductSlider = ({ title, image }: { title: string; image: string }) => {
               WebkitOverflowScrolling: "touch",
             }}
           >
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex-none w-[260px] transform transition-transform duration-300 hover:scale-105">
-                <ProductCard
-                  name="24 Mantra Organic Jaggery Powder 500GM"
-                  price={80}
-                  image={image}
-                  productId={`slider-product-${i}`}
-                  tags={[]}
-                  instock={true}
-                />
-              </div>
-            ))}
+            {fetchBestSellers ? (
+              isLoading ? (
+                <div className="flex items-center justify-center w-full">
+                  <PrimaryLoader />
+                </div>
+              ) : error ? (
+                <div className="flex items-center justify-center w-full text-gray-500">
+                  Failed to load products
+                </div>
+              ) : products.length > 0 ? (
+                products.map((product) => {
+                  // Calculate stock status the same way as product detail page
+                  const isInStock = product.inventory ? product.inventory > 0 : product.instock;
+                  
+                  return (
+                    <div key={product._id} className="flex-none w-[260px] transform transition-transform duration-300 hover:scale-105">
+                      <ProductCard
+                        name={product.name}
+                        price={typeof product.price === 'number' ? product.price : parseFloat(product.price.$numberDecimal)}
+                        image={product.images?.[0] || image}
+                        productId={product._id || ''}
+                        tags={product.tags || []}
+                        instock={isInStock}
+                      />
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="flex items-center justify-center w-full text-gray-500">
+                  No best sellers found
+                </div>
+              )
+            ) : (
+              Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="flex-none w-[260px] transform transition-transform duration-300 hover:scale-105">
+                  <ProductCard
+                    name="24 Mantra Organic Jaggery Powder 500GM"
+                    price={80}
+                    image={image}
+                    productId={`slider-product-${i}`}
+                    tags={[]}
+                    instock={true}
+                  />
+                </div>
+              ))
+            )}
           </div>
 
           <button
