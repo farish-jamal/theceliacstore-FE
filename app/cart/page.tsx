@@ -55,26 +55,6 @@ const convertApiAddressToLocal = (apiAddress: Address): LocalAddress => {
   return converted;
 };
 
-const availableCoupons = [
-  {
-    code: "SAVE10",
-    description: "10% off on your entire order",
-    expiryDate: "2024-12-31",
-    minimumOrder: 500,
-  },
-  {
-    code: "WELCOME20",
-    description: "20% off on your first order",
-    expiryDate: "2024-12-31",
-    minimumOrder: 1000,
-  },
-  {
-    code: "FREESHIP",
-    description: "Free shipping on orders above ₹1500",
-    expiryDate: "2024-12-31",
-    minimumOrder: 1500,
-  },
-];
 
 const thumbnails = [
   "https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747513129/183b94b37929bc9eee61fb523d8bef99602cb329_rabkid.jpg?_s=public-apps",
@@ -139,9 +119,6 @@ const CartPage = () => {
     null
   );
   const [showAddressSelect, setShowAddressSelect] = useState(false);
-  const [showCoupons, setShowCoupons] = useState(false);
-  const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
   // Set default selected address when addresses load
   React.useEffect(() => {
@@ -213,8 +190,7 @@ const CartPage = () => {
       acc + (typeof item.price === "number" ? item.price : 0) * item.quantity,
     0
   );
-  const discount = appliedCoupon ? subtotal * 0.1 : 0;
-  const total = subtotal - discount;
+  const total = subtotal;
 
   const addNewAddress = (e: React.FormEvent) => {
     e.preventDefault();
@@ -271,21 +247,6 @@ const CartPage = () => {
     }
   };
 
-  const applyCoupon = () => {
-    const coupon = availableCoupons.find((c) => c.code === couponCode);
-    if (!coupon) {
-      alert("Invalid coupon code");
-      return;
-    }
-
-    if (subtotal < coupon.minimumOrder) {
-      alert(`This coupon requires a minimum order of ₹${coupon.minimumOrder}`);
-      return;
-    }
-
-    setAppliedCoupon(couponCode);
-    setCouponCode("");
-  };
 
   // If user is not logged in, show login prompt
   if (!userId) {
@@ -337,40 +298,6 @@ const CartPage = () => {
             <div className="bg-white rounded-xl p-6 shadow-sm sticky top-4">
               <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
 
-              <div className="mb-6">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    placeholder="Enter coupon code"
-                    className="flex-1 border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
-                  />
-                  <button
-                    onClick={applyCoupon}
-                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
-                  >
-                    Apply
-                  </button>
-                </div>
-                <button
-                  onClick={() => setShowCoupons(true)}
-                  className="text-green-600 text-sm mt-2 hover:text-green-700 font-medium"
-                >
-                  View Available Coupons
-                </button>
-                {appliedCoupon && (
-                  <div className="flex items-center justify-between mt-3 text-green-600 text-sm bg-green-50 p-2 rounded-lg">
-                    <span>Coupon {appliedCoupon} applied - 10% off</span>
-                    <button
-                      onClick={() => setAppliedCoupon(null)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
 
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
@@ -417,7 +344,6 @@ const CartPage = () => {
 
               <OrderSummary
                 subtotal={subtotal}
-                discount={discount}
                 total={total}
               />
               <CheckoutButton 
@@ -431,7 +357,7 @@ const CartPage = () => {
       </main>
 
       <ProductSlider title="Recommended for you" image={thumbnails[1]} />
-      <ProductSlider title="Best Sellers" image={thumbnails[0]} />
+      <ProductSlider title="Best Sellers" image={thumbnails[0]} fetchBestSellers={true} />
 
       {showAddAddress && (
         <motion.div
@@ -572,67 +498,6 @@ const CartPage = () => {
         </motion.div>
       )}
 
-      {showCoupons && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-        >
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold">Available Coupons</h2>
-              <button
-                onClick={() => setShowCoupons(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              {availableCoupons.map((coupon) => (
-                <div
-                  key={coupon.code}
-                  className="border-2 border-dashed border-green-200 rounded-lg p-4 hover:border-green-500 transition-colors cursor-pointer"
-                  onClick={() => {
-                    setCouponCode(coupon.code);
-                    setShowCoupons(false);
-                  }}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-bold text-lg text-green-600">
-                        {coupon.code}
-                      </h3>
-                      <p className="text-gray-600 text-sm mt-1">
-                        {coupon.description}
-                      </p>
-                    </div>
-                    <button
-                      className="text-green-600 text-sm font-medium hover:text-green-700 bg-green-50 px-3 py-1 rounded-full"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCouponCode(coupon.code);
-                        setShowCoupons(false);
-                      }}
-                    >
-                      Use Code
-                    </button>
-                  </div>
-                  <div className="mt-3 flex justify-between items-center text-xs text-gray-500">
-                    <span>Min. Order: ₹{coupon.minimumOrder}</span>
-                    <span>Expires: {coupon.expiryDate}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
 
       {showAddressSelect && (
         <motion.div
