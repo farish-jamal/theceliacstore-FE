@@ -8,6 +8,10 @@ import { Bundle } from "../../apis/getBundles";
 import { convertToNumber } from "../../utils/formatPrice";
 import { useAppSelector } from "../../hooks/reduxHooks";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateProductInCart } from "../../apis/updateProductInCart";
+import { showSnackbar } from "@/app/slices/snackbarSlice";
 
 interface QuickViewDialogProps {
   isOpen: boolean;
@@ -26,6 +30,27 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
   const [selectedImage, setSelectedImage] = useState(0);
   const auth = useAppSelector((state) => state.auth);
   const router = useRouter();
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+
+  const addToCartMutation = useMutation({
+    mutationFn: updateProductInCart,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      dispatch(
+        showSnackbar({ message: "Added to cart", type: "success" })
+      );
+      onClose();
+    },
+    onError: () => {
+      dispatch(
+        showSnackbar({
+          message: "Failed to add to cart. Please try again.",
+          type: "error",
+        })
+      );
+    },
+  });
 
   if (!isOpen) return null;
 
@@ -38,15 +63,31 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
   const images = isProduct ? product?.images : bundle?.images;
   const name = isProduct ? product?.name : bundle?.name;
   const description = isProduct ? product?.small_description : bundle?.description;
-  const isInStock = isProduct ? product?.instock : true;
+  const isInStock = isProduct
+    ? (product?.inventory ? product.inventory > 0 : product?.instock)
+    : true;
 
   const handleAddToCart = () => {
     if (!auth.user || !auth.token) {
       router.push('/login');
       return;
     }
-    // TODO: Implement add to cart functionality
-    console.log(`Adding ${type} to cart:`, data);
+    if (isProduct && product?._id) {
+      addToCartMutation.mutate({
+        product_id: product._id,
+        quantity,
+        type: 'product',
+      });
+      return;
+    }
+
+    if (!isProduct && bundle?._id) {
+      addToCartMutation.mutate({
+        bundle_id: bundle._id,
+        quantity,
+        type: 'bundle',
+      });
+    }
   };
 
   const handleViewFullDetails = () => {
@@ -194,11 +235,11 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
                 <button
                   onClick={handleAddToCart}
-                  disabled={!isInStock}
+                  disabled={!isInStock || addToCartMutation.isPending}
                   className="flex-1 bg-green-600 text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <ShoppingCart className="w-4 h-4" />
-                  Add to Cart
+                  {addToCartMutation.isPending ? 'Adding...' : 'Add to Cart'}
                 </button>
                 <button
                   onClick={handleViewFullDetails}
