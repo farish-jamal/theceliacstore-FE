@@ -31,15 +31,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           <h3 className="font-medium">#{orderNumber}</h3>
         </div>
         <p className="text-sm text-gray-600">{items.join(", ")}</p>
-        {status === "Processing" ? (
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-3"
-          >
-            Track Order →
-          </Button>
-        ) : (
+        {status !== "Processing" && (
           <Button
             variant="outline"
             size="sm"

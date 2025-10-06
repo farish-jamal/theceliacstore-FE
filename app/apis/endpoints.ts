@@ -30,4 +30,5 @@ export const endpoints = {
 
   // orders
   order: "api/order",
+  orderHistory: "api/order/history",
 };
