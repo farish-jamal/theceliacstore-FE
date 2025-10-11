@@ -37,6 +37,8 @@ export type Cart = {
   user: string;
   items: CartItem[];
   total_price: number;
+  shipping_charge: number;
+  final_price: number;
   is_active: boolean;
   createdAt: string;
   updatedAt: string;

@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import TopFloater from "@/app/components/floater/TopFloater";
 import Navbar from "@/app/components/navbar/Navbar";
 import Footer from "@/app/components/layout/Footer";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, Settings2 } from "lucide-react";
+import { Plus, X, Edit, Trash2 } from "lucide-react";
 import ProductSlider from "../components/productsider/ProductSlider";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCart } from "@/app/apis/getCart";
@@ -13,9 +13,9 @@ import { Cart } from "@/app/types/Cart";
 import CartItemsList from "./components/CartItemsList";
 import { isArrayWithValues } from "@/app/utils/isArrayWithValues/index";
 import EmptyCart from "./components/EmptyCart";
-import AddressCard from "./components/AddressCard";
 import OrderSummary from "./components/OrderSummary";
 import CheckoutButton from "./components/CheckoutButton";
+import CartItemsSkeleton from "./components/CartItemSkeleton";
 import {
   getAddresses,
   createAddress,
@@ -69,9 +69,20 @@ const CartPage = () => {
   const user = useAppSelector((state) => state.auth.user);
   const userId = user?.id;
 
+  // State declarations
+  const [selectedAddress, setSelectedAddress] = useState<string>("");
+  const [showAddAddress, setShowAddAddress] = useState(false);
+  const [showEditAddress, setShowEditAddress] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<LocalAddress | null>(
+    null
+  );
+  const [showAddressSelect, setShowAddressSelect] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingAddressId, setDeletingAddressId] = useState<string>("");
+
   const { data: cartData, isLoading: cartLoading } = useQuery({
-    queryKey: ["cart"],
-    queryFn: getCart,
+    queryKey: ["cart", selectedAddress],
+    queryFn: () => getCart(selectedAddress),
     select: (res) => res?.data?.data,
   });
 
@@ -87,16 +98,13 @@ const CartPage = () => {
         };
       }
       const response = await getAddresses(userId);
-      console.log("🌐 RAW API RESPONSE:", response);
       return response;
     },
     select: (res) => {
-      console.log("🔍 SELECT FUNCTION INPUT:", res);
-      const addresses = res?.data || []; // data is directly the addresses array
-      console.log("🔍 EXTRACTED ADDRESSES:", addresses);
+      const addresses = res?.data || []; 
       return addresses;
     },
-    enabled: !!userId, // Only run query if userId exists
+    enabled: !!userId,
   });
 
   console.log("🔍 ADDRESS DEBUG INFO:");
@@ -105,22 +113,16 @@ const CartPage = () => {
   console.log("Address loading:", addressLoading);
 
   const cart: Cart | undefined = cartData;
-  const addresses: LocalAddress[] = Array.isArray(addressData)
-    ? addressData.map(convertApiAddressToLocal)
-    : [];
+  const addresses: LocalAddress[] = useMemo(
+    () => Array.isArray(addressData)
+      ? addressData.map(convertApiAddressToLocal)
+      : [],
+    [addressData]
+  );
 
   console.log("Final addresses array:", addresses);
   console.log("Address array length:", addresses.length);
 
-  const [selectedAddress, setSelectedAddress] = useState<string>("");
-  const [showAddAddress, setShowAddAddress] = useState(false);
-  const [showEditAddress, setShowEditAddress] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<LocalAddress | null>(
-    null
-  );
-  const [showAddressSelect, setShowAddressSelect] = useState(false);
-
-  // Set default selected address when addresses load
   React.useEffect(() => {
     console.log("🎯 ADDRESS SELECTION LOGIC:");
     console.log("Addresses available:", addresses.length);
@@ -173,8 +175,18 @@ const CartPage = () => {
     mutationFn: async (addressId: string) => {
       return await deleteAddress(addressId);
     },
-    onSuccess: () => {
+    onSuccess: (_, addressId) => {
       queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
+      // If the deleted address was selected, select the first available address
+      if (selectedAddress === addressId) {
+        const remainingAddresses = addresses.filter((addr) => addr.id !== addressId);
+        if (remainingAddresses.length > 0) {
+          const defaultAddress = remainingAddresses.find((addr) => addr.isDefault) || remainingAddresses[0];
+          setSelectedAddress(defaultAddress.id);
+        } else {
+          setSelectedAddress("");
+        }
+      }
     },
     onError: (error) => {
       console.error("Error deleting address:", error);
@@ -185,12 +197,9 @@ const CartPage = () => {
   // Defensive: handle undefined/null cart or items
   const items = isArrayWithValues(cart?.items) ? cart.items : [];
   console.log("Cart items:", cartData, items);
-  const subtotal = items.reduce(
-    (acc, item) =>
-      acc + (typeof item.price === "number" ? item.price : 0) * item.quantity,
-    0
-  );
-  const total = subtotal;
+  const subtotal = cart?.total_price || 0;
+  const shippingCharge = cart?.shipping_charge || 0;
+  const finalPrice = cart?.final_price || 0;
 
   const addNewAddress = (e: React.FormEvent) => {
     e.preventDefault();
@@ -238,13 +247,18 @@ const CartPage = () => {
   };
 
   const handleDeleteAddress = (addressId: string) => {
-    if (window.confirm("Are you sure you want to delete this address?")) {
-      if (!userId) {
-        alert("Please log in to delete an address");
-        return;
-      }
-      deleteAddressMutation.mutate(addressId);
+    setDeletingAddressId(addressId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteAddress = () => {
+    if (!userId) {
+      alert("Please log in to delete an address");
+      return;
     }
+    deleteAddressMutation.mutate(deletingAddressId);
+    setShowDeleteConfirm(false);
+    setDeletingAddressId("");
   };
 
 
@@ -283,9 +297,7 @@ const CartPage = () => {
           <div className="lg:w-2/3">
             <AnimatePresence>
               {cartLoading ? (
-                <div className="bg-white rounded-xl p-8 text-center">
-                  Loading...
-                </div>
+                <CartItemsSkeleton />
               ) : !isArrayWithValues(cart?.items) ? (
                 <EmptyCart />
               ) : (
@@ -303,10 +315,10 @@ const CartPage = () => {
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-medium">Delivery Address</h3>
                   <button
-                    onClick={() => setShowAddAddress(true)}
+                    onClick={() => setShowAddressSelect(true)}
                     className="text-green-600 font-medium hover:text-green-700 flex items-center gap-1"
                   >
-                    <Plus className="w-4 h-4" /> Add New
+                    Select Address
                   </button>
                 </div>
                 <div
@@ -330,7 +342,19 @@ const CartPage = () => {
                         </p>
                       );
                     } else if (foundAddress) {
-                      return <AddressCard {...foundAddress} />;
+                      return (
+                        <div>
+                          {/* Line 1: Name and Phone */}
+                          <div className="flex items-center gap-3 mb-2">
+                            <p className="font-semibold text-gray-900">{foundAddress.name}</p>
+                            <p className="text-sm text-gray-600">{foundAddress.phone}</p>
+                          </div>
+                          {/* Line 2: Full Address */}
+                          <p className="text-sm text-gray-600">
+                            {foundAddress.address}, {foundAddress.city}, {foundAddress.state}, {foundAddress.zip}
+                          </p>
+                        </div>
+                      );
                     } else {
                       return (
                         <p className="text-gray-500 text-center">
@@ -344,10 +368,11 @@ const CartPage = () => {
 
               <OrderSummary
                 subtotal={subtotal}
-                total={total}
+                shippingCharge={shippingCharge}
+                finalPrice={finalPrice}
               />
               <CheckoutButton 
-                disabled={!isArrayWithValues(cart?.items) || !selectedAddress} 
+                disabled={!isArrayWithValues(cart?.items)} 
                 cartId={cart?._id}
                 addressId={selectedAddress}
               />
@@ -372,7 +397,7 @@ const CartPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
         >
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
@@ -512,12 +537,12 @@ const CartPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
         >
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl"
+            className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl max-h-[80vh] overflow-y-auto"
           >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold">Select Address</h2>
@@ -529,16 +554,29 @@ const CartPage = () => {
               </button>
             </div>
             <div className="space-y-3">
+              {/* Add New Address Card */}
+              <div
+                onClick={() => {
+                  setShowAddAddress(true);
+                  setShowAddressSelect(false);
+                }}
+                className="border-2 border-dashed border-gray-300 rounded-xl p-4 cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all flex items-center justify-center gap-2 text-green-600 font-medium"
+              >
+                <Plus className="w-5 h-5" />
+                Add New Address
+              </div>
+
+              {/* Existing Addresses */}
               {addresses.map((address) => (
                 <div
                   key={address.id}
-                  className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
+                  className={`border-2 rounded-xl p-3 cursor-pointer transition-all ${
                     selectedAddress === address.id
-                      ? "border-green-500 bg-green-50 shadow-sm"
+                      ? "border-green-500 bg-green-50"
                       : "hover:border-gray-300"
                   }`}
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-3">
                     <div
                       className="flex-1"
                       onClick={() => {
@@ -546,14 +584,14 @@ const CartPage = () => {
                         setShowAddressSelect(false);
                       }}
                     >
-                      <p className="font-medium mb-1">{address.name}</p>
-                      <p className="text-sm text-gray-600 leading-relaxed">
-                        {address.address}, {address.city},
-                        <br />
-                        {address.state} {address.zip}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {address.phone}
+                      {/* Line 1: Name and Phone */}
+                      <div className="flex items-center gap-3 mb-1">
+                        <p className="font-semibold text-gray-900">{address.name}</p>
+                        <p className="text-sm text-gray-600">{address.phone}</p>
+                      </div>
+                      {/* Line 2: Full Address */}
+                      <p className="text-sm text-gray-600">
+                        {address.address}, {address.city}, {address.state} - {address.zip}
                       </p>
                       {address.isDefault && (
                         <span className="inline-block mt-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
@@ -561,23 +599,27 @@ const CartPage = () => {
                         </span>
                       )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 flex-shrink-0">
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setEditingAddress(address);
                           setShowEditAddress(true);
                           setShowAddressSelect(false);
                         }}
                         className="text-gray-400 hover:text-gray-600 p-1"
                       >
-                        <Settings2 className="w-5 h-5" />
+                        <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDeleteAddress(address.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAddress(address.id);
+                        }}
                         className="text-red-400 hover:text-red-600 p-1"
                         disabled={deleteAddressMutation.isPending}
                       >
-                        <X className="w-5 h-5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -593,7 +635,7 @@ const CartPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
         >
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
@@ -733,6 +775,51 @@ const CartPage = () => {
                 {updateAddressMutation.isPending ? "Saving..." : "Save Changes"}
               </button>
             </form>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <h2 className="text-xl font-semibold">Delete Address?</h2>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this address? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDeletingAddressId("");
+                }}
+                className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                disabled={deleteAddressMutation.isPending}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteAddress}
+                disabled={deleteAddressMutation.isPending}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
+              >
+                {deleteAddressMutation.isPending ? "Deleting..." : "Delete"}
+              </button>
+            </div>
           </motion.div>
         </motion.div>
       )}

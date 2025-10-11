@@ -80,10 +80,20 @@ const CheckoutButton: React.FC<CheckoutButtonProps> = ({
   });
 
   const handleCheckout = () => {
-    if (!cartId || !addressId) {
+    if (!addressId) {
       dispatch(
         showSnackbar({
-          message: "Please select a delivery address and ensure your cart is not empty.",
+          message: "Please select a delivery address to proceed with checkout.",
+          type: "error",
+        })
+      );
+      return;
+    }
+
+    if (!cartId) {
+      dispatch(
+        showSnackbar({
+          message: "Your cart is empty. Please add items to proceed.",
           type: "error",
         })
       );

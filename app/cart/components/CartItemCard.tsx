@@ -12,35 +12,27 @@ export type CartItemCardProps = {
 
 const CartItemCard: React.FC<CartItemCardProps> = ({ item, onQuantityChange, onRemove, loading }) => {
   const { quantity, price, total } = item;
-  
+
   // Handle different item types
   const isProduct = item.type === "product";
   const isBundle = item.type === "bundle";
-  
+
   // Get display properties based on item type
-  const name = isProduct ? item.product.name : 
-               isBundle && typeof item.bundle === "object" ? item.bundle.name : 
-               "Bundle"; // fallback if bundle is just an ID
-  
-  const description = isProduct ? item.product.small_description : 
-                     isBundle && typeof item.bundle === "object" ? item.bundle.description : 
-                     "Bundle package"; // fallback
-  
-  const banner_image = isProduct ? item.product.banner_image : 
-                      isBundle && typeof item.bundle === "object" && item.bundle.images?.[0] ? item.bundle.images[0] : 
-                      null;
-  
-  const images = isProduct ? item.product.images : 
-                isBundle && typeof item.bundle === "object" ? item.bundle.images : 
-                [];
-  
-  const originalPrice = isProduct ? item.product.price : 
-                       isBundle && typeof item.bundle === "object" ? item.bundle.price : 
-                       0;
-  
-  const hasDiscount = isProduct ? !!item.product.discounted_price : 
-                     isBundle && typeof item.bundle === "object" ? !!item.bundle.discounted_price : 
-                     false;
+  const name = isProduct ? item.product.name :
+    isBundle && typeof item.bundle === "object" ? item.bundle.name :
+      "Bundle"; // fallback if bundle is just an ID
+
+  const description = isProduct ? item.product.small_description :
+    isBundle && typeof item.bundle === "object" ? item.bundle.description :
+      "Bundle package"; // fallback
+
+  const banner_image = isProduct ? item.product.banner_image :
+    isBundle && typeof item.bundle === "object" && item.bundle.images?.[0] ? item.bundle.images[0] :
+      null;
+
+  const images = isProduct ? item.product.images :
+    isBundle && typeof item.bundle === "object" ? item.bundle.images :
+      [];
 
   return (
     <div className="flex gap-4 items-center border-b py-4">
@@ -58,9 +50,6 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, onQuantityChange, onR
         </div>
         <div className="flex items-center gap-2">
           <span className="font-bold text-green-700">₹{formatPrice(price)}</span>
-          {hasDiscount && (
-            <span className="line-through text-gray-400 text-xs">₹{formatPrice(originalPrice)}</span>
-          )}
         </div>
       </div>
       <div className="flex flex-col items-center gap-2">
