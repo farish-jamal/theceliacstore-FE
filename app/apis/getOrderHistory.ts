@@ -10,9 +10,30 @@ export type OrderItemProduct = {
   sub_category: string;
 };
 
+export type OrderItemBundle = {
+  _id: string;
+  name: string;
+  price: number;
+  discounted_price: number;
+  images: string[];
+  description: string;
+  products: Array<{
+    product: string;
+    quantity: number;
+    _id: string;
+  }>;
+};
+
 export type OrderItem = {
   type: "product";
   product: OrderItemProduct;
+  quantity: number;
+  total_amount: number;
+  discounted_total_amount: number;
+  _id: string;
+} | {
+  type: "bundle";
+  bundle: OrderItemBundle;
   quantity: number;
   total_amount: number;
   discounted_total_amount: number;
@@ -57,6 +78,20 @@ export const getOrderHistory = async (): Promise<OrderHistoryResponse> => {
     endpoint: endpoints.orderHistory,
   });
   return apiResponse.response as OrderHistoryResponse;
+};
+
+export type OrderByIdResponse = {
+  success?: boolean;
+  data?: Order;
+  message?: string;
+  statusCode?: number;
+};
+
+export const getOrderById = async (id: string): Promise<OrderByIdResponse> => {
+  const apiResponse = await apiService<OrderByIdResponse>({
+    endpoint: endpoints.getOrderHistoryById(id),
+  });
+  return apiResponse.response as OrderByIdResponse;
 };
 
 
