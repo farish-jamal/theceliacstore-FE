@@ -129,8 +129,8 @@ const TopBrands = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col mt-10 px-4 lg:px-0 gap-8 mb-8">
-        <Typography variant="h1" className="text-center text-3xl font-bold mb-4">
+      <div className="flex flex-col mt-6 md:mt-10 px-4 gap-4 md:gap-6 mb-6 md:mb-8">
+        <Typography variant="h1" className="text-center text-xl md:text-3xl font-bold">
           Top Brands
         </Typography>
         <BrandSkeleton />
@@ -140,8 +140,8 @@ const TopBrands = () => {
 
   if (error || !brandsResponse?.data?.brands) {
     return (
-      <div className="flex flex-col mt-10 px-4 lg:px-0 gap-8 mb-8">
-        <Typography variant="h1" className="text-center text-3xl font-bold mb-4">
+      <div className="flex flex-col mt-6 md:mt-10 px-4 gap-4 md:gap-6 mb-6 md:mb-8">
+        <Typography variant="h1" className="text-center text-xl md:text-3xl font-bold">
           Top Brands
         </Typography>
         <div className="text-center text-gray-500">
@@ -154,36 +154,37 @@ const TopBrands = () => {
   const brands = brandsResponse.data.brands;
 
   return (
-    <div className="flex flex-col mt-10 px-4 lg:px-0 gap-8 mb-8">
-      <Typography variant="h1" className="text-center text-3xl font-bold mb-4">
+    <div className="flex flex-col mt-6 md:mt-10 px-4 gap-4 md:gap-6 mb-6 md:mb-8">
+      <Typography variant="h1" className="text-center text-xl md:text-3xl font-bold">
         Top Brands
       </Typography>
 
-      <div className="w-full lg:w-[70%] mx-auto rounded-lg bg-white">
+      <div className="w-full lg:w-[80%] mx-auto">
         <Carousel
           opts={{
-            align: "center",
+            align: "start",
             loop: true,
+            dragFree: true,
           }}
         >
-          <CarouselContent className="items-center justify-center">
+          <CarouselContent className="-ml-2 md:-ml-4">
             {brands.map((brand: Brand) => (
               <CarouselItem
                 key={brand._id}
-                className="flex items-center justify-center basis-1/2 md:basis-1/3 lg:basis-1/6 px-2"
+                className="pl-2 md:pl-4 basis-1/3 md:basis-1/4 lg:basis-1/6"
               >
                 <Link 
                   href={`/products?brands=${brand._id}`} 
-                  className="w-full h-full flex flex-col items-center justify-center p-4 hover:scale-105 transition-transform duration-200"
+                  className="flex flex-col items-center justify-center p-2 md:p-4 hover:scale-105 transition-transform duration-200"
                 >
                   <Image
                     src={brand.images && brand.images.length > 0 ? brand.images[0] : defaultBrandLogo}
                     alt={brand.name}
-                    width={180}
-                    height={80}
-                    className="w-auto h-20 object-contain bg-transparent max-w-full mb-2"
+                    width={120}
+                    height={60}
+                    className="w-auto h-12 md:h-16 object-contain bg-transparent max-w-full"
                   />
-                  <span className="text-sm text-gray-700 text-center font-medium mt-2">
+                  <span className="text-xs md:text-sm text-gray-700 text-center font-medium mt-1 md:mt-2 line-clamp-1">
                     {brand.name}
                   </span>
                 </Link>

@@ -6,7 +6,7 @@ import { showSnackbar } from "@/app/slices/snackbarSlice";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
 import { motion, AnimatePresence } from "framer-motion";
-import { formatPrice } from "../../utils/formatPrice";
+import { formatCurrency } from "../../utils/formatPrice";
 import QuickViewButton from "../buttons/QuickViewButton";
 import QuickViewDialog from "../dialogs/QuickViewDialog";
 import { Product } from "../../types/Product";
@@ -177,7 +177,7 @@ const ProductCard = ({ name, price, image, productId, tags = [], onClick, instoc
       </AnimatePresence>
 
       <div
-        className="border rounded-lg p-5 flex flex-col cursor-pointer items-center gap-2 h-full transition-transform duration-200 hover:shadow-lg group relative"
+        className="border rounded-lg p-4 flex flex-col cursor-pointer items-center h-full transition-transform duration-200 hover:shadow-lg group relative"
         onClick={handleCardClick}
       >
         {/* Tag images on top left - only show if there are valid tags */}
@@ -258,15 +258,23 @@ const ProductCard = ({ name, price, image, productId, tags = [], onClick, instoc
             </div>
           )}
         </div>
-        <h3 className="text-center text-sm min-h-[2.5em] flex items-center justify-center w-full">
+        
+        {/* Title - consistent spacing from image */}
+        <h3 className="text-center text-sm line-clamp-3 w-full mt-3 mb-3">
           {name}
         </h3>
-        <div className="flex items-center gap-2">
-          <p className="text-base font-semibold">₹{formatPrice(price)}</p>
-          <p className="text-xs">(inclusive of all taxes)</p>
+        
+        {/* Price section - consistent spacing */}
+        <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 w-full mb-3">
+          <p className="text-base font-semibold">₹{formatCurrency(price)}</p>
+          <p className="text-xs text-gray-500 text-center">(inclusive of all taxes)</p>
         </div>
-        <div className="flex flex-1" />
-        <div className="flex flex-col w-full gap-2 mt-auto">
+        
+        {/* Spacer to push buttons to bottom */}
+        <div className="flex-1" />
+        
+        {/* Buttons section - consistent spacing from bottom */}
+        <div className="flex flex-col w-full gap-2">
           <div className="flex items-center justify-between w-full gap-2 quantity-controls">
             <div className="flex items-center border rounded h-6 overflow-hidden">
               <button 

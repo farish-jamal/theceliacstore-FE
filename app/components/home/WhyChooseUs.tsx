@@ -29,12 +29,12 @@ const features = [
 
 const WhyChooseUs = () => {
   return (
-    <div className="flex flex-col mt-10 px-4 lg:px-0 gap-8 w-full">
-      <Typography variant="h1" className="text-center text-3xl font-bold mb-4">
+    <div className="flex flex-col mt-10 px-4 lg:px-0 gap-10 w-full">
+      <Typography variant="h1" className="text-center text-3xl font-bold">
         Why Choose Us
       </Typography>
 
-      <div className="flex flex-row flex-wrap gap-16 items-center justify-center mb-4">
+      <div className="flex flex-row flex-wrap md:gap-16 gap-12 items-center justify-center mb-4">
         {features.map((feature, index) => (
           <div key={index} className="flex flex-row gap-4 items-center">
             {feature.icon}

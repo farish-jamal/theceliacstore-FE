@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import PromoCard from "../cards/PromoCard";
 import ProductCard from "../cards/ProductCard";
+import PromoCard from "../cards/PromoCard";
 import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "@/app/apis/getProducts";
 import { Product, ProductParams } from "@/app/types/Product";
@@ -33,12 +33,13 @@ const ProductGrid = ({ params }: ProductGridProps) => {
   console.log("Products Data:", productsData);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 px-2 sm:px-4 py-6 w-full max-w-7xl mx-auto">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-4 px-2 sm:px-4 py-6 w-full max-w-7xl mx-auto">
       {isLoading ? (
         <div className="col-span-full"><PrimaryLoader /></div>
       ) : (
         <>
-          <div>
+          {/* First Promo Card */}
+          <div className="col-span-2 md:col-span-1">
             <PromoCard
               title="Essentials Bundle"
               subtitle="GLUTEN FREE"
@@ -48,8 +49,8 @@ const ProductGrid = ({ params }: ProductGridProps) => {
             />
           </div>
 
+          {/* First 4 Products */}
           {productsData.slice(0, 4).map((product: Product) => {
-            // Calculate stock status the same way as product detail page
             const isInStock = product.inventory ? product.inventory > 0 : product.instock;
             
             return (
@@ -71,8 +72,8 @@ const ProductGrid = ({ params }: ProductGridProps) => {
             );
           })}
 
+          {/* Next 4 Products */}
           {productsData.slice(4, 8).map((product: Product) => {
-            // Calculate stock status the same way as product detail page
             const isInStock = product.inventory ? product.inventory > 0 : product.instock;
             
             return (
@@ -94,15 +95,17 @@ const ProductGrid = ({ params }: ProductGridProps) => {
             );
           })}
 
-          {/* Static Promo - last column of second row */}
-          <PromoCard
-            title="Gluten- Free Indulgence"
-            subtitle="NOW IN A BUNDLE"
-            buttonText="Shop Now"
-            bgColor="bg-yellow-300"
-            textColor="text-black"
-            styles="h-full"
-          />
+          {/* Second Promo Card */}
+          <div className="col-span-2 md:col-span-1">
+            <PromoCard
+              title="Gluten-Free Indulgence"
+              subtitle="NOW IN A BUNDLE"
+              buttonText="Shop Now"
+              bgColor="bg-yellow-300"
+              textColor="text-black"
+              styles="h-full"
+            />
+          </div>
         </>
       )}
     </div>

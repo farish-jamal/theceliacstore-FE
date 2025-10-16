@@ -13,9 +13,10 @@ interface SlideProps {
   index: number;
   current: number;
   onButtonClick?: (path: string) => void;
+  mobileImageFit?: 'contain' | 'cover';
 }
 
-const Slide = ({ slide, index, current, onButtonClick }: SlideProps) => {
+const Slide = ({ slide, index, current, onButtonClick, mobileImageFit = 'cover' }: SlideProps) => {
   const slideRef = useRef<HTMLLIElement>(null);
 
   const xRef = useRef(0);
@@ -59,7 +60,7 @@ const Slide = ({ slide, index, current, onButtonClick }: SlideProps) => {
   return (
     <li
       ref={slideRef}
-      className="w-[80vw] h-[50vh] flex-shrink-0 flex items-center justify-center relative text-center text-white transition-all duration-300 ease-in-out"
+      className="w-[100vw] md:w-[80vw] aspect-[16/9] md:aspect-auto md:h-[50vh] flex-shrink-0 flex items-center justify-center relative text-center text-white transition-all duration-300 ease-in-out"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
@@ -72,7 +73,7 @@ const Slide = ({ slide, index, current, onButtonClick }: SlideProps) => {
       }}
     >
       <div
-        className="absolute top-0 left-0 w-full h-full bg-[#1D1F2F] rounded-lg overflow-hidden transition-all duration-150 ease-out"
+        className="absolute top-0 left-0 w-full h-full bg-[#1D1F2F] md:rounded-lg overflow-hidden transition-all duration-150 ease-out"
         style={{
           transform:
             current === index
@@ -81,7 +82,7 @@ const Slide = ({ slide, index, current, onButtonClick }: SlideProps) => {
         }}
       >
         <img
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-600 ease-in-out"
+          className={`absolute inset-0 w-full h-full ${mobileImageFit === 'contain' ? 'object-contain md:object-cover' : 'object-cover'} transition-opacity duration-600 ease-in-out`}
           style={{
             opacity: current === index ? 1 : 0.5,
           }}
@@ -144,9 +145,10 @@ const CarouselControl = ({
 interface CarouselProps {
   slides: (SlideData & { path?: string })[];
   onButtonClick?: (path: string) => void;
+  mobileImageFit?: 'contain' | 'cover';
 }
 
-export function Carousel({ slides, onButtonClick }: CarouselProps) {
+export function Carousel({ slides, onButtonClick, mobileImageFit = 'cover' }: CarouselProps) {
   const [current, setCurrent] = useState(0);
   const id = useId();
 
@@ -160,7 +162,7 @@ export function Carousel({ slides, onButtonClick }: CarouselProps) {
 
   return (
     <div
-      className="relative w-[80vw] h-[50vh] mx-auto overflow-hidden"
+      className="relative w-[100vw] md:w-[80vw] aspect-[16/9] md:aspect-auto md:h-[50vh] mx-auto overflow-hidden"
       aria-labelledby={`carousel-heading-${id}`}
     >
       <ul
@@ -177,6 +179,7 @@ export function Carousel({ slides, onButtonClick }: CarouselProps) {
             index={index}
             current={current}
             onButtonClick={onButtonClick}
+            mobileImageFit={mobileImageFit}
           />
         ))}
       </ul>

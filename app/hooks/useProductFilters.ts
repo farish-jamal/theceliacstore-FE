@@ -23,7 +23,7 @@ export const useProductFilters = () => {
       is_imported_picks: params.get("is_imported_picks") === "true",
       is_bakery: params.get("is_bakery") === "true",
       brands: params.get("brands") ? params.get("brands")!.split(",") : [],
-      sort_by: params.get("sort_by") || undefined,
+      sort_by: params.get("sort_by") || "created_at",
     };
     
     return filters;

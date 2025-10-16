@@ -145,7 +145,7 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
   // Create chips for other filters
   const renderOtherFilterChips = () => {
     const otherFilters = Object.entries(filters).filter(([key, value]) => {
-      if (key === "page" || key === "per_page") return false;
+      if (key === "page" || key === "per_page" || key === "sort_by") return false;
       if (key === "category" || key === "sub_category" || key === "brands") return false;
       if (value === undefined || value === null || value === "") return false;
       if (Array.isArray(value) && value.length === 0) return false;
@@ -222,8 +222,8 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
   if (!hasActiveFilters) return null;
 
   return (
-    <div className="mb-2">
-      <div className="flex overflow-x-auto gap-2 pb-2 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
+    <div className="md:mb-2 mb-0">
+      <div className="flex overflow-x-auto gap-2 pt-2 pb-2 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
         {renderCategoryChips()}
         {renderSubCategoryChips()}
         {renderBrandChips()}

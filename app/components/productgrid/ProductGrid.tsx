@@ -129,7 +129,7 @@ const ProductGrid = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="flex flex-col mx-[5%]">
+      <div className="flex flex-col mx-2 md:mx-[5%]">
         <div className="flex">
           <SidebarFilter
             isOpen={isFilterOpen}
@@ -156,18 +156,45 @@ const ProductGrid = () => {
             brands={brands}
             onClearFilters={handleClearFilters}
           />
-          <div className="flex-1 py-2">
-            <div className="bg-white py-3 text-sm">
+          <div className="flex-1 pt-0 md:pt-2 pb-4">
+            <div className="bg-white py-2 md:py-3 text-xs md:text-sm px-2 md:px-0">
               <Link href="/" className="text-gray-500 hover:text-gray-700">
                 Home
               </Link>
-              <span className="mx-2 text-gray-400">›</span>
+              <span className="mx-1 md:mx-2 text-gray-400">›</span>
               <span className="text-gray-700">All Products</span>
             </div>
-            <div className="bg-green-500 text-white text-center py-3 text-sm -mx-[5%] mb-5 ">
+            <div className="bg-green-500 text-white text-center py-2 md:py-3 text-xs md:text-sm -mx-2 md:-mx-[5%] mb-3 md:mb-5">
               500+ health-first picks, all in one place.
             </div>
-            <div className="flex justify-between items-center mb-4">
+            {/* Mobile Layout */}
+            <div className="md:hidden mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <FilterButton onClick={() => setIsFilterOpen(true)} />
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-600">Sort by:</span>
+                  <div className="px-2 py-1 bg-white">
+                    <SortFilter value={filters.sort_by || ""} onChange={handleSortByChange} />
+                  </div>
+                </div>
+              </div>
+              <div className="flex">
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-24"></div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-600 text-center px-2">
+                    {filters.per_page && filters.per_page >= totalProducts
+                      ? `Showing all ${totalProducts} products`
+                      : `Showing ${((filters.page - 1) * (filters.per_page || 52)) + 1}–${Math.min((filters.page) * (filters.per_page || 52), totalProducts)} of ${totalProducts} products`}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Desktop Layout */}
+            <div className="hidden md:flex justify-between items-center mb-4">
               <div className="flex items-center gap-4">
                 <FilterButton onClick={() => setIsFilterOpen(true)} />
                 {loading ? (
@@ -181,7 +208,7 @@ const ProductGrid = () => {
                       : `Showing ${((filters.page - 1) * (filters.per_page || 52)) + 1}–${Math.min((filters.page) * (filters.per_page || 52), totalProducts)} of ${totalProducts} products`}
                   </p>
                 )}
-                <div className="hidden sm:flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   <div className="flex rounded-full border border-gray-200 overflow-hidden text-xs">
                     <button
                       onClick={() => handleViewToggle("paginated")}
@@ -200,7 +227,7 @@ const ProductGrid = () => {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-600">Sort by:</span>
-                <div className="   px-2 py-1 bg-white">
+                <div className="px-2 py-1 bg-white">
                   <SortFilter value={filters.sort_by || ""} onChange={handleSortByChange} />
                 </div>
               </div>
@@ -261,7 +288,7 @@ const ProductGrid = () => {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
                   {products.map((product) => {
                     // Convert MongoDB Decimal objects to numbers for calculations
                     const productPrice = convertToNumber(product.price);
