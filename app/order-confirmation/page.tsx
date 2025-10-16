@@ -397,9 +397,9 @@ const OrderConfirmationPage = () => {
             Our customer support team is here to assist you with any questions about your order.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="outline" className="border-2 border-green-200 hover:border-green-300">
+            {/* <Button variant="outline" className="border-2 border-green-200 hover:border-green-300">
               Live Chat
-            </Button>
+            </Button> */}
             <Button variant="outline" className="border-2 border-green-200 hover:border-green-300">
               Call Support
             </Button>

@@ -308,10 +308,10 @@ const OrderDetailsPage = () => {
                       minute: '2-digit'
                     })}</p>
                   </div>
-                  <div>
+                  {/* <div>
                     <p className="text-sm text-gray-500">Expected Delivery</p>
                     <p className="font-medium">—</p>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -358,10 +358,10 @@ const OrderDetailsPage = () => {
                     <span>Total Amount</span>
                     <span>₹{formatPrice(order.discountedTotalAmount ?? order.totalAmount)}</span>
                   </div>
-                  <div>
+                  {/* <div>
                     <p className="text-sm text-gray-500">Payment Method</p>
-                    <p className="font-medium">—</p>
-                  </div>
+                    <p className="font-bold uppercase">Cash on Delivery</p>
+                  </div> */}
                 </div>
               </div>
 
