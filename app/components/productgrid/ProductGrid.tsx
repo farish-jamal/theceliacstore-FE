@@ -11,7 +11,6 @@ import SortFilter from "../filters/SortFilter";
 import ProductGridSkeleton from "../loaders/ProductSkeleton";
 import { convertToNumber } from "../../utils/formatPrice";
 
-const PER_PAGE = 52;
 
 const ProductGrid = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -21,9 +20,10 @@ const ProductGrid = () => {
   const [totalProducts, setTotalProducts] = useState<number>(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+  // Use URL-driven per_page via filters instead of local state
 
   // Use the URL-based filtering hook
-  const { filters, updateFilter, clearFilters, getApiParams } = useProductFilters();
+  const { filters, updateFilter, updateFilters, clearFilters, getApiParams } = useProductFilters();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -53,12 +53,11 @@ const ProductGrid = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const apiParams = getApiParams;
-
-        const res = await getProducts({ params: apiParams });
+        const res = await getProducts({ params: getApiParams });
         setProducts(res.data?.data || []);
         setTotalProducts(res.data?.total || 0);
-        setTotalPages(Math.ceil((res.data?.total || 1) / PER_PAGE));
+        const effectivePerPage = filters.per_page || 52;
+        setTotalPages(Math.ceil((res.data?.total || 1) / effectivePerPage));
       } catch (error) {
         console.error("Error fetching products:", error);
         setProducts([]);
@@ -69,7 +68,7 @@ const ProductGrid = () => {
       }
     };
     fetchProducts();
-  }, [getApiParams]);
+  }, [getApiParams, filters.per_page]);
 
   const handlePageChange = (page: number) => {
     updateFilter("page", page);
@@ -113,6 +112,15 @@ const ProductGrid = () => {
 
   const handleSortByChange = (sortBy: string) => {
     updateFilter("sort_by", sortBy);
+  };
+
+  // Toggle between paginated and all views by adjusting per_page in URL
+  const handleViewToggle = (mode: "paginated" | "all") => {
+    if (mode === "all") {
+      updateFilters({ per_page: totalProducts || 9999 });
+    } else {
+      updateFilters({ per_page: 52 });
+    }
   };
 
   const handleClearFilters = () => {
@@ -168,13 +176,33 @@ const ProductGrid = () => {
                   </div>
                 ) : (
                   <p className="text-xs text-gray-600">
-                    Showing {((filters.page - 1) * PER_PAGE) + 1}–{Math.min(filters.page * PER_PAGE, totalProducts)} of {totalProducts} products
+                    {filters.per_page && filters.per_page >= totalProducts
+                      ? `Showing all ${totalProducts} products`
+                      : `Showing ${((filters.page - 1) * (filters.per_page || 52)) + 1}–${Math.min((filters.page) * (filters.per_page || 52), totalProducts)} of ${totalProducts} products`}
                   </p>
                 )}
+                <div className="hidden sm:flex items-center gap-2">
+                  <div className="flex rounded-full border border-gray-200 overflow-hidden text-xs">
+                    <button
+                      onClick={() => handleViewToggle("paginated")}
+                      className={`px-3 py-1 ${(!filters.per_page || (filters.per_page && filters.per_page < totalProducts)) ? "bg-gray-900 text-white" : "bg-white text-gray-700"}`}
+                    >
+                      Paginated
+                    </button>
+                    <button
+                      onClick={() => handleViewToggle("all")}
+                      className={`px-3 py-1 ${filters.per_page && filters.per_page >= totalProducts ? "bg-gray-900 text-white" : "bg-white text-gray-700"}`}
+                    >
+                      All Products
+                    </button>
+                  </div>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-600">Sort by:</span>
-                <SortFilter value={filters.sort_by || ""} onChange={handleSortByChange} />
+                <div className="   px-2 py-1 bg-white">
+                  <SortFilter value={filters.sort_by || ""} onChange={handleSortByChange} />
+                </div>
               </div>
             </div>
             <div className="h-[calc(100vh-40px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
@@ -259,7 +287,7 @@ const ProductGrid = () => {
               )}
             </div>
 
-            {totalPages > 1 && (
+            {totalPages > 1 && !(filters.per_page && filters.per_page >= totalProducts) && (
               <Pagination
                 currentPage={filters.page}
                 totalPages={totalPages}
