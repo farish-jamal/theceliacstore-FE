@@ -15,7 +15,7 @@ const PopularCategories: React.FC = () => {
     queryKey: ['subcategories'],
     queryFn: async () => {
       const response = await getSubCategories();
-      return response.data || [];
+      return response.data?.subCategories || [];
     },
   });
 
@@ -44,8 +44,8 @@ const PopularCategories: React.FC = () => {
           </button>
           <div className="flex overflow-x-auto no-scrollbar space-x-2 md:space-x-3 py-1 px-1 flex-1 md:w-[70vw] max-w-full justify-center">
             {[1, 2, 3, 4, 5, 6].map((item) => (
-              <div 
-                key={item} 
+              <div
+                key={item}
                 className="px-3 py-1.5 md:px-5 md:py-2 rounded-full border border-gray-200 bg-gray-100 animate-pulse w-24 md:w-32 h-7 md:h-8 flex-shrink-0"
               />
             ))}
@@ -83,7 +83,7 @@ const PopularCategories: React.FC = () => {
           ref={containerRef}
           className="flex overflow-x-auto no-scrollbar space-x-2 md:space-x-3 py-1 px-1 flex-1 md:w-[70vw] max-w-full justify-center"
         >
-          {data.map((subCategory) => (
+          {data && data.length > 0 && data.map((subCategory) => (
             <button
               key={subCategory._id}
               onClick={() => handleSubCategoryClick(subCategory)}

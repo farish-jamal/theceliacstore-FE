@@ -140,7 +140,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
           const response = await getSubCategories(categoryId);
           setCategorySubCategories(prev => ({
             ...prev,
-            [categoryId]: response.data || []
+            [categoryId]: response.data?.subCategories || []
           }));
         } catch (error) {
           console.error("Error fetching sub-categories:", error);

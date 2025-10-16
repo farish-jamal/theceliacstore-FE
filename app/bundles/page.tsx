@@ -45,7 +45,7 @@ const BundlesPage = () => {
       if (filters.category) {
         try {
           const res = await getSubCategories(filters.category);
-          setSubCategories(res.data || []);
+          setSubCategories(res.data?.subCategories || []);
         } catch {
           setSubCategories([]);
         }
