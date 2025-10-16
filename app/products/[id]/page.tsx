@@ -630,26 +630,26 @@ export default function ProductDetailPage() {
         {activeTab === 'info' ? (
           <div className="flex flex-col lg:flex-row gap-12 py-8 px-[10%]">
             <div className="w-full lg:w-2/3 text-sm space-y-3">
-              <div className="flex">
+              {/* <div className="flex">
                 <span className="w-48 text-gray-600">Variant:</span>{" "}
                 <span>{selectedVariant?.name || "N/A"}</span>
-              </div>
-              <div className="flex">
+              </div> */}
+              {/* <div className="flex">
                 <span className="w-48 text-gray-600">SKU:</span>{" "}
                 <span>{product.sku || "N/A"}</span>
-              </div>
+              </div> */}
               <div className="flex">
                 <span className="w-48 text-gray-600">Brand:</span>{" "}
                 <span>{product.brand?.name || "N/A"}</span>
               </div>
-              <div className="flex">
+              {/* <div className="flex">
                 <span className="w-48 text-gray-600">Stock Status:</span>{" "}
                 <span>{isVariantInStock ? "Available" : "Out of Stock"}</span>
-              </div>
-              <div className="flex">
+              </div> */}
+              {/* <div className="flex">
                 <span className="w-48 text-gray-600">Status:</span>{" "}
                 <span>{product.status || "N/A"}</span>
-              </div>
+              </div> */}
               <div className="flex">
                 <span className="w-48 text-gray-600">Tags:</span>{" "}
                 <span>{formattedAllTags.length ? formattedAllTags.join(', ') : 'N/A'}</span>
@@ -658,18 +658,18 @@ export default function ProductDetailPage() {
                 <span className="w-48 text-gray-600">Weight:</span>{" "}
                 <span>{product.weight_in_grams ? `${product.weight_in_grams} g` : 'N/A'}</span>
               </div>
-              <div className="flex">
+              {/* <div className="flex">
                 <span className="w-48 text-gray-600">Type:</span>{" "}
                 <span>{product.tags?.includes('gluten_free') ? 'Gluten Free' : 'N/A'}</span>
-              </div>
-              <div className="flex">
+              </div> */}
+              {/* <div className="flex">
                 <span className="w-48 text-gray-600">Inventory:</span>{" "}
                 <span>{typeof product.inventory === 'number' ? product.inventory : (isVariantInStock ? 'Available' : 'Out of Stock')}</span>
-              </div>
-              <div className="flex">
+              </div> */}
+              {/* <div className="flex">
                 <span className="w-48 text-gray-600">Best Seller:</span>{" "}
                 <span>{product.is_best_seller ? 'Yes' : 'No'}</span>
-              </div>
+              </div> */}
               <div className="flex">
                 <span className="w-48 text-gray-600">Price:</span>{" "}
                 <span>₹{formatPrice(displayPrice)}</span>
