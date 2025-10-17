@@ -6,19 +6,19 @@ const slides = [
   {
     title: "Gluten Free",
     button: "Shop Now",
-    src: "/banner12.png",
+    src: "/banner20.jpeg",
     path: "/products?category=gluten-free",
   },
   {
     title: "Shop Gluten Free Best Sellers",
     button: "Shop Now",
-    src: "/banner12.png",
+    src: "/banner21.jpg",
     path: "/products?category=gluten-free&filter=bestsellers",
   },
   {
     title: "Shop Lactose Free",
     button: "Shop Now",
-    src: "/banner12.png",
+    src: "/banner22.jpg",
     path: "/products?category=lactose-free",
   },
 ];

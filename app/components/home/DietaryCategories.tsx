@@ -82,7 +82,7 @@ const DietaryNeeds: React.FC = () => {
   return (
     <section aria-labelledby="dietary-heading" className="py-6 md:py-10">
       <div className="text-center mb-4 md:mb-8">
-        <Typography variant="h1">Your Dietary Needs</Typography>
+        <Typography variant="h1">Shop by dietary needs</Typography>
         <div className="w-12 h-1 bg-green-500 mx-auto mt-2 rounded-full" />
       </div>
 
@@ -106,7 +106,7 @@ const DietaryNeeds: React.FC = () => {
               />
             </div>
             <h3 className="text-base md:text-xl font-medium text-gray-700 text-center mt-2 md:mt-4">
-              {category.name}
+              Shop {category.name}
             </h3>
           </li>
         ))}

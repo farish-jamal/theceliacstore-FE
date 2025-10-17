@@ -2,14 +2,18 @@ import { apiService } from "./apiService";
 
 export interface CheckPurchaseResponse {
   success: boolean;
-  hasPurchased: boolean;
+  data: {
+    is_purchased: boolean;
+    product_id: string;
+  };
   message?: string;
+  statusCode?: number;
 }
 
 export const checkUserPurchase = async (productId: string): Promise<CheckPurchaseResponse> => {
   try {
     const response = await apiService<CheckPurchaseResponse>({
-      endpoint: `api/orders/check-purchase?productId=${productId}`,
+      endpoint: `api/product/check-purchased?product_id=${productId}`,
       method: "GET",
     });
 
