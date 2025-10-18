@@ -368,7 +368,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                   className="border-gray-400 data-[state=checked]:border-green-600"
                 />
                 <label htmlFor="imported-picks" className={`text-sm cursor-pointer text-gray-700 ${isImportedPicks ? 'text-green-700 font-medium' : ''}`}>
-                  Imported Picks (Only Delhi NCR)
+                  Imported Picks
                 </label>
               </div>
               <div className="flex items-center gap-3">
@@ -379,7 +379,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                   className="border-gray-400 data-[state=checked]:border-green-600"
                 />
                 <label htmlFor="bakery" className={`text-sm cursor-pointer text-gray-700 ${isBakery ? 'text-green-700 font-medium' : ''}`}>
-                  Bakery
+                  Bakery (Only Delhi NCR)
                 </label>
               </div>
             </div>
