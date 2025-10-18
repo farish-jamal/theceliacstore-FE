@@ -28,6 +28,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
 import { logout as logoutAction } from "@/app/slices/authSlice";
 import { removeCookie } from "@/app/utils/removeCookie";
+import { useQuery } from "@tanstack/react-query";
+import { getCart } from "@/app/apis/getCart";
 
 const navItems = [
   { label: "Home", path: "/" },
@@ -61,6 +63,18 @@ const Navbar = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const pathname = usePathname();
+
+  // Fetch cart data to get item count
+  const { data: cartData } = useQuery({
+    queryKey: ["cart"],
+    queryFn: () => getCart(),
+    enabled: !!auth.user && !!auth.token,
+    staleTime: 30000, // 30 seconds
+    retry: false,
+  });
+
+  // Calculate total item count
+  const cartItemCount = cartData?.data?.data?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
 
   useEffect(() => {
     const currentPath = pathname.split("/")[1];
@@ -121,7 +135,7 @@ const Navbar = () => {
               className="flex items-center gap-1 cursor-pointer rounded-full hover:bg-slate-50 p-2"
               aria-label="Cart"
             >
-              <CartIcon />
+              <CartIcon count={cartItemCount} />
             </button>
             {/* User menu with shadcn dropdown, only if logged in */}
             {auth.user ? (
@@ -276,12 +290,10 @@ const NavItems = ({
 };
 
 const CategoryItem = ({
-  active,
-  setActive,
   mobile = false,
 }: {
-  active: string;
-  setActive: (label: string) => void;
+  active?: string;
+  setActive?: (label: string) => void;
   mobile?: boolean;
 }) => (
   <ul className={`flex ${mobile ? "flex-col gap-4" : "items-center gap-8"}`}>

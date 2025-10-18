@@ -51,10 +51,9 @@ export default function BundleDetailPage() {
         // Invalidate cart query to refresh cart data
         queryClient.invalidateQueries({ queryKey: ["cart"] });
         
-        // Hide success animation after 1.5 seconds and redirect to cart
+        // Hide success animation after 1.5 seconds (no redirect)
         setTimeout(() => {
           setShowSuccessAnimation(false);
-          router.push('/cart');
         }, 1500);
       } else {
         dispatch(showSnackbar({ 
