@@ -28,6 +28,10 @@ const HomePage = () => {
     router.push('/bundles');
   };
 
+  const handleShopAllProducts = () => {
+    router.push('/products');
+  };
+
   return (
     <div className="flex-col min-h-screen">
       <Header />
@@ -36,6 +40,14 @@ const HomePage = () => {
       <DietaryCategories />
       <PopularCategories />
       <ProductGrid params={params} />
+
+      <button
+            onClick={handleShopAllProducts}
+            className="bg-green-600 text-white px-6 py-2 md:px-10 md:py-2 rounded-full text-base md:text-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center gap-2 mx-auto mb-5"
+          >
+            Shop All Products
+            <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+          </button>
       
       {/* View All Bundles Section */}
       <div className="bg-green-50 py-6 md:py-12 px-4">

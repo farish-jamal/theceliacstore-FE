@@ -7,19 +7,19 @@ const slides = [
     title: "Gluten Free",
     button: "Shop Now",
     src: "/banner20.jpeg",
-    path: "/products?category=gluten-free",
+    path: "/products?category=68c8e3d9c668f51ededb9a24",
   },
   {
     title: "Shop Gluten Free Best Sellers",
     button: "Shop Now",
     src: "/banner21.jpg",
-    path: "/products?category=gluten-free&filter=bestsellers",
+    path: "/products?category=68c8e3d9c668f51ededb9a24&filter=bestsellers",
   },
   {
-    title: "Shop Lactose Free",
+    title: "Shop Organic",
     button: "Shop Now",
     src: "/banner22.jpg",
-    path: "/products?category=lactose-free",
+    path: "/products?category=68c8e5b9c668f51ededb9a30",
   },
 ];
 

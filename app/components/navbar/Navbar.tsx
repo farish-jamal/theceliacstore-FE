@@ -34,17 +34,32 @@ import { getCart } from "@/app/apis/getCart";
 const navItems = [
   { label: "Home", path: "/" },
   {
-    label: "Shop",  
+    label: "Shop",
     path: "/products",
+    submenu: [
+      { label: "Shop All", path: "/products" },
+      {
+        label: "Shop Gluten Free",
+        path: "/products?category=68c8e3d9c668f51ededb9a24",
+      },
+      {
+        label: "Shop Organic",
+        path: "/products?category=68c8e5b9c668f51ededb9a30",
+      },
+      {
+        label: "Shop Lactose Free",
+        path: "/products?category=68c8e580c668f51ededb9a2b",
+      },
+    ],
   },
   {
     label: "Bundles",
     path: "/bundles",
   },
-  // { label: "Blog", path: "/blogs" },
+  { label: "Blogs", path: "/blogs" },
   {
     label: "About us",
-    icon:  "",
+    icon: "",
     path: "/about",
   },
 ];
@@ -267,22 +282,57 @@ const NavItems = ({
     >
       {navItems.map((item) => (
         <li key={item.label}>
-          <button
-            type="button"
-            onClick={() => {
-              setActive(item.label);
-              if (item.path) {
-                router.push(item.path);
-              }
-            }}
-            className={`flex items-center font-medium text-[18px] cursor-pointer transition-colors bg-transparent outline-none
-            ${active === item.label ? "text-[#4CAF50]" : "text-[#717171]"}
-            hover:text-[#4CAF50]`}
-            aria-current={active === item.label ? "page" : undefined}
-          >
-            {item.label}
-            {item.icon}
-          </button>
+          {item.submenu ? (
+            // Render dropdown for items with submenu
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className={`flex items-center gap-1 font-medium text-[18px] cursor-pointer transition-colors bg-transparent outline-none
+                  ${active === item.label ? "text-[#4CAF50]" : "text-[#717171]"}
+                  hover:text-[#4CAF50]`}
+                >
+                  {item.label}
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48 p-1">
+                {item.submenu.map((subitem) => (
+                  <DropdownMenuItem
+                    key={subitem.label}
+                    asChild
+                    className="cursor-pointer"
+                  >
+                    <Link
+                      href={subitem.path}
+                      className="flex items-center gap-2 w-full"
+                      onClick={() => setActive(item.label)}
+                    >
+                      {subitem.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            // Render regular button for items without submenu
+            <button
+              type="button"
+              onClick={() => {
+                setActive(item.label);
+                if (item.path) {
+                  router.push(item.path);
+                }
+              }}
+              className={`flex items-center font-medium text-[18px] cursor-pointer transition-colors bg-transparent outline-none
+              ${active === item.label ? "text-[#4CAF50]" : "text-[#717171]"}
+              hover:text-[#4CAF50]`}
+              aria-current={active === item.label ? "page" : undefined}
+            >
+              {item.label}
+              {item.icon}
+            </button>
+          )}
         </li>
       ))}
     </ul>
