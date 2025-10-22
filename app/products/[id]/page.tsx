@@ -9,6 +9,7 @@ import Image from "next/image";
 import { getProduct } from "@/app/apis/getProducts";
 import { getReviews } from "@/app/apis/getReviews";
 import { addReview } from "@/app/apis/addReview";
+import { checkUserPurchase } from "@/app/apis/checkPurchase";
 import { Product, Variant } from "@/app/types/Product";
 import { AddReviewRequest } from "@/app/types/Review";
 import ProductSlider from "@/app/components/productsider/ProductSlider";
@@ -56,6 +57,16 @@ export default function ProductDetailPage() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  // Check if user has purchased the product
+  const { data: purchaseCheck } = useQuery({
+    queryKey: ['checkPurchase', productId],
+    queryFn: () => checkUserPurchase(productId),
+    enabled: !!productId && !!auth.user && !!auth.token,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const hasPurchased = purchaseCheck?.data?.is_purchased || false;
+
   // Transform backend response (array) into summary shape expected by UI
   const reviewsData = React.useMemo(() => {
     const reviews = reviewsRaw?.data || [];
@@ -93,10 +104,9 @@ export default function ProductDetailPage() {
         // Invalidate cart query to refresh cart data
         queryClient.invalidateQueries({ queryKey: ["cart"] });
         
-        // Hide success animation after 1.5 seconds and redirect to cart
+        // Hide success animation after 1.5 seconds (no redirect)
         setTimeout(() => {
           setShowSuccessAnimation(false);
-          router.push('/cart');
         }, 1500);
       } else {
         dispatch(showSnackbar({ 
@@ -683,28 +693,30 @@ export default function ProductDetailPage() {
             </div>
             
             {/* Quick Review Button in Info Tab */}
-            <div className="w-full lg:w-1/3">
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h4 className="font-semibold text-gray-900 mb-4">Share Your Experience</h4>
-                <p className="text-sm text-gray-600 mb-4">
-                  Help other customers by sharing your review of this product.
-                </p>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setActiveTab('reviews');
-                    setTimeout(() => {
-                      handleShowAddReviewForm();
-                    }, 100);
-                  }}
-                  disabled={addReviewMutation.isPending}
-                  className="w-full px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Write a Review
-                </motion.button>
+            {hasPurchased && (
+              <div className="w-full lg:w-1/3">
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h4 className="font-semibold text-gray-900 mb-4">Share Your Experience</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Help other customers by sharing your review of this product.
+                  </p>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setActiveTab('reviews');
+                      setTimeout(() => {
+                        handleShowAddReviewForm();
+                      }, 100);
+                    }}
+                    disabled={addReviewMutation.isPending}
+                    className="w-full px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Write a Review
+                  </motion.button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         ) : (
           <div className="py-8">
@@ -727,15 +739,17 @@ export default function ProductDetailPage() {
                   <h3 className="text-lg font-semibold text-gray-900">
                     Customer Reviews ({reviewsData.data.totalReviews})
                   </h3>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleShowAddReviewForm}
-                    disabled={addReviewMutation.isPending}
-                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Write a Review
-                  </motion.button>
+                  {hasPurchased && (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleShowAddReviewForm}
+                      disabled={addReviewMutation.isPending}
+                      className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Write a Review
+                    </motion.button>
+                  )}
                 </div>
 
                 {/* Add Review Form */}
@@ -764,16 +778,18 @@ export default function ProductDetailPage() {
                       </svg>
                     </div>
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No reviews yet</h3>
-                    <p className="text-gray-500 mb-4">Be the first to review this product!</p>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleShowAddReviewForm}
-                      disabled={addReviewMutation.isPending}
-                      className="px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Write the First Review
-                    </motion.button>
+                    <p className="text-gray-500 mb-4">{hasPurchased ? "Be the first to review this product!" : "Purchase this product to leave a review"}</p>
+                    {hasPurchased && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleShowAddReviewForm}
+                        disabled={addReviewMutation.isPending}
+                        className="px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Write the First Review
+                      </motion.button>
+                    )}
                   </div>
                 )}
               </div>
@@ -785,15 +801,17 @@ export default function ProductDetailPage() {
                     <h3 className="text-lg font-semibold text-gray-900">
                       Customer Reviews
                     </h3>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleShowAddReviewForm}
-                      disabled={addReviewMutation.isPending}
-                      className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Write a Review
-                    </motion.button>
+                    {hasPurchased && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleShowAddReviewForm}
+                        disabled={addReviewMutation.isPending}
+                        className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Write a Review
+                      </motion.button>
+                    )}
                   </div>
 
                   {/* Add Review Form */}
@@ -815,16 +833,18 @@ export default function ProductDetailPage() {
                         </svg>
                       </div>
                       <h3 className="text-lg font-medium text-gray-900 mb-2">No reviews yet</h3>
-                      <p className="text-gray-500 mb-4">Be the first to review this product!</p>
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleShowAddReviewForm}
-                        disabled={addReviewMutation.isPending}
-                        className="px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Write the First Review
-                      </motion.button>
+                      <p className="text-gray-500 mb-4">{hasPurchased ? "Be the first to review this product!" : "Purchase this product to leave a review"}</p>
+                      {hasPurchased && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleShowAddReviewForm}
+                          disabled={addReviewMutation.isPending}
+                          className="px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Write the First Review
+                        </motion.button>
+                      )}
                     </div>
                   )}
                 </div>

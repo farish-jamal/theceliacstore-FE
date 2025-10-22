@@ -34,7 +34,7 @@ The system supports the following filter keys in the URL:
 
 ### Category and brand filtering
 ```
-/products?category=health-foods&brands=brand1,brand2,brand3&sort_by=low_to_high
+/products?category=health-foods&brands=brand1,brand2,brand3&sort_by=low_to_highs
 ```
 
 ### Best seller filter

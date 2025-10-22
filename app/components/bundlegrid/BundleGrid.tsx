@@ -105,7 +105,7 @@ const BundleGrid = () => {
       setLoading(true);
       setError(null);
       try {
-        const apiParams = getApiParams;
+        const apiParams = { ...getApiParams, is_active: true };
         console.log("Fetching bundles with params:", apiParams);
         
         const res = await getBundles({ params: apiParams });

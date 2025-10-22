@@ -124,8 +124,7 @@ const TopBrands = () => {
     queryFn: getBrands,
   });
 
-  // Default brand logo for brands without images
-  const defaultBrandLogo = "/brand-1.webp";
+  // Only include brands that have at least one image
 
   if (isLoading) {
     return (
@@ -151,7 +150,9 @@ const TopBrands = () => {
     );
   }
 
-  const brands = brandsResponse.data.brands;
+  const brands = brandsResponse.data.brands.filter(
+    (brand: Brand) => Array.isArray(brand.images) && brand.images.length > 0 && Boolean(brand.images[0])
+  );
 
   return (
     <div className="flex flex-col mt-6 md:mt-10 px-4 gap-4 md:gap-6 mb-6 md:mb-8">
@@ -178,7 +179,7 @@ const TopBrands = () => {
                   className="flex flex-col items-center justify-center p-2 md:p-4 hover:scale-105 transition-transform duration-200"
                 >
                   <Image
-                    src={brand.images && brand.images.length > 0 ? brand.images[0] : defaultBrandLogo}
+                    src={brand.images[0]}
                     alt={brand.name}
                     width={120}
                     height={60}

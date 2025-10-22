@@ -20,6 +20,7 @@ const FrequentlyBought = ({ currentProductId }: FrequentlyBoughtProps) => {
   const [allFirstPageProducts, setAllFirstPageProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [adding, setAdding] = useState<boolean>(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchFirstPage = async () => {
@@ -54,23 +55,41 @@ const FrequentlyBought = ({ currentProductId }: FrequentlyBoughtProps) => {
     return picked;
   }, [allFirstPageProducts, currentProductId]);
 
+  // Initialize default selection to all displayed items
+  useEffect(() => {
+    if (!randomThree.length) {
+      setSelectedIds(new Set());
+      return;
+    }
+    const initial = new Set<string>();
+    for (let i = 0; i < randomThree.length; i += 1) {
+      const id = randomThree[i]?._id || String(i);
+      initial.add(id);
+    }
+    setSelectedIds(initial);
+  }, [randomThree]);
+
+  const selectedProducts = useMemo(() => {
+    return randomThree.filter((p, idx) => selectedIds.has(p._id || String(idx)));
+  }, [randomThree, selectedIds]);
+
   const totalPrice = useMemo(() => {
-    return randomThree.reduce((sum, p) => {
+    return selectedProducts.reduce((sum, p) => {
       const price = (p.discounted_price as number) || (p.price as number) || 0;
       return sum + (typeof price === "number" ? price : 0);
     }, 0);
-  }, [randomThree]);
+  }, [selectedProducts]);
 
   const handleAddAllToCart = async () => {
     if (!auth.user || !auth.token) {
       router.push("/login");
       return;
     }
-    if (!randomThree.length) return;
+    if (!selectedProducts.length) return;
     setAdding(true);
     try {
       await Promise.all(
-        randomThree.map((p) =>
+        selectedProducts.map((p) =>
           updateProductInCart({
             product_id: p._id || "",
             quantity: 1,
@@ -131,6 +150,9 @@ const FrequentlyBought = ({ currentProductId }: FrequentlyBoughtProps) => {
               ? product.name.slice(0, 100) + "..."
               : product.name;
 
+            const id = product._id || String(index);
+            const isSelected = selectedIds.has(id);
+
             return (
             <React.Fragment key={product._id || index}>
               {index > 0 && (
@@ -138,17 +160,50 @@ const FrequentlyBought = ({ currentProductId }: FrequentlyBoughtProps) => {
               )}
               <div className="flex flex-col items-center mx-2">
                 <div className="relative mb-3">
-                  <div className="absolute -top-2 -left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="white"
-                      strokeWidth="3"
-                    >
-                      <path d="M5 12l5 5L20 7"></path>
-                    </svg>
+                  <div
+                    className={`${isSelected ? "bg-green-500" : "bg-gray-200"} absolute -top-2 -left-2 w-5 h-5 rounded-full flex items-center justify-center cursor-pointer`}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={isSelected}
+                    aria-label={`Toggle ${product.name}`}
+                    onClick={() => {
+                      setSelectedIds((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(id)) {
+                          next.delete(id);
+                        } else {
+                          next.add(id);
+                        }
+                        return next;
+                      });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(id)) {
+                            next.delete(id);
+                          } else {
+                            next.add(id);
+                          }
+                          return next;
+                        });
+                      }
+                    }}
+                  >
+                    {isSelected && (
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="white"
+                        strokeWidth="3"
+                      >
+                        <path d="M5 12l5 5L20 7"></path>
+                      </svg>
+                    )}
                   </div>
                   <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 p-1 bg-white rounded border border-gray-200 shadow-sm">
                     <img
@@ -178,7 +233,7 @@ const FrequentlyBought = ({ currentProductId }: FrequentlyBoughtProps) => {
               Total: ₹{formatPrice(totalPrice)}
             </div>
             <div className="text-[11px] sm:text-xs text-gray-500 mb-3">
-              For {randomThree.length} Items
+              For {selectedProducts.length} Items
             </div>
             <button
               onClick={handleAddAllToCart}

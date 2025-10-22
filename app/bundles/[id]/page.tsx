@@ -51,10 +51,9 @@ export default function BundleDetailPage() {
         // Invalidate cart query to refresh cart data
         queryClient.invalidateQueries({ queryKey: ["cart"] });
         
-        // Hide success animation after 1.5 seconds and redirect to cart
+        // Hide success animation after 1.5 seconds (no redirect)
         setTimeout(() => {
           setShowSuccessAnimation(false);
-          router.push('/cart');
         }, 1500);
       } else {
         dispatch(showSnackbar({ 
@@ -456,8 +455,16 @@ export default function BundleDetailPage() {
       </div>
 
       <FrequentlyBought />
-      <ProductSlider title="You May Also Like" image={bundle.images?.[0] || ""} />
-      <ProductSlider title="Best Sellers" image={bundle.images?.[0] || ""} />
+      <ProductSlider
+        title="Recommended for you"
+        image={"https://res.cloudinary.com/dacwig3xk/image/upload/v1748809663/uploads/images/a7qwl65t93onu0ino3pg.png"}
+        productIdForRecommendations={bundle.products[0]._id}
+      />
+      <ProductSlider
+        title="Best Sellers"
+        image={"https://res.cloudinary.com/dacwig3xk/image/upload/v1748809663/uploads/images/a7qwl65t93onu0ino3pg.png"}
+        fetchBestSellers={true}
+      />
       <Footer />
     </div>
   );

@@ -28,21 +28,38 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
 import { logout as logoutAction } from "@/app/slices/authSlice";
 import { removeCookie } from "@/app/utils/removeCookie";
+import { useQuery } from "@tanstack/react-query";
+import { getCart } from "@/app/apis/getCart";
 
 const navItems = [
   { label: "Home", path: "/" },
   {
-    label: "Shop",  
+    label: "Shop",
     path: "/products",
+    submenu: [
+      { label: "Shop All", path: "/products" },
+      {
+        label: "Shop Gluten Free",
+        path: "/products?category=68c8e3d9c668f51ededb9a24",
+      },
+      {
+        label: "Shop Organic",
+        path: "/products?category=68c8e5b9c668f51ededb9a30",
+      },
+      {
+        label: "Shop Lactose Free",
+        path: "/products?category=68c8e580c668f51ededb9a2b",
+      },
+    ],
   },
   {
     label: "Bundles",
     path: "/bundles",
   },
-  // { label: "Blog", path: "/blogs" },
+  { label: "Blogs", path: "/blogs" },
   {
     label: "About us",
-    icon:  "",
+    icon: "",
     path: "/about",
   },
 ];
@@ -61,6 +78,18 @@ const Navbar = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const pathname = usePathname();
+
+  // Fetch cart data to get item count
+  const { data: cartData } = useQuery({
+    queryKey: ["cart"],
+    queryFn: () => getCart(),
+    enabled: !!auth.user && !!auth.token,
+    staleTime: 30000, // 30 seconds
+    retry: false,
+  });
+
+  // Calculate total item count
+  const cartItemCount = cartData?.data?.data?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
 
   useEffect(() => {
     const currentPath = pathname.split("/")[1];
@@ -121,7 +150,7 @@ const Navbar = () => {
               className="flex items-center gap-1 cursor-pointer rounded-full hover:bg-slate-50 p-2"
               aria-label="Cart"
             >
-              <CartIcon />
+              <CartIcon count={cartItemCount} />
             </button>
             {/* User menu with shadcn dropdown, only if logged in */}
             {auth.user ? (
@@ -253,22 +282,57 @@ const NavItems = ({
     >
       {navItems.map((item) => (
         <li key={item.label}>
-          <button
-            type="button"
-            onClick={() => {
-              setActive(item.label);
-              if (item.path) {
-                router.push(item.path);
-              }
-            }}
-            className={`flex items-center font-medium text-[18px] cursor-pointer transition-colors bg-transparent outline-none
-            ${active === item.label ? "text-[#4CAF50]" : "text-[#717171]"}
-            hover:text-[#4CAF50]`}
-            aria-current={active === item.label ? "page" : undefined}
-          >
-            {item.label}
-            {item.icon}
-          </button>
+          {item.submenu ? (
+            // Render dropdown for items with submenu
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className={`flex items-center gap-1 font-medium text-[18px] cursor-pointer transition-colors bg-transparent outline-none
+                  ${active === item.label ? "text-[#4CAF50]" : "text-[#717171]"}
+                  hover:text-[#4CAF50]`}
+                >
+                  {item.label}
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48 p-1">
+                {item.submenu.map((subitem) => (
+                  <DropdownMenuItem
+                    key={subitem.label}
+                    asChild
+                    className="cursor-pointer"
+                  >
+                    <Link
+                      href={subitem.path}
+                      className="flex items-center gap-2 w-full"
+                      onClick={() => setActive(item.label)}
+                    >
+                      {subitem.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            // Render regular button for items without submenu
+            <button
+              type="button"
+              onClick={() => {
+                setActive(item.label);
+                if (item.path) {
+                  router.push(item.path);
+                }
+              }}
+              className={`flex items-center font-medium text-[18px] cursor-pointer transition-colors bg-transparent outline-none
+              ${active === item.label ? "text-[#4CAF50]" : "text-[#717171]"}
+              hover:text-[#4CAF50]`}
+              aria-current={active === item.label ? "page" : undefined}
+            >
+              {item.label}
+              {item.icon}
+            </button>
+          )}
         </li>
       ))}
     </ul>
@@ -276,12 +340,10 @@ const NavItems = ({
 };
 
 const CategoryItem = ({
-  active,
-  setActive,
   mobile = false,
 }: {
-  active: string;
-  setActive: (label: string) => void;
+  active?: string;
+  setActive?: (label: string) => void;
   mobile?: boolean;
 }) => (
   <ul className={`flex ${mobile ? "flex-col gap-4" : "items-center gap-8"}`}>
