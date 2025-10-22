@@ -38,16 +38,15 @@ const ForgotPassword = () => {
       if (response?.success) {
         dispatch(
           showSnackbar({
-            message: response?.message || "Password reset link sent to your email!",
+            message:  "Password reset link sent to your email!",
             type: "success",
           })
         );
         setCountdown(60); // Start 60-second countdown
-        setEmail("");
       } else {
         dispatch(
           showSnackbar({
-            message: response?.message || "Failed to send reset link. Please try again.",
+            message: response?.data?.message || "Failed to send reset link. Please try again.",
             type: "error",
           })
         );

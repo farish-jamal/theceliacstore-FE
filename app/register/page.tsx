@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +14,15 @@ import { useRouter } from "next/navigation";
 import { registerUser } from "../apis/registerUser";
 import { z } from "zod";
 import { AxiosError } from "axios";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogPortal,
+} from "@/components/ui/dialog";
 
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -44,8 +52,7 @@ const Register = () => {
     mutationFn: registerUser,
     onSuccess: (response) => {
       if (response?.success && response.data) {
-        const { id, name, email, phone } = response.data.user;
-        const { token } = response.data;
+        const { id, name, email, phone, token } = response.data;
         dispatch(setAuth({ user: { id, name, email, phone }, token }));
         dispatch(
           showSnackbar({
@@ -58,7 +65,7 @@ const Register = () => {
         dispatch(
           showSnackbar({
             message:
-              response?.data?.message ||
+              response?.message ||
               "Registration failed. Please try again.",
             type: "error",
           })
@@ -90,6 +97,13 @@ const Register = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+    
+    // Check if user agreed to terms
+    if (!agreed) {
+      setErrors({ agreed: "You must agree to the Terms and Privacy Policy" });
+      return;
+    }
+    
     const result = registerSchema.safeParse(form);
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
@@ -99,7 +113,13 @@ const Register = () => {
       setErrors(fieldErrors);
       return;
     }
-    registerMutation.mutate(form);
+    registerMutation.mutate({
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      password: form.password,
+      confirmPassword: form.confirmPassword,
+    });
   };
 
   return (
@@ -181,26 +201,128 @@ const Register = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="terms"
-              className="mt-1"
-              checked={agreed}
-              onCheckedChange={() => setAgreed((prev) => !prev)}
-            />
-            <label
-              htmlFor="terms"
-              className="text-sm text-gray-600 leading-6 cursor-pointer"
-            >
-              I agree to all the{" "}
-              <a href="#" className="text-blue-600 underline">
-                Terms
-              </a>{" "}
-              and{" "}
-              <a href="#" className="text-blue-600 underline">
-                Privacy Policies
-              </a>
-            </label>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="terms"
+                className="mt-1"
+                checked={agreed}
+                onCheckedChange={() => setAgreed((prev) => !prev)}
+              />
+              <label
+                htmlFor="terms"
+                className="text-sm text-gray-600 leading-6 cursor-pointer"
+              >
+                I agree to all the{" "}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button
+                      type="button"
+                      className="text-blue-600 underline hover:text-blue-800"
+                    >
+                      Terms
+                    </button>
+                  </DialogTrigger>
+                  <DialogPortal>
+                    <DialogContent 
+                      className="max-w-2xl max-h-[80vh] overflow-y-auto"
+                      showCloseButton={false}
+                    >
+                      <DialogHeader>
+                        <DialogTitle>Terms of Service</DialogTitle>
+                        <DialogDescription>
+                          Please read and understand our terms of service before proceeding.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 text-sm text-gray-700">
+                        <h3 className="font-semibold text-lg">1. Acceptance of Terms</h3>
+                        <p>
+                          By accessing and using The Celiac Store, you accept and agree to be bound by the terms and provision of this agreement.
+                        </p>
+                        
+                        <h3 className="font-semibold text-lg">2. Use License</h3>
+                        <p>
+                          Permission is granted to temporarily download one copy of the materials on The Celiac Store for personal, non-commercial transitory viewing only.
+                        </p>
+                        
+                        <h3 className="font-semibold text-lg">3. Product Information</h3>
+                        <p>
+                          We strive to provide accurate product information, but we cannot guarantee that all product descriptions or other content is accurate, complete, reliable, current, or error-free.
+                        </p>
+                        
+                        <h3 className="font-semibold text-lg">4. Health and Dietary Information</h3>
+                        <p>
+                          Our products are gluten-free, but we recommend consulting with healthcare professionals regarding dietary restrictions and allergies.
+                        </p>
+                        
+                        <h3 className="font-semibold text-lg">5. Limitation of Liability</h3>
+                        <p>
+                          In no event shall The Celiac Store or its suppliers be liable for any damages arising out of the use or inability to use the materials on our website.
+                        </p>
+                      </div>
+                    </DialogContent>
+                  </DialogPortal>
+                </Dialog>{" "}
+                and{" "}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button
+                      type="button"
+                      className="text-blue-600 underline hover:text-blue-800"
+                    >
+                      Privacy Policies
+                    </button>
+                  </DialogTrigger>
+                  <DialogPortal>
+                    <DialogContent 
+                      className="max-w-2xl max-h-[80vh] overflow-y-auto"
+                      showCloseButton={false}
+                    >
+                      <DialogHeader>
+                        <DialogTitle>Privacy Policy</DialogTitle>
+                        <DialogDescription>
+                          Please read and understand our privacy policy before proceeding.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 text-sm text-gray-700">
+                        <h3 className="font-semibold text-lg">1. Information We Collect</h3>
+                        <p>
+                          We collect information you provide directly to us, such as when you create an account, make a purchase, or contact us for support.
+                        </p>
+                        
+                        <h3 className="font-semibold text-lg">2. How We Use Your Information</h3>
+                        <p>
+                          We use the information we collect to provide, maintain, and improve our services, process transactions, and communicate with you.
+                        </p>
+                        
+                        <h3 className="font-semibold text-lg">3. Information Sharing</h3>
+                        <p>
+                          We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy.
+                        </p>
+                        
+                        <h3 className="font-semibold text-lg">4. Data Security</h3>
+                        <p>
+                          We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.
+                        </p>
+                        
+                        <h3 className="font-semibold text-lg">5. Cookies</h3>
+                        <p>
+                          We use cookies and similar technologies to enhance your experience on our website and to analyze how our services are used.
+                        </p>
+                        
+                        <h3 className="font-semibold text-lg">6. Your Rights</h3>
+                        <p>
+                          You have the right to access, update, or delete your personal information. You may also opt out of certain communications from us.
+                        </p>
+                      </div>
+                    </DialogContent>
+                  </DialogPortal>
+                </Dialog>
+              </label>
+            </div>
+            {errors.agreed && (
+              <p className="text-sm text-red-500">{errors.agreed}</p>
+            )}
           </div>
 
           <Button
@@ -218,7 +340,8 @@ const Register = () => {
             </Link>
           </p>
 
-          <div className="relative flex items-center justify-center">
+          {/* Google Signup - Commented out for now */}
+          {/* <div className="relative flex items-center justify-center">
             <span className="text-gray-400 text-sm">Or Sign up with</span>
           </div>
 
@@ -234,7 +357,7 @@ const Register = () => {
               height={20}
             />
             Sign in with Google
-          </Button>
+          </Button> */}
         </form>
       </div>
     </div>

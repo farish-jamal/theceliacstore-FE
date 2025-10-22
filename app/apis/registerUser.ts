@@ -12,12 +12,10 @@ export interface RegisterPayload {
 export interface RegisterApiResponse {
   success?: boolean;
   data?: {
-    user: {
-      id: string;
-      email: string;
-      name: string;
-      phone: string;
-    };
+    id: string;
+    email: string;
+    name: string;
+    phone: string;
     token: string;
   };
   message?: string;
