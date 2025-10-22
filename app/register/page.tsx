@@ -14,6 +14,7 @@ import { showSnackbar } from "../slices/snackbarSlice";
 import { useRouter } from "next/navigation";
 import { registerUser } from "../apis/registerUser";
 import { z } from "zod";
+import { AxiosError } from "axios";
 
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -57,17 +58,24 @@ const Register = () => {
         dispatch(
           showSnackbar({
             message:
-              response?.message ||
+              response?.data?.message ||
               "Registration failed. Please try again.",
             type: "error",
           })
         );
       }
     },
-    onError: () => {
+    onError: (error: AxiosError<{ message?: string }>) => {
+      console.log("ERROR",error);
+      // Extract error message from the API response
+      const errorMessage = 
+        error?.response?.data?.message || 
+        error?.message || 
+        "Registration failed. Please check your details.";
+      
       dispatch(
         showSnackbar({
-          message: "Registration failed. Please check your details.",
+          message: errorMessage,
           type: "error",
         })
       );
@@ -198,8 +206,9 @@ const Register = () => {
           <Button
             type="submit"
             className="w-full bg-[#4CAF50] hover:bg-green-600 text-white p-5 font-bold text-base"
+            disabled={registerMutation.isPending}
           >
-            Create account
+            {registerMutation.isPending ? "Creating account..." : "Create account"}
           </Button>
 
           <p className="text-center text-sm text-gray-600">
