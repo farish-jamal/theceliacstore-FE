@@ -3,8 +3,8 @@ import { ChevronRight } from "lucide-react";
 import { useState, useRef, useId, useEffect } from "react";
 
 interface SlideData {
-  title: string;
-  button: string;
+  title?: string;
+  button?: string;
   src: string;
 }
 
@@ -13,10 +13,11 @@ interface SlideProps {
   index: number;
   current: number;
   onButtonClick?: (path: string) => void;
+  onSlideClick?: (path: string) => void;
   mobileImageFit?: 'contain' | 'cover';
 }
 
-const Slide = ({ slide, index, current, onButtonClick, mobileImageFit = 'cover' }: SlideProps) => {
+const Slide = ({ slide, index, current, onButtonClick, onSlideClick, mobileImageFit = 'cover' }: SlideProps) => {
   const slideRef = useRef<HTMLLIElement>(null);
 
   const xRef = useRef(0);
@@ -57,12 +58,29 @@ const Slide = ({ slide, index, current, onButtonClick, mobileImageFit = 'cover' 
 
   const { src, button, title } = slide;
 
+  const handleSlideClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on controls, dots, or button
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('button') || 
+      target.closest('[role="button"]') ||
+      target.closest('.carousel-control') ||
+      target.closest('.carousel-dot')
+    ) {
+      return;
+    }
+    if (slide.path && onSlideClick) {
+      onSlideClick(slide.path);
+    }
+  };
+
   return (
     <li
       ref={slideRef}
-      className="w-[100vw] md:w-[80vw] aspect-[16/9] md:aspect-auto md:h-[50vh] flex-shrink-0 flex items-center justify-center relative text-center text-white transition-all duration-300 ease-in-out"
+      className="w-[100vw] md:w-[80vw] aspect-[16/9] md:aspect-auto md:h-[50vh] flex-shrink-0 flex items-center justify-center relative text-center text-white transition-all duration-300 ease-in-out cursor-pointer"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onClick={handleSlideClick}
       style={{
         transform:
           current !== index
@@ -86,7 +104,7 @@ const Slide = ({ slide, index, current, onButtonClick, mobileImageFit = 'cover' 
           style={{
             opacity: current === index ? 1 : 0.5,
           }}
-          alt={title}
+          alt={title || `Slide ${index + 1}`}
           src={src}
           onLoad={imageLoaded}
           loading="eager"
@@ -97,23 +115,29 @@ const Slide = ({ slide, index, current, onButtonClick, mobileImageFit = 'cover' 
         )}
       </div>
 
-      <article
-        className={`relative p-8 transition-opacity duration-1000 ease-in-out ${
-          current === index ? "opacity-100 visible" : "opacity-0 invisible"
-        }`}
-      >
-        <h2 className="text-lg md:text-2xl lg:text-4xl font-semibold relative">
-          {title}
-        </h2>
-        <div className="flex justify-center">
-          <button 
-            className="mt-6 px-6 py-2 w-fit mx-auto text-black bg-white h-12 text-xs flex justify-center items-center rounded-2xl hover:shadow-lg transition duration-200 shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)]"
-            onClick={() => slide.path && onButtonClick?.(slide.path)}
-          >
-            {button}
-          </button>
-        </div>
-      </article>
+      {(title || button) && (
+        <article
+          className={`relative p-8 transition-opacity duration-1000 ease-in-out ${
+            current === index ? "opacity-100 visible" : "opacity-0 invisible"
+          }`}
+        >
+          {title && (
+            <h2 className="text-lg md:text-2xl lg:text-4xl font-semibold relative">
+              {title}
+            </h2>
+          )}
+          {button && (
+            <div className="flex justify-center">
+              <button 
+                className="mt-6 px-6 py-2 w-fit mx-auto text-black bg-white h-12 text-xs flex justify-center items-center rounded-2xl hover:shadow-lg transition duration-200 shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)]"
+                onClick={() => slide.path && onButtonClick?.(slide.path)}
+              >
+                {button}
+              </button>
+            </div>
+          )}
+        </article>
+      )}
     </li>
   );
 };
@@ -130,11 +154,14 @@ const CarouselControl = ({
   handleClick,
 }: CarouselControlProps) => (
   <button
-    className={`w-10 h-10 flex items-center mx-2 justify-center bg-neutral-200 dark:bg-neutral-800 border-3 border-transparent rounded-full focus:border-[#6D64F7] focus:outline-none hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ${
+    className={`carousel-control w-10 h-10 flex items-center mx-2 justify-center bg-neutral-200 dark:bg-neutral-800 border-3 border-transparent rounded-full focus:border-[#6D64F7] focus:outline-none hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ${
       type === "previous" ? "rotate-180" : ""
     }`}
     title={title}
-    onClick={handleClick}
+    onClick={(e) => {
+      e.stopPropagation();
+      handleClick();
+    }}
     aria-label={title}
     type="button"
   >
@@ -145,10 +172,11 @@ const CarouselControl = ({
 interface CarouselProps {
   slides: (SlideData & { path?: string })[];
   onButtonClick?: (path: string) => void;
+  onSlideClick?: (path: string) => void;
   mobileImageFit?: 'contain' | 'cover';
 }
 
-export function Carousel({ slides, onButtonClick, mobileImageFit = 'cover' }: CarouselProps) {
+export function Carousel({ slides, onButtonClick, onSlideClick, mobileImageFit = 'cover' }: CarouselProps) {
   const [current, setCurrent] = useState(0);
   const id = useId();
 
@@ -179,6 +207,7 @@ export function Carousel({ slides, onButtonClick, mobileImageFit = 'cover' }: Ca
             index={index}
             current={current}
             onButtonClick={onButtonClick}
+            onSlideClick={onSlideClick}
             mobileImageFit={mobileImageFit}
           />
         ))}
@@ -189,12 +218,15 @@ export function Carousel({ slides, onButtonClick, mobileImageFit = 'cover' }: Ca
         {slides.map((_, idx) => (
           <span
             key={idx}
-            className={`block w-3 h-3 rounded-full transition-all duration-300 cursor-pointer ${
+            className={`carousel-dot block w-3 h-3 rounded-full transition-all duration-300 cursor-pointer ${
               current === idx
                 ? "bg-white border-2 border-[#4CAF50] scale-110"
                 : "bg-white/60"
             }`}
-            onClick={() => setCurrent(idx)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setCurrent(idx);
+            }}
             aria-label={`Go to slide ${idx + 1}`}
           />
         ))}
