@@ -2,6 +2,7 @@ export const endpoints = {
   // auth
   login: "api/auth/user/login",
   register: "api/auth/user/register",
+  forgotPassword: "api/auth/user/forgot-password",
 
   // products
   products: "api/product",

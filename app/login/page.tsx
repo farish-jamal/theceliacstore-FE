@@ -15,6 +15,7 @@ import { showSnackbar } from "../slices/snackbarSlice";
 import { z } from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { setCookie } from "../utils/setCookie";
+import { AxiosError } from "axios";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -61,10 +62,17 @@ const Login = () => {
         );
       }
     },
-    onError: () => {
+    onError: (error: AxiosError<{ message?: string }>) => {
+      console.log("ERROR",error);
+      // Extract error message from the API response
+      const errorMessage = 
+        error?.response?.data?.message || 
+        error?.message || 
+        "Login failed. Please check your credentials.";
+      
       dispatch(
         showSnackbar({
-          message: "Login failed. Please check your credentials.",
+          message: errorMessage,
           type: "error",
         })
       );

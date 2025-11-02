@@ -1,4 +1,3 @@
-# URL-Based Product Filtering System
 
 This document explains how the URL-based filtering system works for the products pages.
 
