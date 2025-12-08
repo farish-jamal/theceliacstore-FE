@@ -4,8 +4,14 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
 
-  // Protect /cart route
-  if (request.nextUrl.pathname.startsWith("/cart") && !token) {
+  // Protected routes that require authentication (excluding cart for guest checkout)
+  const protectedRoutes = ["/account", "/orders"];
+  
+  const isProtectedRoute = protectedRoutes.some(route => 
+    request.nextUrl.pathname.startsWith(route)
+  );
+
+  if (isProtectedRoute && !token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
@@ -15,5 +21,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/cart/:path*"],
+  matcher: ["/account/:path*", "/orders/:path*"],
 };

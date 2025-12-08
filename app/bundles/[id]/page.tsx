@@ -11,8 +11,10 @@ import Link from "next/link";
 import { formatPrice, convertToNumber } from "@/app/utils/formatPrice";
 import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
 import { showSnackbar } from "@/app/slices/snackbarSlice";
+import { setGuestCart } from "@/app/slices/guestCartSlice";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
+import { addBundleToGuestCart } from "@/app/utils/guestCart";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface CartResponse {
@@ -75,21 +77,42 @@ export default function BundleDetailPage() {
   });
 
   const handleAddToCart = () => {
-    if (!auth.user || !auth.token) {
-      // Redirect to login with current page as redirect parameter
-      const currentPath = `/bundles/${bundleId}`;
-      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
-      return;
-    }
-
     if (!bundle) return;
 
     setIsAddingToCart(true);
-    addToCartMutation.mutate({
-      bundle_id: bundle._id || bundleId,
-      quantity: quantity,
-      type: 'bundle'
-    });
+
+    // If user is logged in, use API cart
+    if (auth.user && auth.token) {
+      addToCartMutation.mutate({
+        bundle_id: bundle._id || bundleId,
+        quantity: quantity,
+        type: 'bundle'
+      });
+    } else {
+      // Guest user - use localStorage cart
+      try {
+        const updatedCart = addBundleToGuestCart(bundle, quantity);
+        dispatch(setGuestCart(updatedCart));
+        setShowSuccessAnimation(true);
+        dispatch(showSnackbar({ 
+          message: "Bundle added to cart successfully!", 
+          type: "success" 
+        }));
+        
+        // Hide success animation after 1.5 seconds
+        setTimeout(() => {
+          setShowSuccessAnimation(false);
+          setIsAddingToCart(false);
+        }, 1500);
+      } catch (error) {
+        console.error("Error adding bundle to guest cart:", error);
+        dispatch(showSnackbar({ 
+          message: "Failed to add bundle to cart. Please try again.", 
+          type: "error" 
+        }));
+        setIsAddingToCart(false);
+      }
+    }
   };
 
   useEffect(() => {

@@ -4,17 +4,19 @@ import storage from 'redux-persist/lib/storage';
 import { authReducer } from './slices/authSlice';
 import { snackbarReducer } from './slices/snackbarSlice';
 import { languageReducer } from './slices/languageSlice';
+import guestCartReducer from './slices/guestCartSlice';
 
 const rootReducer = combineReducers({
   auth: authReducer,
   snackbar: snackbarReducer,
   language: languageReducer,
+  guestCart: guestCartReducer,
 });
 
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['auth'], // Only persist auth slice
+  whitelist: ['auth', 'guestCart'], // Persist auth and guest cart
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

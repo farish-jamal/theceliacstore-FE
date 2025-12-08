@@ -18,8 +18,10 @@ import ReviewsSummary from "@/app/components/cards/ReviewsSummary";
 import AddReviewForm from "@/app/components/forms/AddReviewForm";
 import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
 import { showSnackbar } from "@/app/slices/snackbarSlice";
+import { setGuestCart } from "@/app/slices/guestCartSlice";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
+import { addProductToGuestCart } from "@/app/utils/guestCart";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatPrice, convertToNumber } from "@/app/utils/formatPrice";
 import ProductDetailSkeleton from "@/app/components/loaders/ProductDetailSkeleton";
@@ -185,13 +187,6 @@ export default function ProductDetailPage() {
   }, [selectedVariant]);
 
   const handleAddToCart = () => {
-    if (!auth.user || !auth.token) {
-      // Redirect to login with current page as redirect parameter
-      const currentPath = `/products/${productId}`;
-      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
-      return;
-    }
-
     if (!product) return;
 
     // Check if variant selection is required and selected
@@ -204,12 +199,40 @@ export default function ProductDetailPage() {
     }
 
     setIsAddingToCart(true);
-    addToCartMutation.mutate({
-      product_id: product._id || productId,
-      quantity: quantity,
-      variant_sku: selectedVariant?.sku,
-      type: 'product'
-    });
+
+    // If user is logged in, use API cart
+    if (auth.user && auth.token) {
+      addToCartMutation.mutate({
+        product_id: product._id || productId,
+        quantity: quantity,
+        variant_sku: selectedVariant?.sku,
+        type: 'product'
+      });
+    } else {
+      // Guest user - use localStorage cart
+      try {
+        const updatedCart = addProductToGuestCart(product, quantity, selectedVariant?.sku);
+        dispatch(setGuestCart(updatedCart));
+        setShowSuccessAnimation(true);
+        dispatch(showSnackbar({ 
+          message: "Product added to cart successfully!", 
+          type: "success" 
+        }));
+        
+        // Hide success animation after 1.5 seconds
+        setTimeout(() => {
+          setShowSuccessAnimation(false);
+          setIsAddingToCart(false);
+        }, 1500);
+      } catch (error) {
+        console.error("Error adding to guest cart:", error);
+        dispatch(showSnackbar({ 
+          message: "Failed to add product to cart. Please try again.", 
+          type: "error" 
+        }));
+        setIsAddingToCart(false);
+      }
+    }
   };
 
   const getProductUrl = (): string => {

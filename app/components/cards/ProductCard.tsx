@@ -3,8 +3,10 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
 import { showSnackbar } from "@/app/slices/snackbarSlice";
+import { setGuestCart } from "@/app/slices/guestCartSlice";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
+import { addProductToGuestCart } from "@/app/utils/guestCart";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatCurrency } from "../../utils/formatPrice";
 import QuickViewButton from "../buttons/QuickViewButton";
@@ -112,21 +114,46 @@ const ProductCard = ({ name, price, image, productId, tags = [], onClick, instoc
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    if (!auth.user || !auth.token) {
-      // Redirect to login with current page as redirect parameter
-      const currentPath = window.location.pathname;
-      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
-      return;
-    }
-
     if (!instock) return;
 
     setIsAddingToCart(true);
-    addToCartMutation.mutate({
-      product_id: productId,
-      quantity: quantity,
-      type: 'product'
-    });
+
+    // If user is logged in, use API cart
+    if (auth.user && auth.token) {
+      addToCartMutation.mutate({
+        product_id: productId,
+        quantity: quantity,
+        type: 'product'
+      });
+    } else if (productData) {
+      // Guest user - use localStorage cart
+      try {
+        const updatedCart = addProductToGuestCart(productData, quantity);
+        dispatch(setGuestCart(updatedCart));
+        setShowSuccessAnimation(true);
+        dispatch(showSnackbar({ 
+          message: "Product added to cart successfully!", 
+          type: "success" 
+        }));
+        
+        // Hide success animation after 1.5 seconds
+        setTimeout(() => {
+          setShowSuccessAnimation(false);
+          setIsAddingToCart(false);
+        }, 1500);
+      } catch (error) {
+        console.error("Error adding to guest cart:", error);
+        dispatch(showSnackbar({ 
+          message: "Failed to add product to cart. Please try again.", 
+          type: "error" 
+        }));
+        setIsAddingToCart(false);
+      }
+    } else {
+      // No product data available for guest cart, redirect to product page
+      router.push(`/products/${productId}`);
+      setIsAddingToCart(false);
+    }
   };
 
   const handleQuantityChange = (e: React.MouseEvent, change: number) => {

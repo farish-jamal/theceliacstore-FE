@@ -32,6 +32,7 @@ export const endpoints = {
 
   // orders
   order: "api/order",
+  guestOrder: "api/order/guest",
   orderHistory: "api/order/history",
   getOrderHistoryById: (id: string) => `api/order/user/${id}`,
 };

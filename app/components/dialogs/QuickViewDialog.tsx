@@ -12,7 +12,9 @@ import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProductInCart } from "../../apis/updateProductInCart";
+import { addProductToGuestCart, addBundleToGuestCart } from "../../utils/guestCart";
 import { showSnackbar } from "@/app/slices/snackbarSlice";
+import { setGuestCart } from "@/app/slices/guestCartSlice";
 
 interface QuickViewDialogProps {
   isOpen: boolean;
@@ -93,25 +95,48 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
     : true;
 
   const handleAddToCart = () => {
-    if (!auth.user || !auth.token) {
-      router.push('/login');
-      return;
-    }
-    if (isProduct && product?._id) {
-      addToCartMutation.mutate({
-        product_id: product._id,
-        quantity,
-        type: 'product',
-      });
-      return;
-    }
+    // If user is logged in, use API cart
+    if (auth.user && auth.token) {
+      if (isProduct && product?._id) {
+        addToCartMutation.mutate({
+          product_id: product._id,
+          quantity,
+          type: 'product',
+        });
+        return;
+      }
 
-    if (!isProduct && bundle?._id) {
-      addToCartMutation.mutate({
-        bundle_id: bundle._id,
-        quantity,
-        type: 'bundle',
-      });
+      if (!isProduct && bundle?._id) {
+        addToCartMutation.mutate({
+          bundle_id: bundle._id,
+          quantity,
+          type: 'bundle',
+        });
+      }
+    } else {
+      // Guest user - use localStorage cart
+      try {
+        if (isProduct && product) {
+          const updatedCart = addProductToGuestCart(product, quantity);
+          dispatch(setGuestCart(updatedCart));
+        } else if (!isProduct && bundle) {
+          const updatedCart = addBundleToGuestCart(bundle, quantity);
+          dispatch(setGuestCart(updatedCart));
+        }
+        
+        dispatch(
+          showSnackbar({ message: "Added to cart", type: "success" })
+        );
+        onClose();
+      } catch (error) {
+        console.error("Error adding to guest cart:", error);
+        dispatch(
+          showSnackbar({
+            message: "Failed to add to cart. Please try again.",
+            type: "error",
+          })
+        );
+      }
     }
   };
 

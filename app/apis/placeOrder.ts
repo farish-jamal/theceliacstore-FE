@@ -1,9 +1,24 @@
 import { apiService } from "./apiService";
 import { endpoints } from "./endpoints";
+import { GuestAddress } from "@/app/types/GuestCart";
 
 export interface PlaceOrderPayload {
   cartId: string;
   addressId: string;
+}
+
+export interface GuestOrderItem {
+  type: "product" | "bundle";
+  product_id?: string;
+  bundle_id?: string;
+  quantity: number;
+  variant_sku?: string;
+}
+
+export interface GuestPlaceOrderPayload {
+  items: GuestOrderItem[];
+  address: GuestAddress;
+  guest_email?: string;
 }
 
 export interface ProductItem {
@@ -78,4 +93,18 @@ export const placeOrder = async (
   });
 
   return apiResponse.response as PlaceOrderResponse;
-}; 
+};
+
+// Guest order placement
+export const placeGuestOrder = async (
+  payload: GuestPlaceOrderPayload
+): Promise<PlaceOrderResponse> => {
+  const apiResponse = await apiService<PlaceOrderResponse>({
+    endpoint: endpoints.guestOrder,
+    method: "POST",
+    data: payload,
+    removeToken: true,
+  });
+
+  return apiResponse.response as PlaceOrderResponse;
+};

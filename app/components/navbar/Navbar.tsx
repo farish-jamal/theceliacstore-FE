@@ -27,9 +27,11 @@ import { Typography } from "../typography/Typography";
 import { useRouter, usePathname } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
 import { logout as logoutAction } from "@/app/slices/authSlice";
+import { setGuestCart } from "@/app/slices/guestCartSlice";
 import { removeCookie } from "@/app/utils/removeCookie";
 import { useQuery } from "@tanstack/react-query";
 import { getCart } from "@/app/apis/getCart";
+import { getGuestCart } from "@/app/utils/guestCart";
 
 const navItems = [
   { label: "Home", path: "/" },
@@ -75,21 +77,34 @@ const Navbar = () => {
   const [activeCategory, setActiveCategory] = useState("Best Sellers");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const auth = useAppSelector((state) => state.auth);
+  const guestCart = useAppSelector((state) => state.guestCart.cart);
+  const isGuestCartInitialized = useAppSelector((state) => state.guestCart.isInitialized);
   const dispatch = useAppDispatch();
   const router = useRouter();
   const pathname = usePathname();
+  const isLoggedIn = !!auth.user && !!auth.token;
 
-  // Fetch cart data to get item count
+  // Initialize guest cart from localStorage on mount
+  useEffect(() => {
+    if (!isLoggedIn && !isGuestCartInitialized) {
+      const storedCart = getGuestCart();
+      dispatch(setGuestCart(storedCart));
+    }
+  }, [isLoggedIn, isGuestCartInitialized, dispatch]);
+
+  // Fetch cart data to get item count (only for logged-in users)
   const { data: cartData } = useQuery({
     queryKey: ["cart"],
     queryFn: () => getCart(),
-    enabled: !!auth.user && !!auth.token,
+    enabled: isLoggedIn,
     staleTime: 30000, // 30 seconds
     retry: false,
   });
 
-  // Calculate total item count
-  const cartItemCount = cartData?.data?.data?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
+  // Calculate total item count (from API cart for logged-in users, from guest cart for guests)
+  const apiCartItemCount = cartData?.data?.data?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
+  const guestCartItemCount = guestCart.items.reduce((total, item) => total + item.quantity, 0);
+  const cartItemCount = isLoggedIn ? apiCartItemCount : guestCartItemCount;
 
   useEffect(() => {
     const currentPath = pathname.split("/")[1];
