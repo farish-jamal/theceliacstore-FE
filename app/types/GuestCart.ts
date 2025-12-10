@@ -33,6 +33,7 @@ export interface GuestCart {
 
 export interface GuestAddress {
   name: string;
+  email: string;
   address: string;
   city: string;
   state: string;

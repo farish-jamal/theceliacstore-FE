@@ -94,6 +94,7 @@ const GuestCheckoutButton: React.FC<GuestCheckoutButtonProps> = ({
     
     const address: GuestAddress = {
       name: formData.get("fullName") as string,
+      email: formData.get("email") as string,
       address: formData.get("address") as string,
       city: formData.get("city") as string,
       state: formData.get("state") as string,
@@ -200,6 +201,19 @@ const GuestCheckoutButton: React.FC<GuestCheckoutButtonProps> = ({
                     className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
                     required
                     defaultValue={guestAddress?.name || ""}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2" htmlFor="email">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
+                    required
+                    defaultValue={guestAddress?.email || ""}
                   />
                 </div>
                 <div>
