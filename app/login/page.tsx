@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FloatingLabelInput } from "../components/input/FloatingLabelInput";
 import { useMutation } from "@tanstack/react-query";
 import { loginUser } from "../apis/loginUser";
+import { googleLogin } from "../apis/googleLogin";
 import { useAppDispatch } from "../hooks/reduxHooks";
 import { setAuth } from "../slices/authSlice";
 import { showSnackbar } from "../slices/snackbarSlice";
@@ -16,6 +17,7 @@ import { z } from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { setCookie } from "../utils/setCookie";
 import { AxiosError } from "axios";
+import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -63,13 +65,50 @@ const Login = () => {
       }
     },
     onError: (error: AxiosError<{ message?: string }>) => {
-      console.log("ERROR",error);
+      console.log("ERROR", error);
       // Extract error message from the API response
-      const errorMessage = 
-        error?.response?.data?.message || 
-        error?.message || 
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
         "Login failed. Please check your credentials.";
-      
+
+      dispatch(
+        showSnackbar({
+          message: errorMessage,
+          type: "error",
+        })
+      );
+    },
+  });
+
+  const googleLoginMutation = useMutation({
+    mutationFn: googleLogin,
+    onSuccess: (response) => {
+      if (response?.success && response.data) {
+        const { id, name, email, phone, token } = response.data;
+        dispatch(setAuth({ user: { id, name, email, phone }, token }));
+        // Set cookie for Google login (always persistent)
+        setCookie("token", token, 30); // 30 days
+        dispatch(
+          showSnackbar({ message: "Google login successful!", type: "success" })
+        );
+        router.replace(redirectPath);
+      } else {
+        dispatch(
+          showSnackbar({
+            message: response?.message || "Google login failed. Please try again.",
+            type: "error",
+          })
+        );
+      }
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      console.log("GOOGLE LOGIN ERROR", error);
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Google authentication failed. Please try again.";
+
       dispatch(
         showSnackbar({
           message: errorMessage,
@@ -97,6 +136,28 @@ const Login = () => {
       return;
     }
     loginMutation.mutate({ email: form.email, password: form.password });
+  };
+
+  const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
+    if (credentialResponse.credential) {
+      googleLoginMutation.mutate({ idToken: credentialResponse.credential });
+    } else {
+      dispatch(
+        showSnackbar({
+          message: "Google login failed. No credentials received.",
+          type: "error",
+        })
+      );
+    }
+  };
+
+  const handleGoogleError = () => {
+    dispatch(
+      showSnackbar({
+        message: "Google login failed. Please try again.",
+        type: "error",
+      })
+    );
   };
 
   // Show a message if redirected from a protected page
@@ -189,19 +250,16 @@ const Login = () => {
             <span className="text-gray-400 text-sm">Or Sign in with</span>
           </div>
 
-          <Button
-            variant="outline"
-            className="w-full border-gray-300 p-5 text-gray-700 gap-2"
-          >
-            <Image
-              src="https://www.svgrepo.com/show/475656/google-color.svg"
-              alt="Google"
-              className="h-5 w-5"
-              width={20}
-              height={20}
+          <div className="w-full flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              size="large"
+              width="400"
+              text="signin_with"
+              shape="rectangular"
             />
-            Sign in with Google
-          </Button>
+          </div>
         </form>
       </div>
     </div>

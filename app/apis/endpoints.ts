@@ -3,6 +3,7 @@ export const endpoints = {
   login: "api/auth/user/login",
   register: "api/auth/user/register",
   forgotPassword: "api/auth/user/forgot-password",
+  googleLogin: "api/auth/user/google",
 
   // products
   products: "api/product",
@@ -16,7 +17,7 @@ export const endpoints = {
 
   // cart
   cart: "api/cart",
-  
+
   // categories
   categories: "api/category",
 
