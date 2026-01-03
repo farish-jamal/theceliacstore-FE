@@ -58,7 +58,7 @@ const navItems = [
     label: "Bundles",
     path: "/bundles",
   },
-  { label: "Blogs", path: "/blogs" },
+  // { label: "Blogs", path: "/blogs" },
   {
     label: "About us",
     icon: "",
@@ -134,9 +134,9 @@ const Navbar = () => {
             <Image
               src="/celiac-brand-logo.png"
               alt="logo"
-              width={140}
-              height={40}
-              className="h-14 w-auto"
+              width={160}
+              height={60}
+              className="h-16 w-auto"
             />
           </Link>
           {/* Desktop Nav */}
@@ -183,13 +183,12 @@ const Navbar = () => {
                 <DropdownMenuContent align="end" className="w-44 p-1">
                   <DropdownMenuItem asChild className="py-2">
                     <Typography variant="h3">
-                      {`Welcome${
-                        auth.user.name
-                          ? ", " + auth.user.name
-                          : auth.user.email
+                      {`Welcome${auth.user.name
+                        ? ", " + auth.user.name
+                        : auth.user.email
                           ? ", " + auth.user.email
                           : "!"
-                      }`}
+                        }`}
                     </Typography>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="mx-2" />
@@ -291,9 +290,8 @@ const NavItems = ({
 
   return (
     <ul
-      className={`flex flex-col ${mobile ? "gap-4" : "md:flex-row md:gap-8"} ${
-        mobile ? "" : "items-center"
-      }`}
+      className={`flex flex-col ${mobile ? "gap-4" : "md:flex-row md:gap-8"} ${mobile ? "" : "items-center"
+        }`}
     >
       {navItems.map((item) => (
         <li key={item.label}>

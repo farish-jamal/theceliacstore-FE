@@ -62,7 +62,7 @@ const Slide = ({ slide, index, current, onButtonClick, onSlideClick, mobileImage
     // Don't navigate if clicking on controls, dots, or button
     const target = e.target as HTMLElement;
     if (
-      target.closest('button') || 
+      target.closest('button') ||
       target.closest('[role="button"]') ||
       target.closest('.carousel-control') ||
       target.closest('.carousel-dot')
@@ -100,7 +100,7 @@ const Slide = ({ slide, index, current, onButtonClick, onSlideClick, mobileImage
         }}
       >
         <img
-          className={`absolute inset-0 w-full h-full ${mobileImageFit === 'contain' ? 'object-contain md:object-cover' : 'object-cover'} transition-opacity duration-600 ease-in-out`}
+          className={`absolute inset-0 w-full h-full ${mobileImageFit === 'contain' ? 'object-contain md:object-cover' : 'object-fill'} transition-opacity duration-600 ease-in-out`}
           style={{
             opacity: current === index ? 1 : 0.5,
           }}
@@ -117,9 +117,8 @@ const Slide = ({ slide, index, current, onButtonClick, onSlideClick, mobileImage
 
       {(title || button) && (
         <article
-          className={`relative p-8 transition-opacity duration-1000 ease-in-out ${
-            current === index ? "opacity-100 visible" : "opacity-0 invisible"
-          }`}
+          className={`relative p-8 transition-opacity duration-1000 ease-in-out ${current === index ? "opacity-100 visible" : "opacity-0 invisible"
+            }`}
         >
           {title && (
             <h2 className="text-lg md:text-2xl lg:text-4xl font-semibold relative">
@@ -128,7 +127,7 @@ const Slide = ({ slide, index, current, onButtonClick, onSlideClick, mobileImage
           )}
           {button && (
             <div className="flex justify-center">
-              <button 
+              <button
                 className="mt-6 px-6 py-2 w-fit mx-auto text-black bg-white h-12 text-xs flex justify-center items-center rounded-2xl hover:shadow-lg transition duration-200 shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)]"
                 onClick={() => slide.path && onButtonClick?.(slide.path)}
               >
@@ -154,9 +153,8 @@ const CarouselControl = ({
   handleClick,
 }: CarouselControlProps) => (
   <button
-    className={`carousel-control w-10 h-10 flex items-center mx-2 justify-center bg-neutral-200 dark:bg-neutral-800 border-3 border-transparent rounded-full focus:border-[#6D64F7] focus:outline-none hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ${
-      type === "previous" ? "rotate-180" : ""
-    }`}
+    className={`carousel-control w-10 h-10 flex items-center mx-2 justify-center bg-neutral-200 dark:bg-neutral-800 border-3 border-transparent rounded-full focus:border-[#6D64F7] focus:outline-none hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ${type === "previous" ? "rotate-180" : ""
+      }`}
     title={title}
     onClick={(e) => {
       e.stopPropagation();
@@ -176,7 +174,7 @@ interface CarouselProps {
   mobileImageFit?: 'contain' | 'cover';
 }
 
-export function Carousel({ slides, onButtonClick, onSlideClick, mobileImageFit = 'cover' }: CarouselProps) {
+export function Carousel({ slides, onButtonClick, onSlideClick, mobileImageFit = 'contain' }: CarouselProps) {
   const [current, setCurrent] = useState(0);
   const id = useId();
 
@@ -218,11 +216,10 @@ export function Carousel({ slides, onButtonClick, onSlideClick, mobileImageFit =
         {slides.map((_, idx) => (
           <span
             key={idx}
-            className={`carousel-dot block w-3 h-3 rounded-full transition-all duration-300 cursor-pointer ${
-              current === idx
-                ? "bg-white border-2 border-[#4CAF50] scale-110"
-                : "bg-white/60"
-            }`}
+            className={`carousel-dot block w-3 h-3 rounded-full transition-all duration-300 cursor-pointer ${current === idx
+              ? "bg-white border-2 border-[#4CAF50] scale-110"
+              : "bg-white/60"
+              }`}
             onClick={(e) => {
               e.stopPropagation();
               setCurrent(idx);

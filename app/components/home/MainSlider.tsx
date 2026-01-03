@@ -26,8 +26,8 @@ const MainSlider = () => {
 
   return (
     <div className="w-full mt-0 md:mt-1 ">
-      <Carousel 
-        slides={slides} 
+      <Carousel
+        slides={slides}
         onSlideClick={handleSlideClick}
         mobileImageFit="cover"
       />

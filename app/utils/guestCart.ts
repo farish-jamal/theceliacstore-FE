@@ -5,7 +5,7 @@ import { convertToNumber } from "@/app/utils/formatPrice";
 
 const GUEST_CART_KEY = "guest_cart";
 const SHIPPING_THRESHOLD = 500; // Free shipping above this amount
-const SHIPPING_CHARGE = 50;
+const SHIPPING_CHARGE = 0;
 
 // Helper to get price from product (considering variant if selected)
 const getProductPrice = (product: Product, variantSku?: string): number => {
@@ -36,7 +36,7 @@ export const getGuestCart = (): GuestCart => {
   if (typeof window === "undefined") {
     return { items: [], total_price: 0, shipping_charge: 0, final_price: 0 };
   }
-  
+
   try {
     const stored = localStorage.getItem(GUEST_CART_KEY);
     if (stored) {
@@ -46,14 +46,14 @@ export const getGuestCart = (): GuestCart => {
   } catch (error) {
     console.error("Error reading guest cart:", error);
   }
-  
+
   return { items: [], total_price: 0, shipping_charge: 0, final_price: 0 };
 };
 
 // Save guest cart to localStorage
 const saveGuestCart = (cart: GuestCart): void => {
   if (typeof window === "undefined") return;
-  
+
   try {
     localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart));
   } catch (error) {
@@ -68,21 +68,21 @@ const generateItemId = (): string => {
 
 // Add product to guest cart
 export const addProductToGuestCart = (
-  product: Product, 
-  quantity: number, 
+  product: Product,
+  quantity: number,
   variantSku?: string
 ): GuestCart => {
   const cart = getGuestCart();
   const price = getProductPrice(product, variantSku);
-  
+
   // Check if item already exists (same product and variant)
   const existingIndex = cart.items.findIndex(
-    item => 
-      item.type === "product" && 
+    item =>
+      item.type === "product" &&
       item.product._id === product._id &&
       (item as GuestProductCartItem).variant_sku === variantSku
   );
-  
+
   if (existingIndex !== -1) {
     // Update existing item
     const existingItem = cart.items[existingIndex] as GuestProductCartItem;
@@ -102,11 +102,11 @@ export const addProductToGuestCart = (
     };
     cart.items.push(newItem);
   }
-  
+
   // Recalculate totals
   const totals = calculateTotals(cart.items);
   const updatedCart = { ...cart, ...totals };
-  
+
   saveGuestCart(updatedCart);
   return updatedCart;
 };
@@ -115,12 +115,12 @@ export const addProductToGuestCart = (
 export const addBundleToGuestCart = (bundle: Bundle, quantity: number): GuestCart => {
   const cart = getGuestCart();
   const price = getBundlePrice(bundle);
-  
+
   // Check if bundle already exists
   const existingIndex = cart.items.findIndex(
     item => item.type === "bundle" && (item as GuestBundleCartItem).bundle._id === bundle._id
   );
-  
+
   if (existingIndex !== -1) {
     // Update existing item
     const existingItem = cart.items[existingIndex] as GuestBundleCartItem;
@@ -139,11 +139,11 @@ export const addBundleToGuestCart = (bundle: Bundle, quantity: number): GuestCar
     };
     cart.items.push(newItem);
   }
-  
+
   // Recalculate totals
   const totals = calculateTotals(cart.items);
   const updatedCart = { ...cart, ...totals };
-  
+
   saveGuestCart(updatedCart);
   return updatedCart;
 };
@@ -151,7 +151,7 @@ export const addBundleToGuestCart = (bundle: Bundle, quantity: number): GuestCar
 // Update item quantity in guest cart
 export const updateGuestCartItemQuantity = (itemId: string, quantity: number): GuestCart => {
   const cart = getGuestCart();
-  
+
   if (quantity <= 0) {
     // Remove item
     cart.items = cart.items.filter(item => item.id !== itemId);
@@ -163,11 +163,11 @@ export const updateGuestCartItemQuantity = (itemId: string, quantity: number): G
       cart.items[itemIndex].total = cart.items[itemIndex].price * quantity;
     }
   }
-  
+
   // Recalculate totals
   const totals = calculateTotals(cart.items);
   const updatedCart = { ...cart, ...totals };
-  
+
   saveGuestCart(updatedCart);
   return updatedCart;
 };
