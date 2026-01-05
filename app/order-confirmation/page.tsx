@@ -401,10 +401,10 @@ const OrderConfirmationPage = () => {
               Live Chat
             </Button> */}
             <Button variant="outline" className="border-2 border-green-200 hover:border-green-300">
-              Call Support
+              +919810107887
             </Button>
             <Button variant="outline" className="border-2 border-green-200 hover:border-green-300">
-              Email Us
+              theceliacstore@gmail.com
             </Button>
           </div>
         </motion.div>
