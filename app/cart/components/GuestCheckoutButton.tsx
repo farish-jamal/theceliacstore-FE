@@ -341,7 +341,7 @@ const GuestCheckoutButton: React.FC<GuestCheckoutButtonProps> = ({
                         <span>Shipping:</span>
                         <span>
                           {cart.shipping_charge === 0
-                            ? "Free"
+                            ? "To be Confirmed"
                             : `₹${cart.shipping_charge.toFixed(2)}`}
                         </span>
                       </div>
