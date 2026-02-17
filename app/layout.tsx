@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 // Metadata for the application
 // This metadata is used for SEO and social sharing
 
+
+//test comment to be deleted later
+
 export const metadata: Metadata = {
   title: "The Celiac Store | Gluten-Free, Lactose-Free, Organic Food India",
   description:
