@@ -12,11 +12,28 @@ const nextConfig: NextConfig = {
       "theceliacstore.com",
     ],
   },
+
   typescript: {
     ignoreBuildErrors: true,
   },
+
   eslint: {
     ignoreDuringBuilds: true,
+  },
+
+  async redirects() {
+    return [
+      {
+        source: "/shop",
+        destination: "/products",
+        permanent: true,
+      },
+      {
+        source: "/shop/page/:slug*",
+        destination: "/products",
+        permanent: true,
+      },
+    ];
   },
 };
 
