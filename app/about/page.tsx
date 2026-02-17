@@ -37,8 +37,8 @@ const AboutPage = () => {
             <Image
               src="https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1748708075/ab0df74c3f8d1807d7434a10a51793aec32c56a7_ihzbsj.jpg?_s=public-apps"
               alt="Gluten-free and organic products basket"
-              fill
-              style={{ objectFit: "contain" }}
+              width={350}
+              height={350}
               priority
             />
           </div>

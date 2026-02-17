@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { CheckCircle, Package, Truck, MapPin, Calendar, CreditCard, Phone, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import TopFloater from "@/app/components/floater/TopFloater";
 import Navbar from "@/app/components/navbar/Navbar";
 import Footer from "@/app/components/layout/Footer";
@@ -254,15 +255,13 @@ const OrderConfirmationPage = () => {
                     transition={{ delay: 0.6 + index * 0.1 }}
                     className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl"
                   >
-                    <div className="w-20 h-20 bg-white rounded-lg overflow-hidden shadow-sm">
-                      <img
+                    <div className="w-20 h-20 bg-white rounded-lg overflow-hidden shadow-sm relative">
+                      <Image
                         src={item.image}
                         alt={item.name}
+                        width={80}
+                        height={80}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747513129/183b94b37929bc9eee61fb523d8bef99602cb329_rabkid.jpg";
-                        }}
                       />
                     </div>
                     <div className="flex-1">

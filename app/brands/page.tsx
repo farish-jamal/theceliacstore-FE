@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import TopFloater from "../components/floater/TopFloater";
 import Navbar from "../components/navbar/Navbar";
 import Footer from "../components/layout/Footer";
@@ -150,10 +151,12 @@ const BrandsPage = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8">
             {brands.map((brand) => (
               <Link href={`/brands/${brand.id}`} key={brand.id}>
-                <div className="flex items-center justify-center p-4 border border-gray-100 rounded-md hover:shadow-md transition-shadow h-32">
-                  <img
+                <div className="flex items-center justify-center p-4 border border-gray-100 rounded-md hover:shadow-md transition-shadow h-32 relative">
+                  <Image
                     src={brand.image}
                     alt={brand.name}
+                    width={150}
+                    height={80}
                     className="max-h-full max-w-full object-contain"
                   />
                 </div>

@@ -7,6 +7,7 @@ import { updateProductInCart } from "@/app/apis/updateProductInCart";
 import { useAppDispatch, useAppSelector } from "@/app/hooks/reduxHooks";
 import { showSnackbar } from "@/app/slices/snackbarSlice";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 type FrequentlyBoughtProps = {
   currentProductId?: string;
@@ -154,32 +155,19 @@ const FrequentlyBought = ({ currentProductId }: FrequentlyBoughtProps) => {
             const isSelected = selectedIds.has(id);
 
             return (
-            <React.Fragment key={product._id || index}>
-              {index > 0 && (
-                <div className="text-xl font-light text-gray-400 my-3 md:my-0 md:mx-5">+</div>
-              )}
-              <div className="flex flex-col items-center mx-2">
-                <div className="relative mb-3">
-                  <div
-                    className={`${isSelected ? "bg-green-500" : "bg-gray-200"} absolute -top-2 -left-2 w-5 h-5 rounded-full flex items-center justify-center cursor-pointer`}
-                    role="button"
-                    tabIndex={0}
-                    aria-pressed={isSelected}
-                    aria-label={`Toggle ${product.name}`}
-                    onClick={() => {
-                      setSelectedIds((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(id)) {
-                          next.delete(id);
-                        } else {
-                          next.add(id);
-                        }
-                        return next;
-                      });
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
+              <React.Fragment key={product._id || index}>
+                {index > 0 && (
+                  <div className="text-xl font-light text-gray-400 my-3 md:my-0 md:mx-5">+</div>
+                )}
+                <div className="flex flex-col items-center mx-2">
+                  <div className="relative mb-3">
+                    <div
+                      className={`${isSelected ? "bg-green-500" : "bg-gray-200"} absolute -top-2 -left-2 w-5 h-5 rounded-full flex items-center justify-center cursor-pointer`}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={isSelected}
+                      aria-label={`Toggle ${product.name}`}
+                      onClick={() => {
                         setSelectedIds((prev) => {
                           const next = new Set(prev);
                           if (next.has(id)) {
@@ -189,42 +177,58 @@ const FrequentlyBought = ({ currentProductId }: FrequentlyBoughtProps) => {
                           }
                           return next;
                         });
-                      }
-                    }}
-                  >
-                    {isSelected && (
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="white"
-                        strokeWidth="3"
-                      >
-                        <path d="M5 12l5 5L20 7"></path>
-                      </svg>
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedIds((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(id)) {
+                              next.delete(id);
+                            } else {
+                              next.add(id);
+                            }
+                            return next;
+                          });
+                        }
+                      }}
+                    >
+                      {isSelected && (
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="white"
+                          strokeWidth="3"
+                        >
+                          <path d="M5 12l5 5L20 7"></path>
+                        </svg>
+                      )}
+                    </div>
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 p-1 bg-white rounded border border-gray-200 shadow-sm relative">
+                      <Image
+                        src={imageSrc}
+                        alt={product.name}
+                        width={112}
+                        height={112}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  </div>
+                  <h3 className="text-[11px] sm:text-xs text-center font-medium max-w-[120px] md:max-w-[160px]">
+                    {truncatedName}
+                  </h3>
+                  <div className="text-[11px] sm:text-xs mt-1 flex items-center gap-1">
+                    <span className="font-bold">₹{formatPrice(displayPrice)}</span>
+                    {hasDiscount && (
+                      <span className="text-gray-400 line-through">₹{formatPrice(originalPrice)}</span>
                     )}
                   </div>
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 p-1 bg-white rounded border border-gray-200 shadow-sm">
-                    <img
-                      src={imageSrc}
-                      alt={product.name}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
                 </div>
-                <h3 className="text-[11px] sm:text-xs text-center font-medium max-w-[120px] md:max-w-[160px]">
-                  {truncatedName}
-                </h3>
-                <div className="text-[11px] sm:text-xs mt-1 flex items-center gap-1">
-                  <span className="font-bold">₹{formatPrice(displayPrice)}</span>
-                  {hasDiscount && (
-                    <span className="text-gray-400 line-through">₹{formatPrice(originalPrice)}</span>
-                  )}
-                </div>
-              </div>
-            </React.Fragment>
-          );})}
+              </React.Fragment>
+            );
+          })}
 
           <div className="text-xl font-light text-gray-400 my-5 md:my-0 md:mx-5">=</div>
 

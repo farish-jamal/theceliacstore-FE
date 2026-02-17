@@ -2,6 +2,8 @@
 import { ChevronRight } from "lucide-react";
 import { useState, useRef, useId, useEffect } from "react";
 
+import Image from "next/image";
+
 interface SlideData {
   title?: string;
   button?: string;
@@ -52,10 +54,6 @@ const Slide = ({ slide, index, current, onButtonClick, onSlideClick, mobileImage
     yRef.current = 0;
   };
 
-  const imageLoaded = (event: React.SyntheticEvent<HTMLImageElement>) => {
-    event.currentTarget.style.opacity = "1";
-  };
-
   const { src, button, title } = slide;
 
   const handleSlideClick = (e: React.MouseEvent) => {
@@ -99,16 +97,15 @@ const Slide = ({ slide, index, current, onButtonClick, onSlideClick, mobileImage
               : "none",
         }}
       >
-        <img
+        <Image
           className={`absolute inset-0 w-full h-full ${mobileImageFit === 'contain' ? 'object-contain md:object-cover' : 'object-fill'} transition-opacity duration-600 ease-in-out`}
           style={{
             opacity: current === index ? 1 : 0.5,
           }}
           alt={title || `Slide ${index + 1}`}
           src={src}
-          onLoad={imageLoaded}
-          loading="eager"
-          decoding="sync"
+          fill
+          priority={current === index}
         />
         {current === index && (
           <div className="absolute inset-0 bg-black/30 transition-all duration-1000" />

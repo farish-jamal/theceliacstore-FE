@@ -7,6 +7,7 @@ import ProductSlider from "@/app/components/productsider/ProductSlider";
 import FrequentlyBought from "@/app/components/frequentlybought/FrequentlyBought";
 import { getBundle, Bundle } from "@/app/apis/getBundles";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { formatPrice, convertToNumber } from "@/app/utils/formatPrice";
 import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
@@ -30,13 +31,13 @@ export default function BundleDetailPage() {
   const [loading, setLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
-  
+
   const params = useParams();
   const router = useRouter();
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
   const auth = useAppSelector((state) => state.auth);
-  
+
   const bundleId = params.id as string;
 
   // Add to cart mutation for bundles
@@ -46,29 +47,29 @@ export default function BundleDetailPage() {
       const cartResponse = response?.response as CartResponse;
       if (cartResponse?.success) {
         setShowSuccessAnimation(true);
-        dispatch(showSnackbar({ 
-          message: "Bundle added to cart successfully!", 
-          type: "success" 
+        dispatch(showSnackbar({
+          message: "Bundle added to cart successfully!",
+          type: "success"
         }));
         // Invalidate cart query to refresh cart data
         queryClient.invalidateQueries({ queryKey: ["cart"] });
-        
+
         // Hide success animation after 1.5 seconds (no redirect)
         setTimeout(() => {
           setShowSuccessAnimation(false);
         }, 1500);
       } else {
-        dispatch(showSnackbar({ 
-          message: cartResponse?.message || "Failed to add bundle to cart", 
-          type: "error" 
+        dispatch(showSnackbar({
+          message: cartResponse?.message || "Failed to add bundle to cart",
+          type: "error"
         }));
       }
     },
     onError: (error) => {
       console.error("Error adding bundle to cart:", error);
-      dispatch(showSnackbar({ 
-        message: "Failed to add bundle to cart. Please try again.", 
-        type: "error" 
+      dispatch(showSnackbar({
+        message: "Failed to add bundle to cart. Please try again.",
+        type: "error"
       }));
     },
     onSettled: () => {
@@ -94,11 +95,11 @@ export default function BundleDetailPage() {
         const updatedCart = addBundleToGuestCart(bundle, quantity);
         dispatch(setGuestCart(updatedCart));
         setShowSuccessAnimation(true);
-        dispatch(showSnackbar({ 
-          message: "Bundle added to cart successfully!", 
-          type: "success" 
+        dispatch(showSnackbar({
+          message: "Bundle added to cart successfully!",
+          type: "success"
         }));
-        
+
         // Hide success animation after 1.5 seconds
         setTimeout(() => {
           setShowSuccessAnimation(false);
@@ -106,9 +107,9 @@ export default function BundleDetailPage() {
         }, 1500);
       } catch (error) {
         console.error("Error adding bundle to guest cart:", error);
-        dispatch(showSnackbar({ 
-          message: "Failed to add bundle to cart. Please try again.", 
-          type: "error" 
+        dispatch(showSnackbar({
+          message: "Failed to add bundle to cart. Please try again.",
+          type: "error"
         }));
         setIsAddingToCart(false);
       }
@@ -118,7 +119,7 @@ export default function BundleDetailPage() {
   useEffect(() => {
     const fetchBundle = async () => {
       if (!bundleId) return;
-      
+
       setLoading(true);
       try {
         const response = await getBundle(bundleId);
@@ -172,7 +173,7 @@ export default function BundleDetailPage() {
   // Convert MongoDB Decimal objects to numbers for calculations
   const bundlePrice = convertToNumber(bundle.price);
   const bundleDiscountedPrice = convertToNumber(bundle.discounted_price);
-  
+
   const totalPrice = bundleDiscountedPrice || bundlePrice;
   const originalPrice = bundlePrice;
   const savings = originalPrice - totalPrice;
@@ -245,7 +246,7 @@ export default function BundleDetailPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       <TopFloater />
       <Navbar />
       <div className="max-w-7xl mx-auto py-8 px-4 flex flex-col lg:flex-row gap-12">
@@ -257,26 +258,33 @@ export default function BundleDetailPage() {
               {bundle.images?.map((src, idx) => (
                 <div
                   key={idx}
-                  className={`w-24 h-24 p-2 bg-white rounded-lg shadow-sm cursor-pointer ${
-                    selectedThumb === idx ? "border-2 border-green-500" : ""
-                  }`}
+                  className={`w-24 h-24 p-2 bg-white rounded-lg shadow-sm cursor-pointer ${selectedThumb === idx ? "border-2 border-green-500" : ""
+                    }`}
                 >
-                  <img
-                    src={src}
-                    alt="thumb"
-                    className="w-full h-full object-contain"
-                    onClick={() => setSelectedThumb(idx)}
-                  />
+                  <div className="w-full h-full relative">
+                    <Image
+                      src={src}
+                      alt="thumb"
+                      width={96}
+                      height={96}
+                      className="w-full h-full object-contain"
+                      onClick={() => setSelectedThumb(idx)}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
             {/* Main image */}
             <div className="flex-1 aspect-square rounded-lg max-h-[400px]">
-              <img
-                src={bundle.images?.[selectedThumb] || bundle.images?.[0] || ""}
-                alt="main"
-                className="w-full h-full object-contain"
-              />
+              <div className="w-full h-full relative">
+                <Image
+                  src={bundle.images?.[selectedThumb] || bundle.images?.[0] || ""}
+                  alt="main"
+                  width={400}
+                  height={400}
+                  className="w-full h-full object-contain"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -298,16 +306,18 @@ export default function BundleDetailPage() {
           <h1 className="text-2xl font-semibold mb-2">
             {bundle.name}
           </h1>
-          
+
           {/* Tag images after title */}
           {validTags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {validTags.map((tag) => (
                 <div key={tag} className="relative group/tag">
-                  <img
+                  <Image
                     src={tagImageMap[tag]}
                     alt={tag.replace(/_/g, ' ')}
-                    className="w-8 h-8 object-contain transition-transform duration-200 group-hover/tag:scale-110"
+                    width={32}
+                    height={32}
+                    className="object-contain transition-transform duration-200 group-hover/tag:scale-110"
                   />
                   {/* Tooltip */}
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover/tag:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-20">
@@ -361,10 +371,12 @@ export default function BundleDetailPage() {
                 }
                 return (
                   <div key={prod._id || idx} className="flex items-center gap-3">
-                    <div className="w-16 h-16 bg-gray-50 rounded-lg p-1">
-                      <img
+                    <div className="w-16 h-16 bg-gray-50 rounded-lg p-1 relative">
+                      <Image
                         src={prod.banner_image || (prod.images && prod.images[0]) || ""}
                         alt={prod.name}
+                        width={64}
+                        height={64}
                         className="w-full h-full object-contain"
                       />
                     </div>
@@ -415,11 +427,10 @@ export default function BundleDetailPage() {
               whileTap={{ scale: 0.98 }}
               onClick={handleAddToCart}
               disabled={isAddingToCart}
-              className={`flex-1 font-medium py-2.5 px-6 rounded-full text-sm transition-colors ${
-                isAddingToCart
-                  ? "bg-gray-400 text-gray-600 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700 text-white"
-              }`}
+              className={`flex-1 font-medium py-2.5 px-6 rounded-full text-sm transition-colors ${isAddingToCart
+                ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-700 text-white"
+                }`}
             >
               {isAddingToCart ? (
                 <div className="flex items-center justify-center gap-2">
@@ -460,7 +471,7 @@ export default function BundleDetailPage() {
           <p className="text-gray-600 mb-6">
             {bundle.description}
           </p>
-          
+
           <h3 className="font-medium mb-2">Bundle Benefits:</h3>
           <ul className="list-disc list-inside text-gray-600 space-y-2 mb-6">
             <li>Save up to {savingsPercentage}% compared to buying items individually</li>
