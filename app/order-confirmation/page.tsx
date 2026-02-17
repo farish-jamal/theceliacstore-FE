@@ -23,14 +23,14 @@ const OrderConfirmationPage = () => {
   const discountedAmount = searchParams.get("discountedAmount");
   const estimatedDelivery = searchParams.get("estimatedDelivery");
   const createdAt = searchParams.get("createdAt");
-  
+
   // Parse complex data from JSON
   const itemsData = searchParams.get("items");
   const addressData = searchParams.get("address");
-  
+
   let items: OrderItem[] = [];
   let shippingAddress: OrderAddress | null = null;
-  
+
   try {
     if (itemsData) {
       items = JSON.parse(itemsData);
@@ -55,6 +55,23 @@ const OrderConfirmationPage = () => {
   const subtotal = parseFloat(totalAmount || "0");
   const discountAmount = subtotal - parseFloat(discountedAmount || "0");
   const finalTotal = parseFloat(discountedAmount || totalAmount || "0");
+
+  // GTM Purchase Event
+  useEffect(() => {
+    if (!isLoading && orderId) {
+      // @ts-ignore
+      window.dataLayer = window.dataLayer || [];
+      // @ts-ignore
+      window.dataLayer.push({
+        event: "purchase",
+        ecommerce: {
+          currency: "INR",
+          value: finalTotal,
+          transaction_id: orderNumber || orderId
+        }
+      });
+    }
+  }, [isLoading, orderId, finalTotal, orderNumber]);
 
   // Format order date
   const orderDate = createdAt ? new Date(createdAt).toLocaleDateString('en-US', {
@@ -89,7 +106,7 @@ const OrderConfirmationPage = () => {
         description: item.bundle.description
       };
     }
-    
+
     // Fallback for unknown types
     return {
       id: item._id,
@@ -157,7 +174,7 @@ const OrderConfirmationPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
       <TopFloater />
       <Navbar />
-      
+
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Success Header */}
         <motion.div
@@ -174,7 +191,7 @@ const OrderConfirmationPage = () => {
           >
             <CheckCircle className="w-12 h-12 text-green-600" />
           </motion.div>
-          
+
           <motion.h1
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -183,7 +200,7 @@ const OrderConfirmationPage = () => {
           >
             Order Confirmed!
           </motion.h1>
-          
+
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -192,7 +209,7 @@ const OrderConfirmationPage = () => {
           >
             Thank you for your purchase. Your order has been successfully placed.
           </motion.p>
-          
+
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -202,7 +219,7 @@ const OrderConfirmationPage = () => {
             <Package className="w-5 h-5 text-green-600" />
             <span className="font-semibold text-gray-900">Order #{orderDetails.orderNumber}</span>
           </motion.div>
-          
+
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -227,7 +244,7 @@ const OrderConfirmationPage = () => {
                 <Package className="w-6 h-6 text-green-600" />
                 Your Items ({orderDetails.items.length})
               </h2>
-              
+
               <div className="space-y-4">
                 {orderDetails.items.map((item, index) => (
                   <motion.div
@@ -251,11 +268,10 @@ const OrderConfirmationPage = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          item.type === "Bundle" 
-                            ? "bg-purple-100 text-purple-700" 
-                            : "bg-blue-100 text-blue-700"
-                        }`}>
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${item.type === "Bundle"
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-blue-100 text-blue-700"
+                          }`}>
                           {item.type}
                         </span>
                       </div>
@@ -287,7 +303,7 @@ const OrderConfirmationPage = () => {
                 <Truck className="w-6 h-6 text-green-600" />
                 Delivery Information
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-green-600 mt-1" />
@@ -302,7 +318,7 @@ const OrderConfirmationPage = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <Calendar className="w-5 h-5 text-green-600 mt-1" />
                   <div>
@@ -325,7 +341,7 @@ const OrderConfirmationPage = () => {
             {/* Order Summary */}
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-4">
               <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
-              
+
               <div className="space-y-4">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
@@ -340,32 +356,32 @@ const OrderConfirmationPage = () => {
                     <span>Discount</span>
                     <span>-₹{discountAmount}</span>
                   </div>
-                                  )}
-                  <hr />
-                  <div className="flex justify-between text-xl font-semibold">
-                    <span>Total</span>
-                    <span className="text-green-600">{orderDetails.totalAmount}</span>
-                  </div>
-                </div>
-                
-                <div className="mt-6 pt-6 border-t">
-                  <div className="flex items-center gap-2 text-gray-600 mb-2">
-                    <CreditCard className="w-4 h-4" />
-                    <span className="text-sm">Payment Method</span>
-                  </div>
-                  <p className="font-semibold">{orderDetails.paymentMethod}</p>
+                )}
+                <hr />
+                <div className="flex justify-between text-xl font-semibold">
+                  <span>Total</span>
+                  <span className="text-green-600">{orderDetails.totalAmount}</span>
                 </div>
               </div>
 
-             {/* Action Buttons */}
-             <div className="space-y-3">
-               <Button
-                 onClick={() => router.push(`/orders/${orderDetails.orderId}`)}
-                 className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl text-lg font-semibold"
-               >
-                 Track Order
-               </Button>
-             </div>
+              <div className="mt-6 pt-6 border-t">
+                <div className="flex items-center gap-2 text-gray-600 mb-2">
+                  <CreditCard className="w-4 h-4" />
+                  <span className="text-sm">Payment Method</span>
+                </div>
+                <p className="font-semibold">{orderDetails.paymentMethod}</p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <Button
+                onClick={() => router.push(`/orders/${orderDetails.orderId}`)}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl text-lg font-semibold"
+              >
+                Track Order
+              </Button>
+            </div>
           </motion.div>
         </div>
 
