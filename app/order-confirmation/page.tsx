@@ -59,20 +59,59 @@ const OrderConfirmationPage = () => {
 
   // GTM Purchase Event
   useEffect(() => {
-    if (!isLoading && orderId) {
+    // 1. Create a unique lock key for this specific order
+    const trackedKey = `tracked_order_${orderId}`;
+
+    // 2. Only run if loaded, we have an order, value is > 0, AND we haven't tracked it yet
+    if (!isLoading && orderId && finalTotal > 0 && !sessionStorage.getItem(trackedKey)) {
+      
+      // 3. Safely parse items without triggering React infinite loops
+      let safeItems: OrderItem[] = [];
+      try {
+        if (itemsData) {
+          safeItems = JSON.parse(itemsData);
+        }
+      } catch (error) {
+        console.error("Error parsing items for GTM:", error);
+      }
+
+      // 4. Map the items perfectly to Google/Meta's required format
+      const gtmItems = safeItems.map((item) => {
+        const isProduct = item.type === "product" && item.product;
+        const isBundle = item.type === "bundle" && item.bundle;
+        const entity = isProduct ? item.product : (isBundle ? item.bundle : null);
+
+        return {
+          // Prioritize SKU, then Product ID, fallback to cart line-item ID
+          item_id: entity?.sku || entity?._id || item._id, 
+          item_name: entity ? entity.name : "Unknown Item",
+          // Use ?? to safely allow a price of exactly 0
+          price: entity ? (entity.discounted_price ?? entity.price) : (item.discounted_total_amount ?? item.total_amount),
+          quantity: item.quantity,
+          item_category: item.type
+        };
+      });
+
+      // 5. Push securely to the dataLayer
       // @ts-ignore
       window.dataLayer = window.dataLayer || [];
+      // @ts-ignore
+      window.dataLayer.push({ ecommerce: null }); // Clear previous data to prevent bugs
       // @ts-ignore
       window.dataLayer.push({
         event: "purchase",
         ecommerce: {
           currency: "INR",
           value: finalTotal,
-          transaction_id: orderNumber || orderId
+          transaction_id: orderNumber || orderId,
+          items: gtmItems
         }
       });
+
+      // 6. Lock it! Prevent duplicate tracking if the user refreshes the page
+      sessionStorage.setItem(trackedKey, "true");
     }
-  }, [isLoading, orderId, finalTotal, orderNumber]);
+  }, [isLoading, orderId, finalTotal, orderNumber, itemsData]);
 
   // Format order date
   const orderDate = createdAt ? new Date(createdAt).toLocaleDateString('en-US', {
