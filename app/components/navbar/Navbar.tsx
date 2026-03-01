@@ -76,6 +76,7 @@ const Navbar = () => {
   const [active, setActive] = useState("Home");
   const [activeCategory, setActiveCategory] = useState("Best Sellers");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const auth = useAppSelector((state) => state.auth);
   const guestCart = useAppSelector((state) => state.guestCart.cart);
   const isGuestCartInitialized = useAppSelector((state) => state.guestCart.isInitialized);
@@ -119,6 +120,14 @@ const Navbar = () => {
     }
   }, [pathname]);
 
+  const handleSearch = (e?: any) => {
+    if (e && e.type === 'keydown' && e.key !== 'Enter') return;
+    if (!searchQuery.trim()) return;
+
+    router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    setMobileMenuOpen(false);
+  };
+
   const handleLogout = () => {
     dispatch(logoutAction());
     removeCookie("token"); // Remove the token cookie
@@ -150,11 +159,15 @@ const Navbar = () => {
             <Input
               type="text"
               placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
               className="w-full border border-gray-300 rounded-[2rem] px-5 pr-10 py-2"
               aria-label="Search"
             />
             <Search
-              className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+              className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 cursor-pointer"
+              onClick={() => handleSearch()}
               aria-hidden
             />
           </div>
@@ -248,12 +261,20 @@ const Navbar = () => {
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-b border-[#E6E6E6] px-4 py-4 z-50">
           <NavItems active={active} setActive={setActive} mobile />
-          <div className="mt-4">
+          <div className="mt-4 relative">
             <Input
               type="text"
               placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
               className="w-full border border-gray-300 rounded-[2rem] px-5 pr-10 py-2"
               aria-label="Search"
+            />
+            <Search
+              className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 cursor-pointer"
+              onClick={() => handleSearch()}
+              aria-hidden
             />
           </div>
           <div className="mt-4">
