@@ -1,6 +1,11 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { updateProductInCart } from "@/app/apis/updateProductInCart";
+import { getProduct } from "@/app/apis/getProducts"; 
+import { addToGuestCart } from "@/app/slices/guestCartSlice";
+
 import TopFloater from "@/app/components/floater/TopFloater";
 import Navbar from "@/app/components/navbar/Navbar";
 import Footer from "@/app/components/layout/Footer";
@@ -29,7 +34,6 @@ import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
 import { setGuestCart } from "@/app/slices/guestCartSlice";
 import { getGuestCart } from "@/app/utils/guestCart";
 
-// Convert API Address to the local Address interface used in the component
 interface LocalAddress {
   id: string;
   name: string;
@@ -42,9 +46,7 @@ interface LocalAddress {
 }
 
 const convertApiAddressToLocal = (apiAddress: Address): LocalAddress => {
-  console.log("🔄 Converting API address:", apiAddress);
-
-  const converted = {
+  return {
     id: apiAddress._id || "",
     name: apiAddress.name || "",
     address: apiAddress.address || "",
@@ -54,11 +56,7 @@ const convertApiAddressToLocal = (apiAddress: Address): LocalAddress => {
     phone: apiAddress.mobile || "",
     isDefault: apiAddress.isPrimary || false,
   };
-
-  console.log("✅ Converted to local address:", converted);
-  return converted;
 };
-
 
 const thumbnails = [
   "https://res.cloudinary.com/dacwig3xk/image/upload/fl_preserve_transparency/v1747513129/183b94b37929bc9eee61fb523d8bef99602cb329_rabkid.jpg?_s=public-apps",
@@ -69,17 +67,20 @@ const thumbnails = [
 const CartPage = () => {
   const queryClient = useQueryClient();
   const dispatch = useAppDispatch();
+  
+  const searchParams = useSearchParams();
+  const productToAdd = searchParams.get("add");
+  
+  const [isGoogleAdding, setIsGoogleAdding] = useState(false);
+  const processedProduct = useRef<string | null>(null);
 
-  // Get user from Redux store
   const user = useAppSelector((state) => state.auth.user);
   const userId = user?.id;
   const isLoggedIn = !!userId;
 
-  // Get guest cart from Redux store
   const guestCart = useAppSelector((state) => state.guestCart.cart);
   const isGuestCartInitialized = useAppSelector((state) => state.guestCart.isInitialized);
 
-  // Initialize guest cart from localStorage on mount
   useEffect(() => {
     if (!isLoggedIn && !isGuestCartInitialized) {
       const storedCart = getGuestCart();
@@ -87,18 +88,57 @@ const CartPage = () => {
     }
   }, [isLoggedIn, isGuestCartInitialized, dispatch]);
 
-  // State declarations
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [showAddAddress, setShowAddAddress] = useState(false);
   const [showEditAddress, setShowEditAddress] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<LocalAddress | null>(
-    null
-  );
+  const [editingAddress, setEditingAddress] = useState<LocalAddress | null>(null);
   const [showAddressSelect, setShowAddressSelect] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingAddressId, setDeletingAddressId] = useState<string>("");
 
-  // Only fetch cart from API if user is logged in
+  useEffect(() => {
+    if (productToAdd && productToAdd !== processedProduct.current && !isGoogleAdding) {
+      processedProduct.current = productToAdd;
+
+      const autoAddToCart = async () => {
+        setIsGoogleAdding(true);
+        try {
+          if (isLoggedIn) {
+            await updateProductInCart({
+              product_id: productToAdd,
+              quantity: 1,
+              type: "product"
+            });
+            queryClient.invalidateQueries({ queryKey: ["cart"] });
+          } else {
+            const productResponse = await getProduct(productToAdd);
+            const product = productResponse.data;
+            
+            if (!product || !product._id || !product.price) {
+              throw new Error("Invalid product data received from database.");
+            }
+
+            dispatch(addToGuestCart({ 
+                product, 
+                quantity: 1, 
+                type: "product" 
+            }));
+          }
+
+          window.history.replaceState(null, "", window.location.pathname);
+        } catch (error: any) {
+          console.error("Failed to auto-add Google Shopping item:", error);
+          const errorMsg = error?.response?.data?.message || error?.message || "Unknown error occurred.";
+          alert(`Could not add item to cart: ${errorMsg}`);
+        } finally {
+          setIsGoogleAdding(false);
+        }
+      };
+
+      autoAddToCart();
+    }
+  }, [productToAdd, isLoggedIn, dispatch, queryClient]);
+
   const { data: cartData, isLoading: cartLoading } = useQuery({
     queryKey: ["cart", selectedAddress],
     queryFn: () => getCart(selectedAddress),
@@ -106,97 +146,52 @@ const CartPage = () => {
     enabled: isLoggedIn,
   });
 
-  // Only fetch addresses if user is logged in
   const { data: addressData, isLoading: addressLoading } = useQuery({
     queryKey: ["addresses", userId],
     queryFn: async () => {
       if (!userId) {
-        return {
-          success: true,
-          data: { addresses: [], total: 0 },
-          message: "No user",
-          statusCode: 200,
-        };
+        return { success: true, data: { addresses: [], total: 0 }, message: "No user", statusCode: 200 };
       }
-      const response = await getAddresses(userId);
-      return response;
+      return await getAddresses(userId);
     },
-    select: (res) => {
-      const addresses = res?.data || []; 
-      return addresses;
-    },
+    select: (res) => res?.data || [],
     enabled: isLoggedIn,
   });
 
-  console.log("🔍 ADDRESS DEBUG INFO:");
-  console.log("Raw addressData from API:", addressData);
-  console.log("UserId:", userId);
-  console.log("Address loading:", addressLoading);
-  console.log("Is Logged In:", isLoggedIn);
-
   const cart: Cart | undefined = cartData;
   const addresses: LocalAddress[] = useMemo(
-    () => Array.isArray(addressData)
-      ? addressData.map(convertApiAddressToLocal)
-      : [],
+    () => Array.isArray(addressData) ? addressData.map(convertApiAddressToLocal) : [],
     [addressData]
   );
 
-  console.log("Final addresses array:", addresses);
-  console.log("Address array length:", addresses.length);
-
   React.useEffect(() => {
-    console.log("🎯 ADDRESS SELECTION LOGIC:");
-    console.log("Addresses available:", addresses.length);
-    console.log("Current selectedAddress:", selectedAddress);
-
     if (addresses.length > 0 && !selectedAddress) {
-      const defaultAddress =
-        addresses.find((addr) => addr.isDefault) || addresses[0];
-      console.log("Setting default address:", defaultAddress);
+      const defaultAddress = addresses.find((addr) => addr.isDefault) || addresses[0];
       setSelectedAddress(defaultAddress.id);
     }
-  }, [addresses, selectedAddress]);
+  }, [addresses]);
 
   const createAddressMutation = useMutation({
-    mutationFn: async (payload: CreateAddressPayload) => {
-      return await createAddress(payload);
-    },
+    mutationFn: async (payload: CreateAddressPayload) => createAddress(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
       setShowAddAddress(false);
     },
-    onError: (error) => {
-      console.error("Error creating address:", error);
-      alert("Failed to create address. Please try again.");
-    },
+    onError: () => alert("Failed to create address. Please try again."),
   });
 
   const updateAddressMutation = useMutation({
-    mutationFn: async ({
-      addressId,
-      payload,
-    }: {
-      addressId: string;
-      payload: CreateAddressPayload;
-    }) => {
-      return await updateAddress(addressId, payload);
-    },
+    mutationFn: async ({ addressId, payload }: { addressId: string; payload: CreateAddressPayload; }) => updateAddress(addressId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
       setShowEditAddress(false);
       setEditingAddress(null);
     },
-    onError: (error) => {
-      console.error("Error updating address:", error);
-      alert("Failed to update address. Please try again.");
-    },
+    onError: () => alert("Failed to update address. Please try again."),
   });
 
   const deleteAddressMutation = useMutation({
-    mutationFn: async (addressId: string) => {
-      return await deleteAddress(addressId);
-    },
+    mutationFn: async (addressId: string) => deleteAddress(addressId),
     onSuccess: (_, addressId) => {
       queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
       if (selectedAddress === addressId) {
@@ -209,25 +204,15 @@ const CartPage = () => {
         }
       }
     },
-    onError: (error) => {
-      console.error("Error deleting address:", error);
-      alert("Failed to delete address. Please try again.");
-    },
+    onError: () => alert("Failed to delete address. Please try again."),
   });
 
-  // Get items based on whether user is logged in
-  const items = isLoggedIn 
-    ? (isArrayWithValues(cart?.items) ? cart.items : [])
-    : guestCart.items;
-  
+  const items = isLoggedIn ? (isArrayWithValues(cart?.items) ? cart.items : []) : guestCart.items;
   const hasItems = items.length > 0;
   
-  // Get totals based on whether user is logged in
   const subtotal = isLoggedIn ? (cart?.total_price || 0) : guestCart.total_price;
   const shippingCharge = isLoggedIn ? (cart?.shipping_charge || 0) : guestCart.shipping_charge;
   const finalPrice = isLoggedIn ? (cart?.final_price || 0) : guestCart.final_price;
-
-  console.log("Cart items:", isLoggedIn ? cartData : guestCart, items);
 
   const addNewAddress = (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,10 +227,7 @@ const CartPage = () => {
       isPrimary: formData.get("default") === "on",
     };
 
-    if (!userId) {
-      alert("Please log in to add an address");
-      return;
-    }
+    if (!userId) return alert("Please log in to add an address");
     createAddressMutation.mutate(newAddress);
   };
 
@@ -264,14 +246,8 @@ const CartPage = () => {
       isPrimary: formData.get("default") === "on",
     };
 
-    if (!userId) {
-      alert("Please log in to update an address");
-      return;
-    }
-    updateAddressMutation.mutate({
-      addressId: editingAddress.id,
-      payload: updatedAddress,
-    });
+    if (!userId) return alert("Please log in to update an address");
+    updateAddressMutation.mutate({ addressId: editingAddress.id, payload: updatedAddress });
   };
 
   const handleDeleteAddress = (addressId: string) => {
@@ -280,16 +256,12 @@ const CartPage = () => {
   };
 
   const confirmDeleteAddress = () => {
-    if (!userId) {
-      alert("Please log in to delete an address");
-      return;
-    }
+    if (!userId) return alert("Please log in to delete an address");
     deleteAddressMutation.mutate(deletingAddressId);
     setShowDeleteConfirm(false);
     setDeletingAddressId("");
   };
 
-  // Get first product ID for recommendations
   const getRecommendationProductId = (): string => {
     if (isLoggedIn && cart?.items?.[0]?.type === "product") {
       return cart.items[0].product._id;
@@ -297,16 +269,31 @@ const CartPage = () => {
     if (!isLoggedIn && guestCart.items.length > 0 && guestCart.items[0].type === "product") {
       return guestCart.items[0].product._id;
     }
-    return "68e16239e9dceb0798c28534"; // Default product ID
+    return "68e16239e9dceb0798c28534";
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
+      <AnimatePresence>
+        {isGoogleAdding && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-white/70 backdrop-blur-sm flex items-center justify-center"
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-10 h-10 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-4"></div>
+              <p className="text-gray-700 font-medium">Adding item to your cart...</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <TopFloater />
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Cart Items Section */}
           <div className="lg:w-2/3">
             <AnimatePresence>
               {isLoggedIn && cartLoading ? (
@@ -325,7 +312,6 @@ const CartPage = () => {
             <div className="bg-white rounded-xl p-6 shadow-sm sticky top-4">
               <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
 
-              {/* Show address section only for logged-in users */}
               {isLoggedIn && (
                 <div className="mb-6">
                   <div className="flex justify-between items-center mb-4">
@@ -342,21 +328,10 @@ const CartPage = () => {
                     onClick={() => setShowAddressSelect(true)}
                   >
                     {(() => {
-                      console.log("🏠 ADDRESS DISPLAY LOGIC:");
-                      console.log("addressLoading:", addressLoading);
-                      console.log("addresses array:", addresses);
-                      console.log("selectedAddress:", selectedAddress);
-                      const foundAddress = addresses.find(
-                        (addr) => addr.id === selectedAddress
-                      );
-                      console.log("Found selected address:", foundAddress);
+                      const foundAddress = addresses.find((addr) => addr.id === selectedAddress);
 
                       if (addressLoading) {
-                        return (
-                          <p className="text-gray-500 text-center">
-                            Loading addresses...
-                          </p>
-                        );
+                        return <p className="text-gray-500 text-center">Loading addresses...</p>;
                       } else if (foundAddress) {
                         return (
                           <div>
@@ -370,18 +345,13 @@ const CartPage = () => {
                           </div>
                         );
                       } else {
-                        return (
-                          <p className="text-gray-500 text-center">
-                            Select a delivery address
-                          </p>
-                        );
+                        return <p className="text-gray-500 text-center">Select a delivery address</p>;
                       }
                     })()}
                   </div>
                 </div>
               )}
 
-              {/* Guest checkout info */}
               {!isLoggedIn && hasItems && (
                 <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-sm text-blue-800">
@@ -410,7 +380,6 @@ const CartPage = () => {
                 />
               )}
 
-              {/* Login prompt for guest users */}
               {!isLoggedIn && (
                 <div className="mt-4 text-center">
                   <p className="text-sm text-gray-600 mb-2">Already have an account?</p>
@@ -434,9 +403,9 @@ const CartPage = () => {
       />
       <ProductSlider title="Best Sellers" image={thumbnails[0]} fetchBestSellers={true} />
 
-      {/* Address modals - only for logged-in users */}
       {isLoggedIn && (
         <>
+          {/* ADD ADDRESS MODAL */}
           {showAddAddress && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -460,113 +429,87 @@ const CartPage = () => {
                 </div>
                 <form onSubmit={addNewAddress} className="space-y-4">
                   <div>
-                    <label
-                      className="block text-sm font-medium mb-2"
-                      htmlFor="fullName"
-                    >
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      id="fullName"
-                      name="fullName"
-                      className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
-                      required
+                    <label className="block text-sm font-medium mb-2" htmlFor="addFullName">Full Name</label>
+                    <input 
+                      type="text" 
+                      id="addFullName" 
+                      name="fullName" 
+                      className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
+                      required 
                     />
                   </div>
                   <div>
-                    <label
-                      className="block text-sm font-medium mb-2"
-                      htmlFor="address"
-                    >
-                      Street Address
-                    </label>
-                    <input
-                      type="text"
-                      id="address"
-                      name="address"
-                      className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
-                      required
+                    <label className="block text-sm font-medium mb-2" htmlFor="addAddress">Street Address</label>
+                    <input 
+                      type="text" 
+                      id="addAddress" 
+                      name="address" 
+                      className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
+                      required 
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label
-                        className="block text-sm font-medium mb-2"
-                        htmlFor="city"
-                      >
-                        City
-                      </label>
-                      <input
-                        type="text"
-                        id="city"
-                        name="city"
-                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
-                        required
+                      <label className="block text-sm font-medium mb-2" htmlFor="addCity">City</label>
+                      <input 
+                        type="text" 
+                        id="addCity" 
+                        name="city" 
+                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
+                        required 
                       />
                     </div>
                     <div>
-                      <label
-                        className="block text-sm font-medium mb-2"
-                        htmlFor="state"
-                      >
-                        State
-                      </label>
-                      <input
-                        type="text"
-                        id="state"
-                        name="state"
-                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
-                        required
+                      <label className="block text-sm font-medium mb-2" htmlFor="addState">State</label>
+                      <input 
+                        type="text" 
+                        id="addState" 
+                        name="state" 
+                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
+                        required 
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label
-                        className="block text-sm font-medium mb-2"
-                        htmlFor="zip"
-                      >
-                        PIN Code
-                      </label>
-                      <input
-                        type="text"
-                        id="zip"
-                        name="zip"
-                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
-                        required
+                      <label className="block text-sm font-medium mb-2" htmlFor="addZip">PIN Code</label>
+                      <input 
+                        type="text" 
+                        id="addZip" 
+                        name="zip" 
+                        pattern="[0-9]{6}"
+                        placeholder="6-digit PIN"
+                        maxLength="6"
+                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
+                        required 
                       />
                     </div>
                     <div>
-                      <label
-                        className="block text-sm font-medium mb-2"
-                        htmlFor="phone"
-                      >
-                        Mobile
-                      </label>
-                      <input
-                        type="tel"
-                        id="phone"
-                        name="phone"
-                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
-                        required
+                      <label className="block text-sm font-medium mb-2" htmlFor="addPhone">Mobile</label>
+                      <input 
+                        type="tel" 
+                        id="addPhone" 
+                        name="phone" 
+                        pattern="[0-9]{10}"
+                        placeholder="10-digit number"
+                        maxLength="10"
+                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
+                        required 
                       />
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-4">
-                    <input
-                      type="checkbox"
-                      id="default"
-                      name="default"
-                      className="rounded border-2 text-green-600 focus:ring-green-500"
+                    <input 
+                      type="checkbox" 
+                      id="addDefault" 
+                      name="default" 
+                      className="rounded border-2 text-green-600 focus:ring-green-500" 
                     />
-                    <label htmlFor="default" className="text-sm">
-                      Set as default address
-                    </label>
+                    <label htmlFor="addDefault" className="text-sm">Set as default address</label>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={createAddressMutation.isPending}
+                  <button 
+                    type="submit" 
+                    disabled={createAddressMutation.isPending} 
                     className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors mt-6 font-medium disabled:opacity-50"
                   >
                     {createAddressMutation.isPending ? "Adding..." : "Add Address"}
@@ -576,6 +519,7 @@ const CartPage = () => {
             </motion.div>
           )}
 
+          {/* SELECT ADDRESS MODAL */}
           {showAddressSelect && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -590,41 +534,26 @@ const CartPage = () => {
               >
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-semibold">Select Address</h2>
-                  <button
-                    onClick={() => setShowAddressSelect(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
-                  >
+                  <button onClick={() => setShowAddressSelect(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
                     <X className="w-6 h-6" />
                   </button>
                 </div>
                 <div className="space-y-3">
-                  <div
-                    onClick={() => {
-                      setShowAddAddress(true);
-                      setShowAddressSelect(false);
-                    }}
+                  <div 
+                    onClick={() => { setShowAddAddress(true); setShowAddressSelect(false); }} 
                     className="border-2 border-dashed border-gray-300 rounded-xl p-4 cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all flex items-center justify-center gap-2 text-green-600 font-medium"
                   >
-                    <Plus className="w-5 h-5" />
-                    Add New Address
+                    <Plus className="w-5 h-5" /> Add New Address
                   </div>
-
                   {addresses.map((address) => (
-                    <div
-                      key={address.id}
-                      className={`border-2 rounded-xl p-3 cursor-pointer transition-all ${
-                        selectedAddress === address.id
-                          ? "border-green-500 bg-green-50"
-                          : "hover:border-gray-300"
-                      }`}
+                    <div 
+                      key={address.id} 
+                      className={`border-2 rounded-xl p-3 cursor-pointer transition-all ${selectedAddress === address.id ? "border-green-500 bg-green-50" : "hover:border-gray-300"}`}
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <div
-                          className="flex-1"
-                          onClick={() => {
-                            setSelectedAddress(address.id);
-                            setShowAddressSelect(false);
-                          }}
+                        <div 
+                          className="flex-1" 
+                          onClick={() => { setSelectedAddress(address.id); setShowAddressSelect(false); }}
                         >
                           <div className="flex items-center gap-3 mb-1">
                             <p className="font-semibold text-gray-900">{address.name}</p>
@@ -634,29 +563,27 @@ const CartPage = () => {
                             {address.address}, {address.city}, {address.state} - {address.zip}
                           </p>
                           {address.isDefault && (
-                            <span className="inline-block mt-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
-                              Default
-                            </span>
+                            <span className="inline-block mt-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Default</span>
                           )}
                         </div>
                         <div className="flex gap-1 flex-shrink-0">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingAddress(address);
-                              setShowEditAddress(true);
-                              setShowAddressSelect(false);
-                            }}
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setEditingAddress(address); 
+                              setShowEditAddress(true); 
+                              setShowAddressSelect(false); 
+                            }} 
                             className="text-gray-400 hover:text-gray-600 p-1"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteAddress(address.id);
-                            }}
-                            className="text-red-400 hover:text-red-600 p-1"
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              handleDeleteAddress(address.id); 
+                            }} 
+                            className="text-red-400 hover:text-red-600 p-1" 
                             disabled={deleteAddressMutation.isPending}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -670,6 +597,7 @@ const CartPage = () => {
             </motion.div>
           )}
 
+          {/* EDIT ADDRESS MODAL */}
           {showEditAddress && editingAddress && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -684,11 +612,8 @@ const CartPage = () => {
               >
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-semibold">Edit Address</h2>
-                  <button
-                    onClick={() => {
-                      setShowEditAddress(false);
-                      setEditingAddress(null);
-                    }}
+                  <button 
+                    onClick={() => { setShowEditAddress(false); setEditingAddress(null); }} 
                     className="text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     <X className="w-6 h-6" />
@@ -696,120 +621,94 @@ const CartPage = () => {
                 </div>
                 <form onSubmit={editAddress} className="space-y-4">
                   <div>
-                    <label
-                      className="block text-sm font-medium mb-2"
-                      htmlFor="fullName"
-                    >
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      id="fullName"
-                      name="fullName"
-                      defaultValue={editingAddress.name}
-                      className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
-                      required
+                    <label className="block text-sm font-medium mb-2" htmlFor="editFullName">Full Name</label>
+                    <input 
+                      type="text" 
+                      id="editFullName" 
+                      name="fullName" 
+                      defaultValue={editingAddress.name} 
+                      className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
+                      required 
                     />
                   </div>
                   <div>
-                    <label
-                      className="block text-sm font-medium mb-2"
-                      htmlFor="address"
-                    >
-                      Street Address
-                    </label>
-                    <input
-                      type="text"
-                      id="address"
-                      name="address"
-                      defaultValue={editingAddress.address}
-                      className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
-                      required
+                    <label className="block text-sm font-medium mb-2" htmlFor="editAddress">Street Address</label>
+                    <input 
+                      type="text" 
+                      id="editAddress" 
+                      name="address" 
+                      defaultValue={editingAddress.address} 
+                      className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
+                      required 
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label
-                        className="block text-sm font-medium mb-2"
-                        htmlFor="city"
-                      >
-                        City
-                      </label>
-                      <input
-                        type="text"
-                        id="city"
-                        name="city"
-                        defaultValue={editingAddress.city}
-                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
-                        required
+                      <label className="block text-sm font-medium mb-2" htmlFor="editCity">City</label>
+                      <input 
+                        type="text" 
+                        id="editCity" 
+                        name="city" 
+                        defaultValue={editingAddress.city} 
+                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
+                        required 
                       />
                     </div>
                     <div>
-                      <label
-                        className="block text-sm font-medium mb-2"
-                        htmlFor="state"
-                      >
-                        State
-                      </label>
-                      <input
-                        type="text"
-                        id="state"
-                        name="state"
-                        defaultValue={editingAddress.state}
-                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
-                        required
+                      <label className="block text-sm font-medium mb-2" htmlFor="editState">State</label>
+                      <input 
+                        type="text" 
+                        id="editState" 
+                        name="state" 
+                        defaultValue={editingAddress.state} 
+                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
+                        required 
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label
-                        className="block text-sm font-medium mb-2"
-                        htmlFor="zip"
-                      >
-                        PIN Code
-                      </label>
-                      <input
-                        type="text"
-                        id="zip"
-                        name="zip"
-                        defaultValue={editingAddress.zip}
-                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
-                        required
+                      <label className="block text-sm font-medium mb-2" htmlFor="editZip">PIN Code</label>
+                      <input 
+                        type="text" 
+                        id="editZip" 
+                        name="zip" 
+                        defaultValue={editingAddress.zip} 
+                        pattern="[0-9]{6}"
+                        placeholder="6-digit PIN"
+                        maxLength="6"
+                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
+                        required 
                       />
                     </div>
                     <div>
-                      <label
-                        className="block text-sm font-medium mb-2"
-                        htmlFor="phone"
-                      >
-                        Mobile
-                      </label>
-                      <input
-                        type="tel"
-                        id="phone"
-                        name="phone"
-                        defaultValue={editingAddress.phone}
-                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none"
-                        required
+                      <label className="block text-sm font-medium mb-2" htmlFor="editPhone">Mobile</label>
+                      <input 
+                        type="tel" 
+                        id="editPhone" 
+                        name="phone" 
+                        defaultValue={editingAddress.phone} 
+                        pattern="[0-9]{10}"
+                        placeholder="10-digit number"
+                        maxLength="10"
+                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
+                        required 
                       />
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-4">
-                    <input
-                      type="checkbox"
-                      id="default"
-                      name="default"
-                      defaultChecked={editingAddress.isDefault}
-                      className="rounded border-2 text-green-600 focus:ring-green-500"
+                    <input 
+                      type="checkbox" 
+                      id="editDefault" 
+                      name="default" 
+                      defaultChecked={editingAddress.isDefault} 
+                      className="rounded border-2 text-green-600 focus:ring-green-500" 
                     />
-                    <label htmlFor="default" className="text-sm">
-                      Set as default address
-                    </label>
+                    <label htmlFor="editDefault" className="text-sm">Set as default address</label>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={updateAddressMutation.isPending}
+                  <button 
+                    type="submit" 
+                    disabled={updateAddressMutation.isPending} 
                     className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors mt-6 font-medium disabled:opacity-50"
                   >
                     {updateAddressMutation.isPending ? "Saving..." : "Save Changes"}
@@ -819,6 +718,7 @@ const CartPage = () => {
             </motion.div>
           )}
 
+          {/* DELETE CONFIRMATION MODAL */}
           {showDeleteConfirm && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -837,23 +737,18 @@ const CartPage = () => {
                   </div>
                   <h2 className="text-xl font-semibold">Delete Address?</h2>
                 </div>
-                <p className="text-gray-600 mb-6">
-                  Are you sure you want to delete this address? This action cannot be undone.
-                </p>
+                <p className="text-gray-600 mb-6">Are you sure you want to delete this address? This action cannot be undone.</p>
                 <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      setShowDeleteConfirm(false);
-                      setDeletingAddressId("");
-                    }}
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  <button 
+                    onClick={() => { setShowDeleteConfirm(false); setDeletingAddressId(""); }} 
+                    className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium" 
                     disabled={deleteAddressMutation.isPending}
                   >
                     Cancel
                   </button>
-                  <button
-                    onClick={confirmDeleteAddress}
-                    disabled={deleteAddressMutation.isPending}
+                  <button 
+                    onClick={confirmDeleteAddress} 
+                    disabled={deleteAddressMutation.isPending} 
                     className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
                   >
                     {deleteAddressMutation.isPending ? "Deleting..." : "Delete"}
