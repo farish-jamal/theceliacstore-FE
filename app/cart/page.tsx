@@ -4,7 +4,8 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
 import { getProduct } from "@/app/apis/getProducts"; 
-import { addToGuestCart } from "@/app/slices/guestCartSlice";
+// ✅ Synchronized with your guestCartSlice.ts
+import { addItemToGuestCart } from "@/app/slices/guestCartSlice"; 
 
 import TopFloater from "@/app/components/floater/TopFloater";
 import Navbar from "@/app/components/navbar/Navbar";
@@ -118,9 +119,13 @@ const CartPage = () => {
               throw new Error("Invalid product data received from database.");
             }
 
-            dispatch(addToGuestCart({ 
-                product, 
+            // ✅ Payload matches the GuestCartItem type requirements
+            dispatch(addItemToGuestCart({ 
+                id: product._id,
+                product: product, 
+                price: product.price,
                 quantity: 1, 
+                total: product.price,
                 type: "product" 
             }));
           }
@@ -405,7 +410,6 @@ const CartPage = () => {
 
       {isLoggedIn && (
         <>
-          {/* ADD ADDRESS MODAL */}
           {showAddAddress && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -430,44 +434,20 @@ const CartPage = () => {
                 <form onSubmit={addNewAddress} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2" htmlFor="addFullName">Full Name</label>
-                    <input 
-                      type="text" 
-                      id="addFullName" 
-                      name="fullName" 
-                      className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
-                      required 
-                    />
+                    <input type="text" id="addFullName" name="fullName" className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" required />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2" htmlFor="addAddress">Street Address</label>
-                    <input 
-                      type="text" 
-                      id="addAddress" 
-                      name="address" 
-                      className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
-                      required 
-                    />
+                    <input type="text" id="addAddress" name="address" className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" required />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-2" htmlFor="addCity">City</label>
-                      <input 
-                        type="text" 
-                        id="addCity" 
-                        name="city" 
-                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
-                        required 
-                      />
+                      <input type="text" id="addCity" name="city" className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" required />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2" htmlFor="addState">State</label>
-                      <input 
-                        type="text" 
-                        id="addState" 
-                        name="state" 
-                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
-                        required 
-                      />
+                      <input type="text" id="addState" name="state" className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" required />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -479,7 +459,7 @@ const CartPage = () => {
                         name="zip" 
                         pattern="[0-9]{6}"
                         placeholder="6-digit PIN"
-                        maxLength="6"
+                        maxLength={6}
                         className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
                         required 
                       />
@@ -492,26 +472,17 @@ const CartPage = () => {
                         name="phone" 
                         pattern="[0-9]{10}"
                         placeholder="10-digit number"
-                        maxLength="10"
+                        maxLength={10}
                         className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
                         required 
                       />
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-4">
-                    <input 
-                      type="checkbox" 
-                      id="addDefault" 
-                      name="default" 
-                      className="rounded border-2 text-green-600 focus:ring-green-500" 
-                    />
+                    <input type="checkbox" id="addDefault" name="default" className="rounded border-2 text-green-600 focus:ring-green-500" />
                     <label htmlFor="addDefault" className="text-sm">Set as default address</label>
                   </div>
-                  <button 
-                    type="submit" 
-                    disabled={createAddressMutation.isPending} 
-                    className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors mt-6 font-medium disabled:opacity-50"
-                  >
+                  <button type="submit" disabled={createAddressMutation.isPending} className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors mt-6 font-medium disabled:opacity-50">
                     {createAddressMutation.isPending ? "Adding..." : "Add Address"}
                   </button>
                 </form>
@@ -519,7 +490,6 @@ const CartPage = () => {
             </motion.div>
           )}
 
-          {/* SELECT ADDRESS MODAL */}
           {showAddressSelect && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -539,22 +509,13 @@ const CartPage = () => {
                   </button>
                 </div>
                 <div className="space-y-3">
-                  <div 
-                    onClick={() => { setShowAddAddress(true); setShowAddressSelect(false); }} 
-                    className="border-2 border-dashed border-gray-300 rounded-xl p-4 cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all flex items-center justify-center gap-2 text-green-600 font-medium"
-                  >
+                  <div onClick={() => { setShowAddAddress(true); setShowAddressSelect(false); }} className="border-2 border-dashed border-gray-300 rounded-xl p-4 cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all flex items-center justify-center gap-2 text-green-600 font-medium">
                     <Plus className="w-5 h-5" /> Add New Address
                   </div>
                   {addresses.map((address) => (
-                    <div 
-                      key={address.id} 
-                      className={`border-2 rounded-xl p-3 cursor-pointer transition-all ${selectedAddress === address.id ? "border-green-500 bg-green-50" : "hover:border-gray-300"}`}
-                    >
+                    <div key={address.id} className={`border-2 rounded-xl p-3 cursor-pointer transition-all ${selectedAddress === address.id ? "border-green-500 bg-green-50" : "hover:border-gray-300"}`}>
                       <div className="flex items-start justify-between gap-3">
-                        <div 
-                          className="flex-1" 
-                          onClick={() => { setSelectedAddress(address.id); setShowAddressSelect(false); }}
-                        >
+                        <div className="flex-1" onClick={() => { setSelectedAddress(address.id); setShowAddressSelect(false); }}>
                           <div className="flex items-center gap-3 mb-1">
                             <p className="font-semibold text-gray-900">{address.name}</p>
                             <p className="text-sm text-gray-600">{address.phone}</p>
@@ -567,25 +528,10 @@ const CartPage = () => {
                           )}
                         </div>
                         <div className="flex gap-1 flex-shrink-0">
-                          <button 
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              setEditingAddress(address); 
-                              setShowEditAddress(true); 
-                              setShowAddressSelect(false); 
-                            }} 
-                            className="text-gray-400 hover:text-gray-600 p-1"
-                          >
+                          <button onClick={(e) => { e.stopPropagation(); setEditingAddress(address); setShowEditAddress(true); setShowAddressSelect(false); }} className="text-gray-400 hover:text-gray-600 p-1">
                             <Edit className="w-4 h-4" />
                           </button>
-                          <button 
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              handleDeleteAddress(address.id); 
-                            }} 
-                            className="text-red-400 hover:text-red-600 p-1" 
-                            disabled={deleteAddressMutation.isPending}
-                          >
+                          <button onClick={(e) => { e.stopPropagation(); handleDeleteAddress(address.id); }} className="text-red-400 hover:text-red-600 p-1" disabled={deleteAddressMutation.isPending}>
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -597,7 +543,6 @@ const CartPage = () => {
             </motion.div>
           )}
 
-          {/* EDIT ADDRESS MODAL */}
           {showEditAddress && editingAddress && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -612,58 +557,27 @@ const CartPage = () => {
               >
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-semibold">Edit Address</h2>
-                  <button 
-                    onClick={() => { setShowEditAddress(false); setEditingAddress(null); }} 
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
-                  >
+                  <button onClick={() => { setShowEditAddress(false); setEditingAddress(null); }} className="text-gray-400 hover:text-gray-600 transition-colors">
                     <X className="w-6 h-6" />
                   </button>
                 </div>
                 <form onSubmit={editAddress} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2" htmlFor="editFullName">Full Name</label>
-                    <input 
-                      type="text" 
-                      id="editFullName" 
-                      name="fullName" 
-                      defaultValue={editingAddress.name} 
-                      className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
-                      required 
-                    />
+                    <input type="text" id="editFullName" name="fullName" defaultValue={editingAddress.name} className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" required />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2" htmlFor="editAddress">Street Address</label>
-                    <input 
-                      type="text" 
-                      id="editAddress" 
-                      name="address" 
-                      defaultValue={editingAddress.address} 
-                      className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
-                      required 
-                    />
+                    <input type="text" id="editAddress" name="address" defaultValue={editingAddress.address} className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" required />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-2" htmlFor="editCity">City</label>
-                      <input 
-                        type="text" 
-                        id="editCity" 
-                        name="city" 
-                        defaultValue={editingAddress.city} 
-                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
-                        required 
-                      />
+                      <input type="text" id="editCity" name="city" defaultValue={editingAddress.city} className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" required />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2" htmlFor="editState">State</label>
-                      <input 
-                        type="text" 
-                        id="editState" 
-                        name="state" 
-                        defaultValue={editingAddress.state} 
-                        className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
-                        required 
-                      />
+                      <input type="text" id="editState" name="state" defaultValue={editingAddress.state} className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" required />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -676,7 +590,7 @@ const CartPage = () => {
                         defaultValue={editingAddress.zip} 
                         pattern="[0-9]{6}"
                         placeholder="6-digit PIN"
-                        maxLength="6"
+                        maxLength={6}
                         className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
                         required 
                       />
@@ -690,27 +604,17 @@ const CartPage = () => {
                         defaultValue={editingAddress.phone} 
                         pattern="[0-9]{10}"
                         placeholder="10-digit number"
-                        maxLength="10"
+                        maxLength={10}
                         className="w-full border-2 rounded-lg px-4 py-2 focus:border-green-500 focus:outline-none" 
                         required 
                       />
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-4">
-                    <input 
-                      type="checkbox" 
-                      id="editDefault" 
-                      name="default" 
-                      defaultChecked={editingAddress.isDefault} 
-                      className="rounded border-2 text-green-600 focus:ring-green-500" 
-                    />
+                    <input type="checkbox" id="editDefault" name="default" defaultChecked={editingAddress.isDefault} className="rounded border-2 text-green-600 focus:ring-green-500" />
                     <label htmlFor="editDefault" className="text-sm">Set as default address</label>
                   </div>
-                  <button 
-                    type="submit" 
-                    disabled={updateAddressMutation.isPending} 
-                    className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors mt-6 font-medium disabled:opacity-50"
-                  >
+                  <button type="submit" disabled={updateAddressMutation.isPending} className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors mt-6 font-medium disabled:opacity-50">
                     {updateAddressMutation.isPending ? "Saving..." : "Save Changes"}
                   </button>
                 </form>
@@ -718,7 +622,6 @@ const CartPage = () => {
             </motion.div>
           )}
 
-          {/* DELETE CONFIRMATION MODAL */}
           {showDeleteConfirm && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -739,18 +642,10 @@ const CartPage = () => {
                 </div>
                 <p className="text-gray-600 mb-6">Are you sure you want to delete this address? This action cannot be undone.</p>
                 <div className="flex gap-3">
-                  <button 
-                    onClick={() => { setShowDeleteConfirm(false); setDeletingAddressId(""); }} 
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium" 
-                    disabled={deleteAddressMutation.isPending}
-                  >
+                  <button onClick={() => { setShowDeleteConfirm(false); setDeletingAddressId(""); }} className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium" disabled={deleteAddressMutation.isPending}>
                     Cancel
                   </button>
-                  <button 
-                    onClick={confirmDeleteAddress} 
-                    disabled={deleteAddressMutation.isPending} 
-                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
-                  >
+                  <button onClick={confirmDeleteAddress} disabled={deleteAddressMutation.isPending} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50">
                     {deleteAddressMutation.isPending ? "Deleting..." : "Delete"}
                   </button>
                 </div>
