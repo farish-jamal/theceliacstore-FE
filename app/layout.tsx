@@ -14,13 +14,16 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
 // Metadata for the application
 // This metadata is used for SEO and social sharing
-
 export const metadata: Metadata = {
   title: "The Celiac Store | Gluten-Free, Lactose-Free, Organic Food India",
   description:
     "The Celiac Store is India's one-stop shop for gluten-free, lactose-free, and organic food. Founded by a fellow celiac, we offer top Indian & International brands for healthy, delicious living. Shop online or visit our Delhi NCR store.",
+  verification: {
+    google: "PPQZKyGutSkswX5meYXCXHa7d1owezZSJWaRnUPOUIk", // Correctly formatted for Next.js
+  },
   keywords: [
     "celiac store",
     "gluten free india",
@@ -106,8 +109,7 @@ export default function RootLayout({
           ></iframe>
         </noscript>
         {/* End Google Tag Manager (noscript) */}
-/>
-{/* End Google Tag Manager (noscript) */}
+        
         <ClientProvider>
           <ReactQueryProvider>
             <GlobalSnackbar />
