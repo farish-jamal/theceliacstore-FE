@@ -4,6 +4,7 @@ import "./globals.css";
 import ClientProvider from "./components/ClientProvider";
 import ReactQueryProvider from "./components/ReactQueryProvider";
 import GlobalSnackbar from "./components/GlobalSnackbar";
+import FloatingCart from "./components/floater/FloatingCart";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,14 +16,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Metadata for the application
-// This metadata is used for SEO and social sharing
 export const metadata: Metadata = {
   title: "The Celiac Store | Gluten-Free, Lactose-Free, Organic Food India",
   description:
     "The Celiac Store is India's one-stop shop for gluten-free, lactose-free, and organic food. Founded by a fellow celiac, we offer top Indian & International brands for healthy, delicious living. Shop online or visit our Delhi NCR store.",
   verification: {
-    google: "PPQZKyGutSkswX5meYXCXHa7d1owezZSJWaRnUPOUIk", // Correctly formatted for Next.js
+    google: "PPQZKyGutSkswX5meYXCXHa7d1owezZSJWaRnUPOUIk",
   },
   keywords: [
     "celiac store",
@@ -60,15 +59,9 @@ export const metadata: Metadata = {
       { url: "/brand-favicon.png", type: "image/png", sizes: "16x16" },
       { url: "/brand-favicon.png", type: "image/png", sizes: "512x512" },
     ],
-    shortcut: [
-      { url: "/brand-favicon.png", type: "image/png" },
-    ],
-    apple: [
-      { url: "/brand-favicon.png", type: "image/png", sizes: "180x180" },
-    ],
-    other: [
-      { url: "/brand-favicon.png", type: "image/png", sizes: "192x192" },
-    ],
+    shortcut: [{ url: "/brand-favicon.png", type: "image/png" }],
+    apple: [{ url: "/brand-favicon.png", type: "image/png", sizes: "180x180" }],
+    other: [{ url: "/brand-favicon.png", type: "image/png", sizes: "192x192" }],
   },
 };
 
@@ -96,9 +89,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/brand-favicon.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/brand-favicon.png" />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased `}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe
@@ -109,11 +100,12 @@ export default function RootLayout({
           ></iframe>
         </noscript>
         {/* End Google Tag Manager (noscript) */}
-        
+
         <ClientProvider>
           <ReactQueryProvider>
             <GlobalSnackbar />
             {children}
+            <FloatingCart />
           </ReactQueryProvider>
         </ClientProvider>
       </body>
