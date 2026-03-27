@@ -50,16 +50,18 @@ export async function GET() {
             return '';
           }
           
-          // Product data
+          // 3. Smart Title & Tag Logic
           const description = product.small_description || product.full_description || product.name;
           const productUrl = `${DOMAIN}/products/${product._id}?utm_source=google&utm_medium=shopping&utm_campaign=merchant_feed`;
           
-          const optimizedTitle = product.name.toLowerCase().includes('gluten') 
-            ? product.name 
-            : `Gluten-Free ${product.name}`;
+          // Logic: Only prepend if it's explicitly tagged 'gluten_free' and doesn't already have 'gluten' in the name
+          const isTaggedGF = Array.isArray(product.tags) && product.tags.includes('gluten_free');
+          const titleAlreadyHasGF = product.name.toLowerCase().includes('gluten');
+          
+          const optimizedTitle = (isTaggedGF && !titleAlreadyHasGF) 
+            ? `Gluten-Free ${product.name}` 
+            : product.name;
             
-          // 3. Tags check
-          const isGF = Array.isArray(product.tags) && product.tags.includes('gluten_free');
           const formattedTags = Array.isArray(product.tags) && product.tags.length > 0 
             ? product.tags.join(', ') 
             : '';
@@ -69,7 +71,7 @@ export async function GET() {
             ? product.inventory > 0 
             : product.instock !== false;
           
-          // 5. Cast product as any for custom boolean checks to avoid TS build errors
+          // 5. Custom boolean checks
           const prod = product as any;
 
           return `
@@ -90,7 +92,7 @@ export async function GET() {
             ${product.weight_in_grams ? `<g:unit_pricing_measure>${product.weight_in_grams} g</g:unit_pricing_measure>` : ''}
             
             <g:custom_label_0><![CDATA[${prod.is_bakery ? 'Bakery' : 'Pantry'}]]></g:custom_label_0>
-            <g:custom_label_1><![CDATA[${isGF ? 'Certified-GF' : 'Default'}]]></g:custom_label_1>
+            <g:custom_label_1><![CDATA[${isTaggedGF ? 'Certified-GF' : 'Default'}]]></g:custom_label_1>
             ${formattedTags ? `<g:custom_label_2><![CDATA[${formattedTags}]]></g:custom_label_2>` : ''}
             
             <g:mpn>${product.sku || product._id}</g:mpn>
