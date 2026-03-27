@@ -1,3 +1,29 @@
+import { NextResponse } from 'next/server';
+import { getProducts } from '../../apis/getProducts';
+import { Product, MongoDBDecimal } from '../../types/Product';
+
+const DOMAIN = 'https://www.theceliacstore.com';
+
+// Helper: Ensures URLs are absolute
+const ensureAbsoluteUrl = (url: string | undefined): string => {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  return `${DOMAIN}${url.startsWith('/') ? url : '/' + url}`;
+};
+
+// Helper: Correctly formats price with currency
+const formatPrice = (priceValue: number | MongoDBDecimal | null | undefined): string => {
+  let value = '0.00';
+  if (priceValue !== null && priceValue !== undefined) {
+    if (typeof priceValue === 'number') {
+      value = priceValue.toFixed(2);
+    } else if (priceValue.$numberDecimal) {
+      value = parseFloat(priceValue.$numberDecimal).toFixed(2);
+    }
+  }
+  return `${value} INR`;
+};
+
 export async function GET() {
   try {
     const response = await getProducts({
@@ -43,6 +69,9 @@ export async function GET() {
             ? product.inventory > 0 
             : product.instock !== false;
           
+          // 5. Cast product as any for custom boolean checks to avoid TS build errors
+          const prod = product as any;
+
           return `
           <item>
             <g:id>${product._id}</g:id>
@@ -60,7 +89,7 @@ export async function GET() {
             <g:product_type><![CDATA[Food & Beverages]]></g:product_type>
             ${product.weight_in_grams ? `<g:unit_pricing_measure>${product.weight_in_grams} g</g:unit_pricing_measure>` : ''}
             
-            <g:custom_label_0><![CDATA[${product.is_bakery ? 'Bakery' : 'Pantry'}]]></g:custom_label_0>
+            <g:custom_label_0><![CDATA[${prod.is_bakery ? 'Bakery' : 'Pantry'}]]></g:custom_label_0>
             <g:custom_label_1><![CDATA[${isGF ? 'Certified-GF' : 'Default'}]]></g:custom_label_1>
             ${formattedTags ? `<g:custom_label_2><![CDATA[${formattedTags}]]></g:custom_label_2>` : ''}
             
