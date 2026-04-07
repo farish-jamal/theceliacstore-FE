@@ -5,6 +5,7 @@ import ClientProvider from "./components/ClientProvider";
 import ReactQueryProvider from "./components/ReactQueryProvider";
 import GlobalSnackbar from "./components/GlobalSnackbar";
 import FloatingCart from "./components/floater/FloatingCart";
+import DeliveryNotice from "./components/DeliveryNotice";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -103,6 +104,7 @@ export default function RootLayout({
 
         <ClientProvider>
           <ReactQueryProvider>
+            <DeliveryNotice />
             <GlobalSnackbar />
             {children}
             <FloatingCart />
