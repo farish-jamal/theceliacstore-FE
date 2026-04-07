@@ -27,7 +27,7 @@ export default function DeliveryNotice() {
   if (!isVisible) return null;
 
   return (
-    <div className="w-full bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-300 px-4 py-4">
+    <div className="w-full bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-300 px-4 py-4 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1">
           <span className="text-xl">📦</span>
