@@ -38,7 +38,9 @@ const TopFloater = () => {
   return (
     <div className="flex flex-col md:flex-row items-center justify-between bg-[#58B45B] px-4 md:px-24 py-2 gap-2 md:gap-0">
       <div className="flex items-center gap-1 w-full md:w-auto justify-center md:justify-start">
-        {/* <ChevronRight className="inline h-4 w-4 text-white" strokeWidth={3} /> */}
+        <Typography className="text-white text-xs md:text-sm text-center md:text-left">
+          🚚 <span className="font-bold">Delivery charges extra.</span> We&apos;ll call &amp; confirm before dispatch.
+        </Typography>
       </div>
 
       {/* On mobile: language and phone in same row. On desktop: row with gap */}
