@@ -15,7 +15,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ subtotal, shippingCharge, f
     </div>
     <div className="flex justify-between text-gray-600">
       <span>Shipping Charge</span>
-      <span>{shippingCharge > 0 ? "₹" + formatCurrency(shippingCharge) : "To be confirmed later"}</span>
+      <span>{shippingCharge > 0 ? "₹" + formatCurrency(shippingCharge) : "DELIVERY CHARGES APPLICABLE, we will call to confirm charges."}</span>
     </div>
     <div className="flex justify-between font-semibold text-lg pt-2 border-t mt-2">
       <span>Final Price</span>
