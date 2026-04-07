@@ -5,6 +5,7 @@ import ClientProvider from "./components/ClientProvider";
 import ReactQueryProvider from "./components/ReactQueryProvider";
 import GlobalSnackbar from "./components/GlobalSnackbar";
 import FloatingCart from "./components/floater/FloatingCart";
+import Header from "./components/layout/Header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -102,12 +103,16 @@ export default function RootLayout({
         {/* End Google Tag Manager (noscript) */}
 
         <ClientProvider>
-          <ReactQueryProvider>
-            <GlobalSnackbar />
-            {children}
-            <FloatingCart />
-          </ReactQueryProvider>
-        </ClientProvider>
+  <ReactQueryProvider>
+    <div className="fixed top-0 left-0 right-0 z-50">
+      <Header />
+    </div>
+    <div className="h-[36px]" />
+    <GlobalSnackbar />
+    {children}
+    <FloatingCart />
+  </ReactQueryProvider>
+</ClientProvider>
       </body>
     </html>
   );

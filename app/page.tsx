@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Header from "./components/layout/Header";
 import Navbar from "./components/navbar/Navbar";
 import MainSlider from "./components/home/MainSlider";
 import DietaryCategories from "./components/home/DietaryCategories";
@@ -34,11 +33,7 @@ const HomePage = () => {
 
   return (
     <div className="flex-col min-h-screen">
-  <div className="fixed top-0 left-0 right-0 z-50">
-    <Header />
-    <Navbar />
-  </div>
-  <div className="h-[120px] md:h-[140px]" />
+  <Navbar />
   <MainSlider />
       <DietaryCategories />
       <PopularCategories />
