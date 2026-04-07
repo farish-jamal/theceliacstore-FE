@@ -1,7 +1,7 @@
 "use client";
 import Navbar from "../components/navbar/Navbar";
 import ProductGrid from "../components/productgrid/ProductGrid";
-import TopFloater from "../components/floater/TopFloater";
+
 import Footer from "../components/layout/Footer";
 import StoreInfo from "../components/home/StoreInfo";
 import ActiveFilters from "../components/filters/ActiveFilters";
@@ -71,7 +71,7 @@ const ProductsPage = () => {
 
   return (
     <>
-      <TopFloater />
+      <div className="h-[36px]" />
       <Navbar />
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4">

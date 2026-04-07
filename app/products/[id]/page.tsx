@@ -312,7 +312,7 @@ export default function ProductDetailPage() {
   if (!product) {
     return (
       <div className="bg-gray-50">
-        <TopFloater />
+        <div className="h-[36px]" />
         <Navbar />
         <div className="max-w-7xl mx-auto py-8 px-4">
           <div className="text-center py-10">Product not found</div>
@@ -366,7 +366,7 @@ export default function ProductDetailPage() {
 
   return (
     <div className="bg-gray-50">
-      <TopFloater />
+      <div className="h-[36px]" />
       <Navbar />
       
       {/* Success Animation Overlay */}

@@ -1,7 +1,7 @@
 "use client";
 import Navbar from "../components/navbar/Navbar";
 import BundleGrid from "../components/bundlegrid/BundleGrid";
-import TopFloater from "../components/floater/TopFloater";
+
 import Footer from "../components/layout/Footer";
 import StoreInfo from "../components/home/StoreInfo";
 import BundleActiveFilters from "../components/filters/BundleActiveFilters";
@@ -71,7 +71,7 @@ const BundlesPage = () => {
 
   return (
     <>
-      <TopFloater />
+      <div className="h-[36px]" />
       <Navbar />
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 pt-3">

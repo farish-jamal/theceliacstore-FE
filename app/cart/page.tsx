@@ -295,7 +295,7 @@ const CartPage = () => {
         )}
       </AnimatePresence>
 
-      <TopFloater />
+      <div className="h-[36px]" />
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">

@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import TopFloater from "../components/floater/TopFloater";
+
 import Navbar from "../components/navbar/Navbar";
 import Footer from "../components/layout/Footer";
 
@@ -117,7 +117,7 @@ const BrandsPage = () => {
 
   return (
     <>
-      <TopFloater />
+      <div className="h-[36px]" />
       <Navbar />
       <div>
         <div className="bg-green-500 py-2 px-4">

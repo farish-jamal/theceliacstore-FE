@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import TopFloater from "../components/floater/TopFloater";
+
 import Navbar from "../components/navbar/Navbar";
 import Footer from "../components/layout/Footer";
 import BlogCard from "../components/cards/BlogCard";
@@ -48,7 +48,7 @@ const BlogsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <TopFloater />
+      <div className="h-[36px]" />
       <Navbar />
       <div className="max-w-6xl mx-auto px-4 py-12">
         {isLoading ? (

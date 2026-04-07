@@ -142,7 +142,7 @@ export default function BundleDetailPage() {
   if (loading) {
     return (
       <div className="bg-gray-50">
-        <TopFloater />
+        <div className="h-[36px]" />
         <Navbar />
         <div className="max-w-7xl mx-auto py-8 px-4">
           <div className="text-center py-10">Loading...</div>
@@ -155,7 +155,7 @@ export default function BundleDetailPage() {
   if (!bundle) {
     return (
       <div className="bg-gray-50">
-        <TopFloater />
+        <div className="h-[36px]" />
         <Navbar />
         <div className="max-w-7xl mx-auto py-8 px-4">
           <div className="text-center py-10">
@@ -247,7 +247,7 @@ export default function BundleDetailPage() {
         )}
       </AnimatePresence>
 
-      <TopFloater />
+      <div className="h-[36px]" />
       <Navbar />
       <div className="max-w-7xl mx-auto py-8 px-4 flex flex-col lg:flex-row gap-12">
         {/* Left: Image Gallery */}

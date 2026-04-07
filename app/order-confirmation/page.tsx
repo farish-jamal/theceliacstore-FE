@@ -212,7 +212,7 @@ const OrderConfirmationPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
-      <TopFloater />
+      <div className="h-[36px]" />
       <Navbar />
 
       <main className="max-w-4xl mx-auto px-4 py-8">

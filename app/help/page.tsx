@@ -1,5 +1,5 @@
 import React from "react";
-import TopFloater from "../components/floater/TopFloater";
+
 import Navbar from "../components/navbar/Navbar";
 import Footer from "../components/layout/Footer";
 import { Typography } from "../components/typography/Typography";
@@ -60,7 +60,7 @@ const HelpPage = () => {
 
   return (
     <div className="flex-col min-h-screen">
-      <TopFloater />
+      <div className="h-[36px]" />
       <Navbar />
 
       <main className="flex-1 py-8 px-4 md:px-16">

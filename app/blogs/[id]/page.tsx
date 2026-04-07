@@ -36,7 +36,7 @@ const SingleBlogPage = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <TopFloater />
+        <div className="h-[36px]" />
         <Navbar />
         <div className="flex justify-center items-center min-h-[400px]">
           <PrimaryLoader />
@@ -49,7 +49,7 @@ const SingleBlogPage = () => {
   if (isError || !blogData) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <TopFloater />
+        <div className="h-[36px]" />
         <Navbar />
         <div className="flex justify-center items-center min-h-[400px]">
           <EmptySection icon={<FileX />} text="Blog not found" />
@@ -61,7 +61,7 @@ const SingleBlogPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <TopFloater />
+      <div className="h-[36px]" />
       <Navbar />
 
       <motion.main
