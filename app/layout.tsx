@@ -104,7 +104,7 @@ export default function RootLayout({
 
         <ClientProvider>
   <ReactQueryProvider>
-    <div className="fixed top-0 left-0 right-0 z-50">
+ <div className="fixed top-0 left-0 right-0 z-50">
       <Header />
     </div>
     <div className="h-[36px]" />

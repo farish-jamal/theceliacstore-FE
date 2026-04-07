@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Navbar from "./components/navbar/Navbar";
+import Header from "./components/layout/Header";
 import MainSlider from "./components/home/MainSlider";
 import DietaryCategories from "./components/home/DietaryCategories";
 import PopularCategories from "./components/home/PopularCategories";
@@ -33,8 +34,11 @@ const HomePage = () => {
 
   return (
     <div className="flex-col min-h-screen">
-  <Navbar />
-  <MainSlider />
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Navbar />
+      </div>
+      <div className="h-[130px] md:h-[150px]" />
+      <MainSlider />
       <DietaryCategories />
       <PopularCategories />
       <ProductGrid params={params} />
