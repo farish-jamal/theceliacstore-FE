@@ -425,12 +425,14 @@ const OrderConfirmationPage = () => {
 
             {/* Action Buttons */}
             <div className="space-y-3">
+              {/* Track Order - disabled until order tracking is built
               <Button
                 onClick={() => router.push(`/orders/${orderDetails.orderId}`)}
                 className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl text-lg font-semibold"
               >
                 Track Order
               </Button>
+              */}
             </div>
           </motion.div>
         </div>
