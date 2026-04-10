@@ -219,6 +219,18 @@ const CartPage = () => {
   const shippingCharge = isLoggedIn ? (cart?.shipping_charge || 0) : guestCart.shipping_charge;
   const finalPrice = isLoggedIn ? (cart?.final_price || 0) : guestCart.final_price;
 
+  const guestCartWeightGrams = !isLoggedIn
+  ? guestCart.items.reduce((total, item) => {
+      if (item.type === "product") {
+        return total + ((item.product.weight_in_grams || 0) * item.quantity);
+      }
+      return total;
+    }, 0)
+  : 0;
+
+  const [shippingEstimate, setShippingEstimate] = useState<{ pincode: string; charge: number } | null>(null);
+
+
   const addNewAddress = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
@@ -367,10 +379,13 @@ const CartPage = () => {
               )}
 
               <OrderSummary
-                subtotal={subtotal}
-                shippingCharge={shippingCharge}
-                finalPrice={finalPrice}
-              />
+              subtotal={subtotal}
+              shippingCharge={shippingCharge}
+              finalPrice={finalPrice}
+              isGuest={!isLoggedIn}
+              guestCartWeightGrams={guestCartWeightGrams}
+              onShippingEstimate={(pincode, charge) => setShippingEstimate({ pincode, charge })}
+            />
               
               {isLoggedIn ? (
                 <CheckoutButton 
