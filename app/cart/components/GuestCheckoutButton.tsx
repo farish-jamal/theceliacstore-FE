@@ -51,11 +51,12 @@ const GuestCheckoutButton: React.FC<GuestCheckoutButtonProps> = ({
 
   // When modal opens, sync with latest initialPincode from cart page
   useEffect(() => {
-    if (showAddressForm) {
-      setModalPincode(initialPincode);
-      setEstimatedCharge(initialShippingCharge > 0 ? initialShippingCharge : null);
-    }
-  }, [showAddressForm, initialPincode, initialShippingCharge]);
+  if (showAddressForm) {
+    setModalPincode(initialPincode || "");
+    setEstimatedCharge(initialShippingCharge > 0 ? initialShippingCharge : null);
+    setPincodeError("");
+  }
+  }, [showAddressForm]);
 
   // Recalculate when pincode changes inside modal
   useEffect(() => {
@@ -110,7 +111,7 @@ const GuestCheckoutButton: React.FC<GuestCheckoutButtonProps> = ({
       }
       return <span>₹{low} – ₹{high}</span>;
     }
-    return <span className="text-gray-400">To be confirmed</span>;
+    return <span className="text-gray-400">We'll call & confirm</span>;
   };
 
   const placeOrderMutation = useMutation({
@@ -408,7 +409,11 @@ const GuestCheckoutButton: React.FC<GuestCheckoutButtonProps> = ({
                       </div>
                       <div className="flex justify-between font-semibold border-t pt-2">
                       <span>Estimated Total:</span>
-                      <span>₹{(cart.total_price + (estimatedCharge !== null ? roundToNearest50(estimatedCharge * 1.15) : 0)).toFixed(2)}</span>
+                      <span>
+                        {estimatedCharge !== null
+                          ? `₹${(cart.total_price + roundToNearest50(estimatedCharge * 1.15)).toFixed(2)}`
+                          : `₹${cart.total_price.toFixed(2)} + delivery charges`}
+                      </span>
                       </div>
                       <p className="text-xs text-gray-400">
                         * Delivery charge is an estimate. Final amount confirmed before dispatch.
