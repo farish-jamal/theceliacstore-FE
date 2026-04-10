@@ -397,6 +397,8 @@ const CartPage = () => {
                 <GuestCheckoutButton 
                   disabled={!hasItems}
                   cart={guestCart}
+                  initialPincode={shippingEstimate?.pincode || ""}
+                  initialShippingCharge={shippingEstimate?.charge || 0}
                 />
               )}
 
