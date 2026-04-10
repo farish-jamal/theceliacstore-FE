@@ -144,6 +144,8 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
         <span className="text-green-600">
         {isGuest && estimatedCharge === null
         ? `₹${formatCurrency(subtotal)} + delivery charges`
+        : isGuest && estimatedCharge !== null
+        ? `₹${formatCurrency(subtotal + roundToNearest50(estimatedCharge * 1.15))}`
         : `₹${formatCurrency(finalPrice)}`}
           </span>
         </div>

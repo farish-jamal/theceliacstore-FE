@@ -24,6 +24,8 @@ const OrderConfirmationPage = () => {
   const discountedAmount = searchParams.get("discountedAmount");
   const estimatedDelivery = searchParams.get("estimatedDelivery");
   const createdAt = searchParams.get("createdAt");
+  const shippingLow = searchParams.get("shippingLow");
+  const shippingHigh = searchParams.get("shippingHigh");
 
   // Parse complex data from JSON
   const itemsData = searchParams.get("items");
@@ -165,7 +167,7 @@ const OrderConfirmationPage = () => {
     totalAmount: `₹${finalTotal}`,
     estimatedDelivery: estimatedDelivery || "N/A",
     orderDate,
-    paymentMethod: "Cash on Delivery",
+    paymentMethod: "Prepaid — we'll call to coordinate",
     items: items.map(getItemDetails),
     shippingAddress: shippingAddress ? {
       name: shippingAddress.name,
@@ -387,7 +389,13 @@ const OrderConfirmationPage = () => {
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping</span>
-                  <span>Free</span>
+                  <span>
+                    {shippingLow && shippingHigh && (parseInt(shippingLow) > 0 || parseInt(shippingHigh) > 0)
+                      ? `₹${shippingLow} – ₹${shippingHigh}`
+                      : shippingLow === "0" && shippingHigh === "0"
+                      ? "Free"
+                      : "We'll call & confirm"}
+                  </span>
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-green-600">
