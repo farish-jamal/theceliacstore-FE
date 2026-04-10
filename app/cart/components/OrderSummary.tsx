@@ -49,7 +49,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
       try {
         const weight = guestCartWeightGrams > 0 ? guestCartWeightGrams : 500;
         const response = await fetch(
-        `${BACKEND_URL}/api/delivery-zone/calculate?pincode=${pincode}&weight_in_grams=${weight}`
+          `${BACKEND_URL}/api/delivery-zone/calculate?pincode=${pincode}&weight_in_grams=${weight}`
         );
         const data = await response.json();
 
@@ -79,7 +79,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
         <span>
           {shippingCharge > 0
             ? "₹" + formatCurrency(shippingCharge)
-            : "DELIVERY CHARGES APPLICABLE, we'll call & confirm."}
+            : "To be calculated"}
         </span>
       );
     }
@@ -101,19 +101,16 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
     }
 
     return (
-      <span className="text-gray-400 text-sm">Enter pincode to estimate</span>
+      <span className="text-gray-400 text-sm">To be calculated</span>
     );
   };
 
   return (
     <div className="border-t-2 pt-4 space-y-3">
-      <div className="flex justify-between text-gray-600">
-        <span>Subtotal</span>
-        <span>₹{formatCurrency(subtotal)}</span>
-      </div>
 
+      {/* Pincode estimator — shown first for guests */}
       {isGuest && (
-        <div className="space-y-1">
+        <div className="space-y-1 pb-2">
           <label className="text-sm text-gray-600">
             Enter pincode to estimate delivery
           </label>
@@ -133,12 +130,17 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
       )}
 
       <div className="flex justify-between text-gray-600">
-        <span>Delivery Charges</span>
+        <span className="font-semibold">Subtotal</span>
+        <span>₹{formatCurrency(subtotal)}</span>
+      </div>
+
+      <div className="flex justify-between text-gray-600">
+        <span className="font-semibold">Delivery Charges</span>
         {renderShippingDisplay()}
       </div>
 
       <div className="flex justify-between font-semibold text-lg pt-2 border-t mt-2">
-        <span>Final Price</span>
+        <span>Estimated Total</span>
         <span className="text-green-600">₹{formatCurrency(finalPrice)}</span>
       </div>
 
