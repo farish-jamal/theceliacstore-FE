@@ -141,8 +141,12 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
 
       <div className="flex justify-between font-semibold text-lg pt-2 border-t mt-2">
         <span>Estimated Total</span>
-        <span className="text-green-600">₹{formatCurrency(finalPrice)}</span>
-      </div>
+        <span className="text-green-600">
+        {isGuest && estimatedCharge === null
+        ? `₹${formatCurrency(subtotal)} + delivery charges`
+        : `₹${formatCurrency(finalPrice)}`}
+          </span>
+        </div>
 
       {isGuest && estimatedCharge !== null && (
         <p className="text-xs text-gray-400">
