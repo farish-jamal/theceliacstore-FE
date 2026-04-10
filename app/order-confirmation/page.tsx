@@ -240,16 +240,16 @@ const OrderConfirmationPage = () => {
             transition={{ delay: 0.5 }}
             className="text-4xl font-bold text-gray-900 mb-2"
           >
-            Order Confirmed!
+            Order Placed!
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.7 }}
-            className="text-xl text-gray-600 mb-4"
+            className="text-lg font-medium text-gray-800 mb-4 max-w-lg mx-auto bg-green-50 border border-green-200 rounded-xl px-6 py-4"
           >
-            Thank you for your purchase. Your order has been successfully placed.
+            Our team will call you to confirm product availability, delivery charges & coordinate payment. Thank you for your order.
           </motion.p>
 
           <motion.div
@@ -388,7 +388,7 @@ const OrderConfirmationPage = () => {
                   <span>₹{subtotal}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Shipping</span>
+                  <span>Estimated Shipping</span>
                   <span>
                     {shippingLow && shippingHigh && (parseInt(shippingLow) > 0 || parseInt(shippingHigh) > 0)
                       ? `₹${shippingLow} – ₹${shippingHigh}`
@@ -405,8 +405,12 @@ const OrderConfirmationPage = () => {
                 )}
                 <hr />
                 <div className="flex justify-between text-xl font-semibold">
-                  <span>Total</span>
-                  <span className="text-green-600">{orderDetails.totalAmount}</span>
+                  <span>Estimated Total</span>
+                  <span className="text-green-600">
+                    {shippingHigh && parseInt(shippingHigh) > 0
+                      ? `₹${subtotal + parseInt(shippingHigh)}`
+                      : orderDetails.totalAmount}
+                  </span>
                 </div>
               </div>
 
