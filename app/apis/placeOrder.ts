@@ -76,6 +76,7 @@ export interface PlaceOrderResponse {
     totalAmount: number;
     discountedTotalAmount: number;
     status: string;
+    orderNumber?: number;
     _id: string;
     createdAt: string;
     updatedAt: string;

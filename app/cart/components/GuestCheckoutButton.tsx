@@ -120,14 +120,13 @@ const GuestCheckoutButton: React.FC<GuestCheckoutButtonProps> = ({
       if (response?.success && response.data) {
         const {
           _id,
+          orderNumber,
           totalAmount,
           discountedTotalAmount,
           createdAt,
           items,
           address,
         } = response.data;
-
-        const orderNumber = `GFC${_id.slice(-8).toUpperCase()}`;
 
         const estimatedDeliveryDate = new Date();
         estimatedDeliveryDate.setDate(estimatedDeliveryDate.getDate() + 7);
@@ -152,7 +151,7 @@ const GuestCheckoutButton: React.FC<GuestCheckoutButtonProps> = ({
 
         const searchParams = new URLSearchParams({
           orderId: _id,
-          orderNumber,
+          orderNumber: orderNumber?.toString() || _id,
           totalAmount: totalAmount.toString(),
           discountedAmount: discountedTotalAmount.toString(),
           estimatedDelivery,
