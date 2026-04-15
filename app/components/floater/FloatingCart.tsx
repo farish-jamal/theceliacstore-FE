@@ -23,7 +23,7 @@ const FloatingCart = () => {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 40, scale: 0.8 }}
           whileTap={{ scale: 0.95 }}
-          className="fixed bottom-6 right-6 z-[90]"
+          className="fixed bottom-14 right-6 z-[90]"
         >
           <button
             onClick={() => router.push("/cart")}

@@ -3,33 +3,21 @@
 import React, { useState } from "react";
 import Navbar from "./components/navbar/Navbar";
 import Header from "./components/layout/Header";
-import MainSlider from "./components/home/MainSlider";
-import DietaryCategories from "./components/home/DietaryCategories";
-import PopularCategories from "./components/home/PopularCategories";
-import ProductGrid from "./components/home/ProductGrid";
+import HomeProductGrid from "./components/home/HomeProductGrid";
 import ReviewSection from "./components/home/ReviewSection";
 import TopBrands from "./components/home/TopBrands";
 import WhyChooseUs from "./components/home/WhyChooseUs";
 import StoreInfo from "./components/home/StoreInfo";
 import Footer from "./components/layout/Footer";
-import { ProductParams } from "./types/Product";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, WheatOff, MilkOff, Leaf } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const HomePage = () => {
-  const [params] = useState<ProductParams>({
-    page: 1,
-    per_page: 10,
-    category: [],
-  });
   const router = useRouter();
+  const [dietaryFilter, setDietaryFilter] = useState<string | null>(null);
 
   const handleViewAllBundles = () => {
     router.push('/bundles');
-  };
-
-  const handleShopAllProducts = () => {
-    router.push('/products');
   };
 
   return (
@@ -39,18 +27,59 @@ const HomePage = () => {
         <Navbar />
       </div>
       <div className="h-[130px] md:h-[150px]" />
-      <MainSlider />
-      <DietaryCategories />
-      <PopularCategories />
-      <ProductGrid params={params} />
 
-      <button
-            onClick={handleShopAllProducts}
-            className="bg-green-600 text-white px-6 py-2 md:px-10 md:py-2 rounded-full text-base md:text-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center gap-2 mx-auto mb-5"
-          >
-            Shop All Products
-            <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
-          </button>
+      {/* A) Delivery strip */}
+      <div style={{ background: '#1b4332' }} className="py-3 px-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-4 sm:gap-8">
+          <div className="flex-1 text-center">
+            <p className="text-sm font-medium text-[#d8f3dc]">Delivering across India</p>
+            <p className="text-xs text-[#95d5b2]">Pan-India shipping on all orders</p>
+          </div>
+          <div className="hidden sm:block w-px h-7 bg-[#2d6a4f]" />
+          <div className="flex-1 text-center">
+            <p className="text-sm font-medium text-[#d8f3dc]">Celiac Friendly — verified</p>
+            <p className="text-xs text-[#95d5b2]">Trusted, backed & certified</p>
+          </div>
+          <div className="hidden sm:block w-px h-7 bg-[#2d6a4f]" />
+          <div className="flex-1 text-center">
+            <p className="text-sm font-medium text-[#d8f3dc]">500+ products</p>
+            <p className="text-xs text-[#95d5b2]">Health-first picks</p>
+          </div>
+        </div>
+      </div>
+
+      {/* B) Dietary needs tiles */}
+      <section className="px-4 py-4 border-b border-gray-100">
+        <div className="max-w-7xl mx-auto">
+          <p className="text-sm font-medium mb-3">Shop by dietary needs</p>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { key: 'glutenFree', label: 'Gluten Free', count: '120+', icon: <WheatOff size={24} color="#2d6a4f" /> },
+              { key: 'lactoseFree', label: 'Lactose Free', count: '60+', icon: <MilkOff size={24} color="#2d6a4f" /> },
+              { key: 'organic', label: 'Organic', count: '45+', icon: <Leaf size={24} color="#2d6a4f" /> },
+            ].map(({ key, label, count, icon }) => (
+              <button
+                key={key}
+                onClick={() => setDietaryFilter(dietaryFilter === key ? null : key)}
+                className={`flex items-center gap-3 h-16 px-3 rounded-xl border text-left transition-colors ${
+                  dietaryFilter === key
+                    ? 'border-[#2d6a4f] bg-[#eaf6f0]'
+                    : 'border-gray-200 bg-gray-50'
+                }`}
+              >
+                {icon}
+                <div>
+                  <p className="text-sm font-medium">{label}</p>
+                  <p className="text-xs text-[#2d6a4f]">{count} products</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* C) Product grid with sidebar */}
+      <HomeProductGrid dietaryFilter={dietaryFilter} />
       
       {/* View All Bundles Section */}
       <div className="bg-green-50 py-6 md:py-12 px-4">
