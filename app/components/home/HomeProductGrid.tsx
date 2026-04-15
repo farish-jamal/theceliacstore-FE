@@ -83,6 +83,7 @@ function ProductCardItem({ product }: ProductCardItemProps) {
   const price = convertToNumber(product.discounted_price) || convertToNumber(product.price);
   const imageUrl = product.banner_image || (product.images && product.images[0]) || "/product-1.png";
   const celiacFriendly = product.celiacFriendly || product.tags?.includes("gluten_free");
+  const outOfStock = product.inventory === 0;
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -96,6 +97,11 @@ function ProductCardItem({ product }: ProductCardItemProps) {
           </span>
         )}
         <img src={imageUrl} alt={product.name} className="w-full h-full object-cover" />
+        {outOfStock && (
+          <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs text-center py-1 z-10">
+            Out of Stock
+          </div>
+        )}
       </div>
       <div className="p-2">
         <p
@@ -106,25 +112,27 @@ function ProductCardItem({ product }: ProductCardItemProps) {
         <p className="text-[9px] text-gray-400 mb-1">incl. all taxes</p>
         <div className="flex items-center gap-1 mb-1.5">
           <button
-            className="w-5 h-5 border rounded text-xs flex items-center justify-center"
+            className={`w-5 h-5 border rounded text-xs flex items-center justify-center ${outOfStock ? "opacity-50 cursor-not-allowed" : ""}`}
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+            disabled={outOfStock}
           >
             {"\u2212"}
           </button>
           <span className="text-xs w-4 text-center">{quantity}</span>
           <button
-            className="w-5 h-5 border rounded text-xs flex items-center justify-center"
+            className={`w-5 h-5 border rounded text-xs flex items-center justify-center ${outOfStock ? "opacity-50 cursor-not-allowed" : ""}`}
             onClick={() => setQuantity((q) => q + 1)}
+            disabled={outOfStock}
           >
             +
           </button>
         </div>
         <button
           onClick={handleAddToCart}
-          disabled={isAdding}
-          className="w-full bg-[#2d6a4f] text-white text-[10px] py-1.5 rounded disabled:opacity-50"
+          disabled={isAdding || outOfStock}
+          className={`w-full bg-[#2d6a4f] text-white text-[10px] py-1.5 rounded disabled:opacity-50 ${outOfStock ? "cursor-not-allowed" : ""}`}
         >
-          {isAdding ? "Adding..." : "Add to Cart"}
+          {outOfStock ? "Out of Stock" : isAdding ? "Adding..." : "Add to Cart"}
         </button>
       </div>
     </div>
