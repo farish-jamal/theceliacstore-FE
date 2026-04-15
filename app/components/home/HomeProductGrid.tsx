@@ -98,7 +98,10 @@ function ProductCardItem({ product }: ProductCardItemProps) {
         <img src={imageUrl} alt={product.name} className="w-full h-full object-cover" />
       </div>
       <div className="p-2">
-        <p className="text-xs leading-tight mb-1 line-clamp-2">{product.name}</p>
+        <p
+          className="text-xs leading-tight mb-1 line-clamp-2 cursor-pointer hover:underline hover:text-[#2d6a4f]"
+          onClick={() => product._id && router.push(`/products/${product._id}`)}
+        >{product.name}</p>
         <p className="text-sm font-medium text-[#1b4332]">{"\u20B9"}{formatCurrency(price)}</p>
         <p className="text-[9px] text-gray-400 mb-1">incl. all taxes</p>
         <div className="flex items-center gap-1 mb-1.5">

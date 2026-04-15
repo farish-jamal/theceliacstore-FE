@@ -21,8 +21,9 @@ const HomePage = () => {
 
   return (
     <div className="flex-col min-h-screen">
-      <div className="h-[36px]" />
-      <Navbar />
+      <div className="sticky top-0 z-50">
+        <Navbar />
+      </div>
 
       {/* A) Delivery strip */}
       <div style={{ background: '#1b4332' }} className="py-3 px-4">
