@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Navbar from "./components/navbar/Navbar";
-import Header from "./components/layout/Header";
 import HomeProductGrid from "./components/home/HomeProductGrid";
 import ReviewSection from "./components/home/ReviewSection";
 import TopBrands from "./components/home/TopBrands";
@@ -22,11 +21,8 @@ const HomePage = () => {
 
   return (
     <div className="flex-col min-h-screen">
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <Header />
-        <Navbar />
-      </div>
-      <div className="h-[130px] md:h-[150px]" />
+      <div className="h-[36px]" />
+      <Navbar />
 
       {/* A) Delivery strip */}
       <div style={{ background: '#1b4332' }} className="py-3 px-4">

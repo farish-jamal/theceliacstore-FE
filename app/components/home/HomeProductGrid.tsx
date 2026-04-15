@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
 import { showSnackbar } from "@/app/slices/snackbarSlice";
@@ -8,11 +8,13 @@ import { setGuestCart } from "@/app/slices/guestCartSlice";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProductInCart } from "@/app/apis/updateProductInCart";
 import { addProductToGuestCart } from "@/app/utils/guestCart";
-import { getProducts } from "@/app/apis/getProducts";
+import { getProducts, getCategories, getBrands, Category, Brand } from "@/app/apis/getProducts";
 import { Product, ProductParams } from "@/app/types/Product";
 import { convertToNumber, formatCurrency } from "@/app/utils/formatPrice";
 import { Check, Search, X, SlidersHorizontal } from "lucide-react";
 import PrimaryLoader from "@/app/components/loaders/PrimaryLoader";
+import SidebarFilter from "@/app/components/sidebar/SidebarFilter";
+import { useProductFilters } from "@/app/hooks/useProductFilters";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -29,18 +31,6 @@ const categoryPills = [
   "Supplements",
   "Rusk",
   "Milk Replacement",
-];
-
-const sidebarBrands = [
-  "Yes You Can",
-  "Bewell",
-  "Pure Food",
-  "Nutri Org",
-  "Life Oats",
-  "Chilzo",
-  "Wheafree",
-  "Chef Urbano",
-  "BRB",
 ];
 
 interface ProductCardItemProps {
@@ -92,7 +82,7 @@ function ProductCardItem({ product }: ProductCardItemProps) {
 
   const price = convertToNumber(product.discounted_price) || convertToNumber(product.price);
   const imageUrl = product.banner_image || (product.images && product.images[0]) || "/product-1.png";
-  const celiacFriendly = product.tags?.includes("gluten_free");
+  const celiacFriendly = product.celiacFriendly || product.tags?.includes("gluten_free");
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -144,91 +134,96 @@ interface HomeProductGridProps {
 
 export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps) {
   const router = useRouter();
+  const { filters, updateFilter, clearFilters, getApiParams } = useProductFilters();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
-
-  // Filters
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [sortBy, setSortBy] = useState<ProductParams["sort_by"]>("created_at");
-  const [sidebarFilters, setSidebarFilters] = useState({
-    organic: false,
-    glutenFree: false,
-    lactoseFree: false,
-    bestSellers: false,
-    importedPicks: false,
-    selectedBrands: [] as string[],
-    priceMin: 0,
-    priceMax: 5000,
-  });
-  const [paginatedView, setPaginatedView] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [paginatedView, setPaginatedView] = useState(true);
 
-  // Sync dietary tile filter with sidebar checkboxes
+  // Fetch categories from API (same as shop page)
   useEffect(() => {
-    setSidebarFilters((prev) => ({
-      ...prev,
-      glutenFree: dietaryFilter === "glutenFree",
-      lactoseFree: dietaryFilter === "lactoseFree",
-      organic: dietaryFilter === "organic",
-    }));
-  }, [dietaryFilter]);
-
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params: ProductParams = {
-        page: 1,
-        per_page: 100,
-        sort_by: sortBy,
-      };
-
-      if (selectedCategory !== "All") {
-        params.search = selectedCategory;
+    const fetchCats = async () => {
+      try {
+        const res = await getCategories();
+        setCategories(res.data?.categories || []);
+      } catch {
+        setCategories([]);
       }
+    };
+    fetchCats();
+  }, []);
 
-      if (sidebarFilters.bestSellers) params.is_best_seller = true;
-      if (sidebarFilters.importedPicks) params.is_imported_picks = true;
-
-      if (sidebarFilters.priceMin > 0 || sidebarFilters.priceMax < 5000) {
-        params.price_range = `${sidebarFilters.priceMin}_${sidebarFilters.priceMax}`;
+  // Fetch brands from API (same as shop page)
+  useEffect(() => {
+    const fetchBr = async () => {
+      try {
+        const res = await getBrands();
+        setBrands(res.data?.brands || []);
+      } catch {
+        setBrands([]);
       }
+    };
+    fetchBr();
+  }, []);
 
-      if (sidebarFilters.selectedBrands.length > 0) {
-        params.brands = sidebarFilters.selectedBrands;
+  // Sync dietary tile filter → category filter in SidebarFilter
+  useEffect(() => {
+    if (!categories.length) return;
+    const nameMap: Record<string, string> = {
+      glutenFree: "Gluten Free",
+      lactoseFree: "Lactose Free",
+      organic: "Organic",
+    };
+    if (dietaryFilter && nameMap[dietaryFilter]) {
+      const cat = categories.find((c) => c.name === nameMap[dietaryFilter]);
+      if (cat) {
+        updateFilter("category", [cat._id]);
       }
-
-      const res = await getProducts({ params });
-      let data: Product[] = [];
-      if (res?.data) {
-        data = Array.isArray(res.data) ? res.data : res.data.data || [];
-        setTotalProducts(Array.isArray(res.data) ? data.length : res.data.total || data.length);
-      }
-
-      // Client-side tag filtering
-      if (sidebarFilters.organic) data = data.filter((p) => p.tags?.includes("organic"));
-      if (sidebarFilters.glutenFree) data = data.filter((p) => p.tags?.includes("gluten_free"));
-      if (sidebarFilters.lactoseFree) data = data.filter((p) => p.tags?.includes("lactose_free"));
-
-      setProducts(data);
-      setTotalProducts(data.length);
-    } catch (err) {
-      console.error("Failed to fetch products:", err);
-    } finally {
-      setLoading(false);
+    } else if (dietaryFilter === null) {
+      updateFilter("category", []);
     }
-  }, [selectedCategory, sortBy, sidebarFilters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dietaryFilter, categories]);
 
+  // Fetch products using shared filter params
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const params = { ...getApiParams, per_page: 500 };
+        const res = await getProducts({ params });
+        const data = res?.data?.data || [];
 
+        // Debug logs (FIX 2 diagnosis)
+        console.log("[HomeProductGrid] dietaryFilter:", dietaryFilter);
+        if (data.length > 0) {
+          console.log("[HomeProductGrid] sample product:", JSON.stringify(data[0], null, 2));
+        }
+
+        setProducts(data);
+        setTotalProducts(res?.data?.total || data.length);
+      } catch (err) {
+        console.error("Failed to fetch products:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getApiParams]);
+
+  // Reset pagination when filters change
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-  }, [selectedCategory, sortBy, sidebarFilters]);
+  }, [getApiParams]);
 
+  // Derived display data
   const searchedProducts = searchQuery
     ? products.filter((p) => p.name?.toLowerCase().includes(searchQuery.toLowerCase()))
     : products;
@@ -241,125 +236,38 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
   const showingTo = displayedProducts.length;
   const showingTotal = searchQuery ? searchedProducts.length : totalProducts;
 
-  const clearAllFilters = () => {
-    setSelectedCategory("All");
-    setSortBy("created_at");
-    setSidebarFilters({
-      organic: false,
-      glutenFree: false,
-      lactoseFree: false,
-      bestSellers: false,
-      importedPicks: false,
-      selectedBrands: [],
-      priceMin: 0,
-      priceMax: 5000,
-    });
-  };
-
-  const toggleBrand = (brand: string) => {
-    setSidebarFilters((prev) => ({
-      ...prev,
-      selectedBrands: prev.selectedBrands.includes(brand)
-        ? prev.selectedBrands.filter((b) => b !== brand)
-        : [...prev.selectedBrands, brand],
-    }));
-  };
+  // Category pill active state
+  const activePill = filters.search || "All";
 
   return (
     <section className="max-w-7xl mx-auto px-4 py-4">
       <div className="flex gap-4">
-        {/* Left Sidebar - hidden on mobile */}
-        <aside className="hidden md:block w-44 flex-shrink-0 space-y-4 text-xs">
-          {/* Categories */}
-          <div>
-            <p className="font-semibold mb-2 text-sm">Categories</p>
-            {["Organic", "Gluten Free", "Lactose Free"].map((cat) => {
-              const key = cat === "Organic" ? "organic" : cat === "Gluten Free" ? "glutenFree" : "lactoseFree";
-              return (
-                <label key={cat} className="flex items-center gap-2 mb-1 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={sidebarFilters[key]}
-                    onChange={() => setSidebarFilters((p) => ({ ...p, [key]: !p[key] }))}
-                    className="rounded border-gray-300 text-green-600"
-                  />
-                  {cat}
-                </label>
-              );
-            })}
-          </div>
-
-          {/* Quick filters */}
-          <div>
-            <p className="font-semibold mb-2 text-sm">Quick filters</p>
-            {[
-              { label: "Best Sellers", key: "bestSellers" as const },
-              { label: "Imported Picks", key: "importedPicks" as const },
-            ].map(({ label, key }) => (
-              <label key={key} className="flex items-center gap-2 mb-1 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={sidebarFilters[key]}
-                  onChange={() => setSidebarFilters((p) => ({ ...p, [key]: !p[key] }))}
-                  className="rounded border-gray-300 text-green-600"
-                />
-                {label}
-              </label>
-            ))}
-          </div>
-
-          {/* Price range */}
-          <div>
-            <p className="font-semibold mb-2 text-sm">Price range</p>
-            <div className="flex items-center gap-1">
-              <input
-                type="number"
-                value={sidebarFilters.priceMin}
-                onChange={(e) => setSidebarFilters((p) => ({ ...p, priceMin: Number(e.target.value) }))}
-                className="w-16 border rounded px-1 py-0.5 text-xs"
-                min={0}
-              />
-              <span>-</span>
-              <input
-                type="number"
-                value={sidebarFilters.priceMax}
-                onChange={(e) => setSidebarFilters((p) => ({ ...p, priceMax: Number(e.target.value) }))}
-                className="w-16 border rounded px-1 py-0.5 text-xs"
-                min={0}
-              />
-            </div>
-          </div>
-
-          {/* Brands */}
-          <div>
-            <p className="font-semibold mb-2 text-sm">Brands</p>
-            {sidebarBrands.map((brand) => (
-              <label key={brand} className="flex items-center gap-2 mb-1 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={sidebarFilters.selectedBrands.includes(brand)}
-                  onChange={() => toggleBrand(brand)}
-                  className="rounded border-gray-300 text-green-600"
-                />
-                {brand}
-              </label>
-            ))}
-          </div>
-
-          {/* Clear all */}
-          <button onClick={clearAllFilters} className="text-red-500 text-xs underline">
-            Clear all filters
-          </button>
-
-          {/* Browse Bundles card */}
-          <div
-            className="bg-[#eaf6f0] rounded-lg p-3 cursor-pointer hover:bg-[#d8f3dc] transition-colors"
-            onClick={() => router.push("/bundles")}
-          >
-            <p className="font-semibold text-sm text-[#1b4332]">Browse Bundles</p>
-            <p className="text-[10px] text-[#2d6a4f] mt-1">Save more with curated packs</p>
-          </div>
-        </aside>
+        {/* Left Sidebar — same SidebarFilter as shop page */}
+        <SidebarFilter
+          isOpen={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+          search={filters.search || ""}
+          onSearchChange={(v) => updateFilter("search", v)}
+          priceRange={filters.price_range || ""}
+          onPriceRangeChange={(v) => updateFilter("price_range", v)}
+          category={filters.category || []}
+          onCategoryChange={(v) => updateFilter("category", v)}
+          subCategory={filters.sub_category || []}
+          onSubCategoryChange={(v) => updateFilter("sub_category", v)}
+          rating={filters.rating}
+          onRatingChange={(v) => updateFilter("rating", v)}
+          isBestSeller={filters.is_best_seller}
+          onBestSellerChange={(v) => updateFilter("is_best_seller", v)}
+          isImportedPicks={filters.is_imported_picks}
+          onImportedPicksChange={(v) => updateFilter("is_imported_picks", v)}
+          isBakery={filters.is_bakery}
+          onBakeryChange={(v) => updateFilter("is_bakery", v)}
+          selectedBrands={filters.brands || []}
+          onBrandChange={(v) => updateFilter("brands", v)}
+          categories={categories}
+          brands={brands}
+          onClearFilters={clearFilters}
+        />
 
         {/* Main area */}
         <div className="flex-1 min-w-0">
@@ -376,8 +284,8 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
                 {paginatedView ? "Paginated" : "All"}
               </button>
               <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as ProductParams["sort_by"])}
+                value={filters.sort_by || "created_at"}
+                onChange={(e) => updateFilter("sort_by", e.target.value)}
                 className="text-xs border rounded px-2 py-1"
               >
                 <option value="created_at">Newest</option>
@@ -406,8 +314,8 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
 
           {/* Mobile filter button */}
           <button
-            className="md:hidden flex items-center gap-1 text-sm border border-gray-300 rounded-lg px-3 py-1.5 mb-2"
-            onClick={() => setFilterDrawerOpen(true)}
+            className="lg:hidden flex items-center gap-1 text-sm border border-gray-300 rounded-lg px-3 py-1.5 mb-2"
+            onClick={() => setIsFilterOpen(true)}
           >
             <SlidersHorizontal size={14} /> Filters
           </button>
@@ -417,9 +325,9 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
             {categoryPills.map((pill) => (
               <button
                 key={pill}
-                onClick={() => setSelectedCategory(pill)}
+                onClick={() => updateFilter("search", pill === "All" ? undefined : pill)}
                 className={`whitespace-nowrap text-xs px-3 py-1 rounded-full border transition-colors ${
-                  selectedCategory === pill
+                  activePill === pill
                     ? "bg-[#2d6a4f] text-white border-[#2d6a4f]"
                     : "border-gray-300 text-gray-600 hover:border-[#2d6a4f]"
                 }`}
@@ -456,113 +364,6 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
           )}
         </div>
       </div>
-
-      {/* Mobile filter drawer */}
-      {filterDrawerOpen && (
-        <div className="fixed inset-0 bg-black/40 z-50 md:hidden" onClick={() => setFilterDrawerOpen(false)}>
-          <div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-4 max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <p className="font-semibold text-sm">Filters</p>
-              <button onClick={() => setFilterDrawerOpen(false)}>
-                <X size={20} className="text-gray-500" />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              {/* Categories */}
-              <div>
-                <p className="font-semibold mb-2 text-sm">Categories</p>
-                {["Organic", "Gluten Free", "Lactose Free"].map((cat) => {
-                  const key = cat === "Organic" ? "organic" : cat === "Gluten Free" ? "glutenFree" : "lactoseFree";
-                  return (
-                    <label key={cat} className="flex items-center gap-2 mb-1 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={sidebarFilters[key]}
-                        onChange={() => setSidebarFilters((p) => ({ ...p, [key]: !p[key] }))}
-                        className="rounded border-gray-300 text-green-600"
-                      />
-                      {cat}
-                    </label>
-                  );
-                })}
-              </div>
-
-              {/* Quick filters */}
-              <div>
-                <p className="font-semibold mb-2 text-sm">Quick filters</p>
-                {[
-                  { label: "Best Sellers", key: "bestSellers" as const },
-                  { label: "Imported Picks", key: "importedPicks" as const },
-                ].map(({ label, key }) => (
-                  <label key={key} className="flex items-center gap-2 mb-1 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={sidebarFilters[key]}
-                      onChange={() => setSidebarFilters((p) => ({ ...p, [key]: !p[key] }))}
-                      className="rounded border-gray-300 text-green-600"
-                    />
-                    {label}
-                  </label>
-                ))}
-              </div>
-
-              {/* Price range */}
-              <div>
-                <p className="font-semibold mb-2 text-sm">Price range</p>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    value={sidebarFilters.priceMin}
-                    onChange={(e) => setSidebarFilters((p) => ({ ...p, priceMin: Number(e.target.value) }))}
-                    className="w-16 border rounded px-1 py-0.5 text-xs"
-                    min={0}
-                  />
-                  <span>-</span>
-                  <input
-                    type="number"
-                    value={sidebarFilters.priceMax}
-                    onChange={(e) => setSidebarFilters((p) => ({ ...p, priceMax: Number(e.target.value) }))}
-                    className="w-16 border rounded px-1 py-0.5 text-xs"
-                    min={0}
-                  />
-                </div>
-              </div>
-
-              {/* Brands */}
-              <div>
-                <p className="font-semibold mb-2 text-sm">Brands</p>
-                {sidebarBrands.map((brand) => (
-                  <label key={brand} className="flex items-center gap-2 mb-1 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={sidebarFilters.selectedBrands.includes(brand)}
-                      onChange={() => toggleBrand(brand)}
-                      className="rounded border-gray-300 text-green-600"
-                    />
-                    {brand}
-                  </label>
-                ))}
-              </div>
-
-              {/* Clear all */}
-              <button onClick={clearAllFilters} className="text-red-500 text-xs underline">
-                Clear all filters
-              </button>
-            </div>
-
-            <button
-              onClick={() => setFilterDrawerOpen(false)}
-              className="w-full mt-4 bg-[#2d6a4f] text-white text-sm py-2.5 rounded-lg"
-            >
-              Apply Filters
-            </button>
-          </div>
-        </div>
-      )}
     </section>
   );
 }
