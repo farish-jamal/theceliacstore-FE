@@ -29,7 +29,17 @@ const ProductGrid = () => {
     const fetchCategories = async () => {
       try {
         const res = await getCategories();
-        setCategories(res.data?.categories || []);
+        const cats = res.data?.categories || [];
+        const priorityOrder = ['Gluten Free', 'Lactose Free', 'Organic'];
+        cats.sort((a: Category, b: Category) => {
+          const ai = priorityOrder.indexOf(a.name);
+          const bi = priorityOrder.indexOf(b.name);
+          if (ai !== -1 && bi !== -1) return ai - bi;
+          if (ai !== -1) return -1;
+          if (bi !== -1) return 1;
+          return 0;
+        });
+        setCategories(cats);
       } catch {
         setCategories([]);
       }

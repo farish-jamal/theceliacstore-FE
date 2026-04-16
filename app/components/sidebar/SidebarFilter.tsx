@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Checkbox } from "../../../components/ui/checkbox";
-import { Category, Brand, SubCategory, getSubCategories } from "../../apis/getProducts";
+import { Category, Brand, SubCategory, getSubCategories, getProducts } from "../../apis/getProducts";
 import SearchFilter from "../filters/SearchFilter";
 import PriceRangeSlider from "../filters/PriceRangeSlider";
 import RatingFilter from "../filters/RatingFilter";
@@ -66,6 +66,28 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
+  // Fetch subcategories and filter out ones with 0 products
+  const fetchNonEmptySubCategories = async (categoryId: string): Promise<SubCategory[]> => {
+    const response = await getSubCategories(categoryId);
+    const allSubs = response.data?.subCategories || response.data || [];
+    if (allSubs.length === 0) return [];
+
+    // Check each subcategory for products in parallel
+    const checks = await Promise.all(
+      allSubs.map(async (sub: SubCategory) => {
+        try {
+          const prodRes = await getProducts({ params: { sub_category: sub._id, per_page: 1 } });
+          const total = prodRes.data?.total ?? 0;
+          console.log(`[SubCat Filter] "${sub.name}" (${sub._id}) → total: ${total}, raw data:`, prodRes.data);
+          return { sub, hasProducts: total > 0 };
+        } catch {
+          return { sub, hasProducts: true }; // keep on error to avoid hiding valid subcategories
+        }
+      })
+    );
+    return checks.filter(c => c.hasProducts).map(c => c.sub);
+  };
+
   // Auto-expand categories when sub-categories are selected
   useEffect(() => {
     if (subCategory.length > 0) {
@@ -94,10 +116,10 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
           if (!categorySubCategories[catId]) {
             setLoadingStates(prev => ({ ...prev, [catId]: true }));
             try {
-              const response = await getSubCategories(catId);
+              const nonEmpty = await fetchNonEmptySubCategories(catId);
               setCategorySubCategories(prev => ({
                 ...prev,
-                [catId]: response.data || []
+                [catId]: nonEmpty
               }));
             } catch (error) {
               console.error("Error fetching sub-categories:", error);
@@ -137,10 +159,10 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
       if (!categorySubCategories[categoryId]) {
         setLoadingStates(prev => ({ ...prev, [categoryId]: true }));
         try {
-          const response = await getSubCategories(categoryId);
+          const nonEmpty = await fetchNonEmptySubCategories(categoryId);
           setCategorySubCategories(prev => ({
             ...prev,
-            [categoryId]: response.data?.subCategories || []
+            [categoryId]: nonEmpty
           }));
         } catch (error) {
           console.error("Error fetching sub-categories:", error);
@@ -234,10 +256,10 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                                 // Fetch sub-categories if not already loaded
                                 if (!categorySubCategories[cat._id]) {
                                   setLoadingStates(prev => ({ ...prev, [cat._id]: true }));
-                                  getSubCategories(cat._id).then(response => {
+                                  fetchNonEmptySubCategories(cat._id).then(nonEmpty => {
                                     setCategorySubCategories(prev => ({
                                       ...prev,
-                                      [cat._id]: response.data || []
+                                      [cat._id]: nonEmpty
                                     }));
                                   }).catch(error => {
                                     console.error("Error fetching sub-categories:", error);
