@@ -51,9 +51,9 @@ const HomePage = () => {
           <p className="text-sm font-medium mb-3">Shop by dietary needs</p>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { key: 'glutenFree', label: 'Gluten Free', count: '120+', icon: <WheatOff size={24} color="#2d6a4f" /> },
-              { key: 'lactoseFree', label: 'Lactose Free', count: '60+', icon: <MilkOff size={24} color="#2d6a4f" /> },
-              { key: 'organic', label: 'Organic', count: '45+', icon: <Leaf size={24} color="#2d6a4f" /> },
+              { key: 'glutenFree', label: 'Gluten Free', count: '400+', icon: <WheatOff size={24} color="#2d6a4f" /> },
+              { key: 'lactoseFree', label: 'Lactose Free', icon: <MilkOff size={24} color="#2d6a4f" /> },
+              { key: 'organic', label: 'Organic', count: '70+', icon: <Leaf size={24} color="#2d6a4f" /> },
             ].map(({ key, label, count, icon }) => (
               <button
                 key={key}
@@ -65,9 +65,9 @@ const HomePage = () => {
                 }`}
               >
                 {icon}
-                <div>
+                <div className="flex flex-col justify-center">
                   <p className="text-sm font-medium">{label}</p>
-                  <p className="text-xs text-[#2d6a4f]">{count} products</p>
+                  {count && <p className="text-xs text-[#2d6a4f]">{count} products</p>}
                 </div>
               </button>
             ))}
