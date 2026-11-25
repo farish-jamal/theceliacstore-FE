@@ -154,6 +154,7 @@ interface HomeProductGridProps {
 
 export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const { filters, updateFilter, clearFilters, getApiParams } = useProductFilters();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -240,7 +241,8 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
       setLoading(true);
       setFullLoaded(false);
       try {
-        const params = { ...getApiParams, per_page: ITEMS_PER_PAGE };
+        // Always page 1: the homepage paginates on the client, so a stray ?page=N must not offset the list.
+        const params = { ...getApiParams, page: 1, per_page: ITEMS_PER_PAGE };
         const res = await getProducts({ params });
         if (requestId !== requestIdRef.current) return;
         if (fullLoadedForRef.current === requestId) return; // full list already arrived
@@ -262,34 +264,47 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getApiParams]);
 
-  const loadAllProducts = async () => {
+  // Returns true only if the full list for the current filters is in place.
+  const loadAllProducts = async (): Promise<boolean> => {
     const requestId = requestIdRef.current;
-    if (fullLoadedForRef.current === requestId || loadingAllForRef.current === requestId) return;
+    if (fullLoadedForRef.current === requestId) return true;
+    if (loadingAllForRef.current === requestId) return false;
     loadingAllForRef.current = requestId;
     setLoadingAll(true);
     try {
-      const params = { ...getApiParams, per_page: 500 };
+      const params = { ...getApiParams, page: 1, per_page: 500 };
       const res = await getProducts({ params });
-      if (requestId !== requestIdRef.current) return;
-      const data = res?.data?.data || [];
+      if (requestId !== requestIdRef.current) return false;
+      // apiService swallows network errors and returns no data. Keep what is on screen
+      // and leave the list marked "not loaded" so the visitor can retry.
+      if (!Array.isArray(res?.data?.data)) {
+        dispatch(showSnackbar({ message: "Couldn't load more products. Please try again.", type: "error" }));
+        return false;
+      }
+      const data = res.data.data;
       setProducts(data);
       setTotalProducts(res?.data?.total || data.length);
       fullLoadedForRef.current = requestId;
       setFullLoaded(true);
       setLoading(false);
+      return true;
     } catch (err) {
       console.error("Failed to fetch products:", err);
+      return false;
     } finally {
-      if (loadingAllForRef.current === requestId) loadingAllForRef.current = -1;
-      setLoadingAll(false);
+      if (loadingAllForRef.current === requestId) {
+        loadingAllForRef.current = -1;
+        setLoadingAll(false);
+      }
     }
   };
 
-  // Search filters the full list locally, so make sure it is loaded once someone types.
+  // Search filters the full list locally, and the "All" view shows the full list,
+  // so (re)load it whenever either is active and the filters change.
   useEffect(() => {
-    if (searchQuery) loadAllProducts();
+    if (searchQuery || !paginatedView) loadAllProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, getApiParams]);
+  }, [searchQuery, paginatedView, getApiParams]);
 
   // Reset pagination when filters change
   useEffect(() => {
@@ -351,10 +366,7 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
             </p>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => {
-                  if (paginatedView) loadAllProducts();
-                  setPaginatedView(!paginatedView);
-                }}
+                onClick={() => setPaginatedView(!paginatedView)}
                 className={`text-[10px] px-2 py-1 rounded border ${paginatedView ? "bg-[#2d6a4f] text-white border-[#2d6a4f]" : "border-gray-300"}`}
               >
                 {paginatedView ? "Paginated" : "All"}
@@ -414,7 +426,7 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
           </div>
 
           {/* Product grid */}
-          {loading || (searchQuery && !fullLoaded && searchedProducts.length === 0) ? (
+          {loading || (searchQuery && !fullLoaded && loadingAll) ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2" aria-busy="true" aria-label="Loading products">
               {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
                 <div key={i} className="border border-gray-200 rounded-lg overflow-hidden animate-pulse">
@@ -440,12 +452,18 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
                 ))}
               </div>
 
+              {!paginatedView && !fullLoaded && loadingAll && (
+                <p className="text-center text-xs text-gray-500 mt-4">Loading all products...</p>
+              )}
+
               {!searchQuery && paginatedView && visibleCount < (fullLoaded ? products.length : totalProducts) && (
                 <div className="text-center mt-4">
                   <button
                     onClick={async () => {
-                      await loadAllProducts();
-                      setVisibleCount((c) => c + ITEMS_PER_PAGE);
+                      // Only grow the page if the full list for these same filters is in place;
+                      // a filter change mid-load resets the count and must not be undone here.
+                      const ok = await loadAllProducts();
+                      if (ok) setVisibleCount((c) => c + ITEMS_PER_PAGE);
                     }}
                     disabled={loadingAll}
                     className="bg-[#2d6a4f] text-white text-sm px-6 py-2 rounded-full hover:bg-[#1b4332] transition-colors"
