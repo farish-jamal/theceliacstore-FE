@@ -230,6 +230,7 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
   // The full list is fetched only when a visitor needs it: Load more, the "All" toggle, or the search box.
   const [fullLoaded, setFullLoaded] = useState(false);
   const [loadingAll, setLoadingAll] = useState(false);
+  const [loadAllFailed, setLoadAllFailed] = useState(false);
   // requestIdRef changes whenever the filters change; replies for old filters are dropped.
   const requestIdRef = useRef(0);
   const fullLoadedForRef = useRef(-1); // request id whose full list is loaded
@@ -271,14 +272,20 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
     if (loadingAllForRef.current === requestId) return false;
     loadingAllForRef.current = requestId;
     setLoadingAll(true);
+    setLoadAllFailed(false);
     try {
       const params = { ...getApiParams, page: 1, per_page: 500 };
-      const res = await getProducts({ params });
+      // Give up after 20 s so a hung request can't leave "Loading..." stuck.
+      // (Manual AbortController: AbortSignal.timeout is missing on older iOS Safari.)
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 20000);
+      const res = await getProducts({ params, signal: controller.signal }).finally(() => clearTimeout(timer));
       if (requestId !== requestIdRef.current) return false;
       // apiService swallows network errors and returns no data. Keep what is on screen
       // and leave the list marked "not loaded" so the visitor can retry.
       if (!Array.isArray(res?.data?.data)) {
         dispatch(showSnackbar({ message: "Couldn't load more products. Please try again.", type: "error" }));
+        setLoadAllFailed(true);
         return false;
       }
       const data = res.data.data;
@@ -452,8 +459,19 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
                 ))}
               </div>
 
-              {!paginatedView && !fullLoaded && loadingAll && (
-                <p className="text-center text-xs text-gray-500 mt-4">Loading all products...</p>
+              {!paginatedView && !fullLoaded && (
+                <div className="text-center mt-4">
+                  {loadingAll ? (
+                    <p className="text-xs text-gray-500">Loading all products...</p>
+                  ) : loadAllFailed && (
+                    <button
+                      onClick={() => loadAllProducts()}
+                      className="bg-[#2d6a4f] text-white text-sm px-6 py-2 rounded-full hover:bg-[#1b4332] transition-colors"
+                    >
+                      Show all products
+                    </button>
+                  )}
+                </div>
               )}
 
               {!searchQuery && paginatedView && visibleCount < (fullLoaded ? products.length : totalProducts) && (
