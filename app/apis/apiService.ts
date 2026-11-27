@@ -33,8 +33,11 @@ export const apiService = async <T = unknown>({
       token = getCookie("token");
     }
 
+    const baseUrl = customUrl ? customUrl : BACKEND_URL;
+    // The ngrok header is only needed for ngrok dev tunnels. Sent to the real backend it is a
+    // non-standard header, which forces a CORS preflight (an extra slow round trip) on every call.
     const requestHeaders: Record<string, string> = {
-      "ngrok-skip-browser-warning": "true",
+      ...(baseUrl.includes("ngrok") ? { "ngrok-skip-browser-warning": "true" } : {}),
       ...headers,
     };
 
@@ -43,7 +46,7 @@ export const apiService = async <T = unknown>({
     }
 
     const requestObj: AxiosRequestConfig = {
-      url: `${customUrl ? customUrl : BACKEND_URL}/${endpoint}`,
+      url: `${baseUrl}/${endpoint}`,
       method,
       params,
       data,

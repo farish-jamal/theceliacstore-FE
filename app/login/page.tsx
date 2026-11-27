@@ -17,7 +17,7 @@ import { z } from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { setCookie } from "../utils/setCookie";
 import { AxiosError } from "axios";
-import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
+import { GoogleLogin, GoogleOAuthProvider, CredentialResponse } from "@react-oauth/google";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -266,4 +266,10 @@ const Login = () => {
   );
 };
 
-export default Login;
+const LoginWithGoogleProvider = () => (
+  <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
+    <Login />
+  </GoogleOAuthProvider>
+);
+
+export default LoginWithGoogleProvider;

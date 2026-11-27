@@ -86,6 +86,9 @@ export default function RootLayout({
           }}
         />
         {/* End Google Tag Manager */}
+        {/* Open connections early to the product API and image host the homepage needs first */}
+        <link rel="preconnect" href="https://theceliacstore-be-7as7.onrender.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://res.cloudinary.com" />
         <link rel="icon" type="image/png" sizes="32x32" href="/brand-favicon.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/brand-favicon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/brand-favicon.png" />

@@ -49,14 +49,17 @@ export type ProductResponse = {
 
 export type GetProductsType = {
   params: ProductParams;
+  signal?: AbortSignal;
 };
 
 export const getProducts = async ({
   params,
+  signal,
 }: GetProductsType): Promise<ProductResponse> => {
   const apiResponse = await apiService<ProductResponse>({
     endpoint: endpoints.products,
     params: params,
+    signal,
   });
 
   return apiResponse.response as ProductResponse;

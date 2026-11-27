@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/app/hooks/reduxHooks";
 import { showSnackbar } from "@/app/slices/snackbarSlice";
@@ -12,9 +12,9 @@ import { getProducts, getCategories, getBrands, Category, Brand } from "@/app/ap
 import { Product, ProductParams } from "@/app/types/Product";
 import { convertToNumber, formatCurrency } from "@/app/utils/formatPrice";
 import { Check, Search, X, SlidersHorizontal } from "lucide-react";
-import PrimaryLoader from "@/app/components/loaders/PrimaryLoader";
 import SidebarFilter from "@/app/components/sidebar/SidebarFilter";
 import { useProductFilters } from "@/app/hooks/useProductFilters";
+import { cloudinaryThumb } from "@/app/utils/cloudinary";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -34,9 +34,10 @@ const categoryPills = [
 
 interface ProductCardItemProps {
   product: Product;
+  priority?: boolean;
 }
 
-function ProductCardItem({ product }: ProductCardItemProps) {
+function ProductCardItem({ product, priority = false }: ProductCardItemProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
@@ -95,7 +96,16 @@ function ProductCardItem({ product }: ProductCardItemProps) {
             <Check size={8} /> Celiac Friendly
           </span>
         )}
-        <img src={imageUrl} alt={product.name} className="w-full h-full object-cover" />
+        <img
+          src={cloudinaryThumb(imageUrl)}
+          alt={product.name}
+          width={400}
+          height={400}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+          decoding="async"
+          className="w-full h-full object-cover"
+        />
         {outOfStock && (
           <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs text-center py-1 z-10">
             Out of Stock
@@ -144,6 +154,7 @@ interface HomeProductGridProps {
 
 export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const { filters, updateFilter, clearFilters, getApiParams } = useProductFilters();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -200,43 +211,108 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
       lactoseFree: "Lactose Free",
       organic: "Organic",
     };
+    // Only touch the URL when the category actually changes. Writing the same value
+    // re-rendered the URL as "/?page=1" and fetched the product list a second time on every visit.
+    const current = filters.category || [];
     if (dietaryFilter && nameMap[dietaryFilter]) {
       const cat = categories.find((c) => c.name === nameMap[dietaryFilter]);
-      if (cat) {
+      if (cat && !(current.length === 1 && current[0] === cat._id)) {
         updateFilter("category", [cat._id]);
       }
-    } else if (dietaryFilter === null) {
+    } else if (dietaryFilter === null && current.length > 0) {
       updateFilter("category", []);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dietaryFilter, categories]);
 
-  // Fetch products using shared filter params
+  // Fetch products using shared filter params.
+  // First paint asks for one page only (was per_page 500 = 1.6 MB JSON, 2.6 s server time).
+  // The full list is fetched only when a visitor needs it: Load more, the "All" toggle, or the search box.
+  const [fullLoaded, setFullLoaded] = useState(false);
+  const [loadingAll, setLoadingAll] = useState(false);
+  const [loadAllFailed, setLoadAllFailed] = useState(false);
+  // requestIdRef changes whenever the filters change; replies for old filters are dropped.
+  const requestIdRef = useRef(0);
+  const fullLoadedForRef = useRef(-1); // request id whose full list is loaded
+  const loadingAllForRef = useRef(-1); // request id whose full list is in flight
+
   useEffect(() => {
-    const fetchProducts = async () => {
+    const requestId = ++requestIdRef.current;
+    const fetchFirstPage = async () => {
       setLoading(true);
+      setFullLoaded(false);
       try {
-        const params = { ...getApiParams, per_page: 500 };
+        // Always page 1: the homepage paginates on the client, so a stray ?page=N must not offset the list.
+        const params = { ...getApiParams, page: 1, per_page: ITEMS_PER_PAGE };
         const res = await getProducts({ params });
+        if (requestId !== requestIdRef.current) return;
+        if (fullLoadedForRef.current === requestId) return; // full list already arrived
         const data = res?.data?.data || [];
-
-        // Debug logs (FIX 2 diagnosis)
-        console.log("[HomeProductGrid] dietaryFilter:", dietaryFilter);
-        if (data.length > 0) {
-          console.log("[HomeProductGrid] sample product:", JSON.stringify(data[0], null, 2));
-        }
-
+        const total = res?.data?.total || data.length;
         setProducts(data);
-        setTotalProducts(res?.data?.total || data.length);
+        setTotalProducts(total);
+        if (data.length >= total) {
+          fullLoadedForRef.current = requestId;
+          setFullLoaded(true);
+        }
       } catch (err) {
-        console.error("Failed to fetch products:", err);
+        if (requestId === requestIdRef.current) console.error("Failed to fetch products:", err);
       } finally {
-        setLoading(false);
+        if (requestId === requestIdRef.current) setLoading(false);
       }
     };
-    fetchProducts();
+    fetchFirstPage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getApiParams]);
+
+  // Returns true only if the full list for the current filters is in place.
+  const loadAllProducts = async (): Promise<boolean> => {
+    const requestId = requestIdRef.current;
+    if (fullLoadedForRef.current === requestId) return true;
+    if (loadingAllForRef.current === requestId) return false;
+    loadingAllForRef.current = requestId;
+    setLoadingAll(true);
+    setLoadAllFailed(false);
+    try {
+      const params = { ...getApiParams, page: 1, per_page: 500 };
+      // Give up after 60 s so a hung request can't leave "Loading..." stuck.
+      // The backend takes ~19 s to send the full list (measured 27 Nov 2026), so keep this well above that.
+      // (Manual AbortController: AbortSignal.timeout is missing on older iOS Safari.)
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 60000);
+      const res = await getProducts({ params, signal: controller.signal }).finally(() => clearTimeout(timer));
+      if (requestId !== requestIdRef.current) return false;
+      // apiService swallows network errors and returns no data. Keep what is on screen
+      // and leave the list marked "not loaded" so the visitor can retry.
+      if (!Array.isArray(res?.data?.data)) {
+        dispatch(showSnackbar({ message: "Couldn't load more products. Please try again.", type: "error" }));
+        setLoadAllFailed(true);
+        return false;
+      }
+      const data = res.data.data;
+      setProducts(data);
+      setTotalProducts(res?.data?.total || data.length);
+      fullLoadedForRef.current = requestId;
+      setFullLoaded(true);
+      setLoading(false);
+      return true;
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+      return false;
+    } finally {
+      if (loadingAllForRef.current === requestId) {
+        loadingAllForRef.current = -1;
+        setLoadingAll(false);
+      }
+    }
+  };
+
+  // Search filters the full list locally, and the "All" view shows the full list,
+  // so (re)load it whenever either is active and the filters change.
+  useEffect(() => {
+    if (searchQuery || !paginatedView) loadAllProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, paginatedView, getApiParams]);
 
   // Reset pagination when filters change
   useEffect(() => {
@@ -358,25 +434,60 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
           </div>
 
           {/* Product grid */}
-          {loading ? (
-            <PrimaryLoader />
+          {loading || (searchQuery && !fullLoaded && loadingAll) ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2" aria-busy="true" aria-label="Loading products">
+              {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
+                <div key={i} className="border border-gray-200 rounded-lg overflow-hidden animate-pulse">
+                  <div className="aspect-square max-h-[140px] md:max-h-[200px] bg-gray-100" />
+                  <div className="p-2">
+                    <div className="h-3 bg-gray-100 rounded mb-1" />
+                    <div className="h-3 w-2/3 bg-gray-100 rounded mb-1" />
+                    <div className="h-4 w-1/3 bg-gray-100 rounded mb-1" />
+                    <div className="h-2 w-1/4 bg-gray-100 rounded mb-1" />
+                    <div className="h-5 w-16 bg-gray-100 rounded mb-1.5" />
+                    <div className="h-6 bg-gray-100 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : displayedProducts.length === 0 ? (
             <p className="text-center text-gray-500 py-8">No products found. Try adjusting your filters.</p>
           ) : (
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {displayedProducts.map((product) => (
-                  <ProductCardItem key={product._id} product={product} />
+                {displayedProducts.map((product, i) => (
+                  <ProductCardItem key={product._id} product={product} priority={i < 4} />
                 ))}
               </div>
 
-              {!searchQuery && paginatedView && visibleCount < products.length && (
+              {!paginatedView && !fullLoaded && (
+                <div className="text-center mt-4">
+                  {loadingAll ? (
+                    <p className="text-xs text-gray-500">Loading all products...</p>
+                  ) : loadAllFailed && (
+                    <button
+                      onClick={() => loadAllProducts()}
+                      className="bg-[#2d6a4f] text-white text-sm px-6 py-2 rounded-full hover:bg-[#1b4332] transition-colors"
+                    >
+                      Show all products
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {!searchQuery && paginatedView && visibleCount < (fullLoaded ? products.length : totalProducts) && (
                 <div className="text-center mt-4">
                   <button
-                    onClick={() => setVisibleCount((c) => c + ITEMS_PER_PAGE)}
+                    onClick={async () => {
+                      // Only grow the page if the full list for these same filters is in place;
+                      // a filter change mid-load resets the count and must not be undone here.
+                      const ok = await loadAllProducts();
+                      if (ok) setVisibleCount((c) => c + ITEMS_PER_PAGE);
+                    }}
+                    disabled={loadingAll}
                     className="bg-[#2d6a4f] text-white text-sm px-6 py-2 rounded-full hover:bg-[#1b4332] transition-colors"
                   >
-                    Load more
+                    {loadingAll ? "Loading..." : "Load more"}
                   </button>
                 </div>
               )}
