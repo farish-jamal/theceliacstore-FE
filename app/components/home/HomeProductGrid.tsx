@@ -274,7 +274,8 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
     setLoadingAll(true);
     setLoadAllFailed(false);
     try {
-      const params = { ...getApiParams, page: 1, per_page: 500 };
+      // 1000 so the whole catalogue (523 on 27 Nov 2026) fits; the backend returns all matching products up to per_page.
+      const params = { ...getApiParams, page: 1, per_page: 1000 };
       // Give up after 60 s so a hung request can't leave "Loading..." stuck.
       // The backend takes ~19 s to send the full list (measured 27 Nov 2026), so keep this well above that.
       // (Manual AbortController: AbortSignal.timeout is missing on older iOS Safari.)
