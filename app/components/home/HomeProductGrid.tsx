@@ -275,10 +275,11 @@ export default function HomeProductGrid({ dietaryFilter }: HomeProductGridProps)
     setLoadAllFailed(false);
     try {
       const params = { ...getApiParams, page: 1, per_page: 500 };
-      // Give up after 20 s so a hung request can't leave "Loading..." stuck.
+      // Give up after 60 s so a hung request can't leave "Loading..." stuck.
+      // The backend takes ~19 s to send the full list (measured 27 Nov 2026), so keep this well above that.
       // (Manual AbortController: AbortSignal.timeout is missing on older iOS Safari.)
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 20000);
+      const timer = setTimeout(() => controller.abort(), 60000);
       const res = await getProducts({ params, signal: controller.signal }).finally(() => clearTimeout(timer));
       if (requestId !== requestIdRef.current) return false;
       // apiService swallows network errors and returns no data. Keep what is on screen
